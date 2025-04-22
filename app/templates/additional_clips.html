@@ -1,0 +1,58 @@
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+    {% for clip in clips %}
+    <div class="col">
+        <div class="clip">
+            <div class="clip-img">
+                <a href="{{ clip.url }}" target="_blank" rel="noopener noreferrer"><img src="{{ clip.thumbnail_url }}" alt="Clip Thumbnail"></a>
+                <div class="clip-duration">{{ clip.duration }}s</div>
+                <div class="clip-views view-count">{{ clip.view_count }}</div>
+                <div class="clip-upload-date upload-date">{{ clip.created_at }}</div>
+            </div>
+            <div class="clip-title">
+                <a href="{{ clip.url }}" target="_blank" rel="noopener noreferrer">{{ clip.title }}</a>
+            </div>
+            <div class="clip-info">
+                <div class="row">
+                    <div class="col-auto clip-streamer">
+                        <a href="https://www.twitch.tv/{{ clip.broadcaster_name }}" target="_blank" rel="noopener noreferrer">{{ clip.broadcaster_name }}</a>
+                    </div>
+                    {% if clip.themes != None %}
+                        <div class="col clip-theme text-end">
+                            {% for theme in clip.themes %}
+                                <button class="btn clip-theme-btn" type="button">{{ theme.name }}</button>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="row">
+                    <div class="col-auto clip-clipper">
+                        <a href="https://www.twitch.tv/{{ clip.creator_name }}" target="_blank" rel="noopener noreferrer">Clipped by {{ clip.creator_name }}</a>
+                    </div>
+                    {% if clip.category != None %}
+                        <div class="col clip-category text-end">
+                            <button class="btn clip-category-btn" type="button">{{ clip.category.name }}</button>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="row">
+                    {% if clip.subjects|length != 0 %}
+                        <div class="clip-subjects">
+                            Subjects: 
+                            {% for subject in clip.subjects %}
+                                {{ subject.name }}{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% if has_next %}
+<div class="col" id="load-clips" hx-get="/load-clips?page={{ currentPage }}&sort={{ sort }}&timeframe={{ timeframe }}" hx-trigger="revealed" hx-swap="outerHTML">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+{% endif %}

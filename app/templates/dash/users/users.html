@@ -1,0 +1,138 @@
+{% extends "dash/dashboard_base.html" %}
+
+{% block dash_content %}
+    <section class="content-header">
+        <h3>Users</h3>
+    </section>
+    <section class="main-content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-light">
+                    <div class="box-body">
+                        <div class="table-toolbar">
+                            <span></span>
+                            <span>
+                                <div class="input-group">
+                                    <input type="search" class="form-control" id="table-search" placeholder="Search" style="max-width: 200px;">
+                                    <a href="?page={{ num }}&size={{ size }}&order={{ order }}&sort={{ sort }}&search={{ search }}" class="btn btn-alveus-green" role="button" id="filterButton">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </a>
+                                </div>
+                            </span>
+                        </div>
+                        <div class="table-pagination">
+                            <span>
+                                <span>Showing {{ users.first }} to {{ users.last }} of {{ users.total }} rows</span>
+                                <span class="dropdown">
+                                    <button class="btn btn-alveus-green dropdown-toggle" type="button" id="sizeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        {{ users.per_page }}
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="sizeDropdown">
+                                        <li><a class="dropdown-item" href="?page={{ num }}&size=5&order={{ order }}&sort={{ sort }}&search={{ search }}">5</a></li>
+                                        <li><a class="dropdown-item" href="?page={{ num }}&size=10&order={{ order }}&sort={{ sort }}&search={{ search }}">10</a></li>
+                                        <li><a class="dropdown-item" href="?page={{ num }}&size=20&order={{ order }}&sort={{ sort }}&search={{ search }}">20</a></li>
+                                        <li><a class="dropdown-item" href="?page={{ num }}&size=30&order={{ order }}&sort={{ sort }}&search={{ search }}">30</a></li>
+                                        <li><a class="dropdown-item" href="?page={{ num }}&size=50&order={{ order }}&sort={{ sort }}&search={{ search }}">50</a></li>
+                                        <li><a class="dropdown-item" href="?page={{ num }}&size=100&order={{ order }}&sort={{ sort }}&search={{ search }}">100</a></li>
+                                    </ul>
+                                    per page
+                                </span>
+                            </span>
+                            <span id="tablePaginationTop">
+                                {% if users.per_page < users.total%}
+                                <div class="btn-group" role="group">
+                                    {% for num in pages %}
+                                        {% if num == None %}
+                                            <a href="#" class="btn btn-secondary disabled" tabindex="-1" role="button" aria-disabled="true">...</a>
+                                        {% elif num == page %}
+                                            <a href="#" class="btn btn-primary disabled" tabindex="-1" role="button" aria-disabled="true">{{ num }}</a>
+                                        {% else %}
+                                            <a href="?page={{ num }}&size={{ size }}&order={{ order }}&sort={{ sort }}&search={{ search }}" class="btn btn-alveus-green" tabindex="-1" role="button">{{ num }}</a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="table-container">
+                            <table class="table table-striped dashboard-table" id="userTable">
+                                <thead>
+                                    <tr>
+                                        {% for key, val in columns|items %}
+                                            {% if key == sort %}
+                                                {% if order == 'desc' %}
+                                                <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-down" style="margin-left: 10px;"></i></a></th>
+                                                {% else %}
+                                                <th><a href="?page={{ num }}&size={{ size }}&order=desc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-up" style="margin-left: 10px;"></i></a></th>
+                                                {% endif %}
+                                            {% else %}
+                                                <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort" style="margin-left: 10px;"></i></a></th>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if users.total > 0 %}
+                                        {% for user in users %}
+                                        <tr>
+                                            <td>{{ user.id }}</td>
+                                            <td>{{ user.twitch_id }}</td>
+                                            <td>{{ user.display_name }}</td>
+                                            <td>{{ user.contributions }}</td>
+                                            <td>{{ user.created_clips|length }}</td>
+                                            <td>{{ user.notes }}</td>
+                                            <td>{{ user.rank.name }}</td>
+                                            <td>{{ user.login_enabled }}</td>
+                                            <td>{{ user.updated_by_user.display_name }}</td>
+                                            <td>{{ user.updated_at }}</td>
+                                            <td style="white-space: nowrap;">
+                                                {% if current_user.rank_id >= 3 and current_user.rank_id > user.rank.id or current_user.rank_id == 4 %}
+                                                    <a href="{{ url_for('main.dash_users_edit', id=user.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
+                                                {% else %}
+                                                    <a href="{{ url_for('main.dash_users_edit', id=user.id) }}" class="btn btn-alveus-green disabled" role="button"><i class="fa-solid fa-pen"></i></a>
+                                                {% endif %}
+                                                {% if current_user.rank_id < 4 %}
+                                                    <a href="{{ url_for('main.dash_users_delete', id=user.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                {% else %}
+                                                    <a href="{{ url_for('main.dash_users_delete', id=user.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td class="text-center" colspan="100%">No users found.</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-pagination">
+                            <span>
+                                <span>Showing {{ users.first }} to {{ users.last }} of {{ users.total }} rows</span>
+                                <span class="dropup">
+                                    <button class="btn btn-alveus-green dropdown-toggle" type="button" id="sizeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        {{ users.per_page }}
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="sizeDropdown">
+                                        <li><a class="dropdown-item" href="#">5</a></li>
+                                        <li><a class="dropdown-item" href="#">10</a></li>
+                                        <li><a class="dropdown-item" href="#">20</a></li>
+                                        <li><a class="dropdown-item" href="#">30</a></li>
+                                        <li><a class="dropdown-item" href="#">50</a></li>
+                                        <li><a class="dropdown-item" href="#">100</a></li>
+                                    </ul>
+                                    per page
+                                </span>
+                            </span>
+                            <span id="tablePaginationBottom">
+                                <!-- Auto-filled from above -->
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

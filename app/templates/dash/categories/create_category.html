@@ -1,0 +1,55 @@
+{% extends "dash/dashboard_base.html" %}
+
+{% block dash_content %}
+    <section class="content-header">
+        <h3>Create Category</h3>
+        <a href="{{ url_for('main.dash_categories') }}"><button class="btn btn-alveus-tan">Back</button></a>
+    </section>
+    <section class="main-content">
+        <div class="row">
+            <div class="col-xl-6 offset-xl-3 col-lg-8 offset-lg-2 col-md-10 offset-md-1 col-sm-12">
+                <div class="box box-light">
+                    <div class="box-body">
+                        {% with errors = get_flashed_messages(category_filter=["form-error"]) %}
+                        {% if errors %}
+                            {% for msg in errors %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {{ msg }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                        {% endwith %}
+                        <form method="POST">
+                            {{ form.hidden_tag() }}
+                            <div class="row form-row">
+                                <div class="col-md-3 form-label">
+                                    {{ form.name.label }}
+                                </div>
+                                <div class="col-md-8 form-input-box">
+                                    {{ form.name(class="form-control") }}
+                                </div>
+                            </div>
+                            <div class="row form-row">
+                                <div class="col-md-3 form-label">
+                                    {{ form.notes.label }}
+                                </div>
+                                <div class="col-md-8 form-input-box">
+                                    {{ form.notes(class="form-control") }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-1 offset-md-8 form-actions">
+                                    {{ form.save(class="btn btn-alveus-green", type="submit") }}
+                                </div>
+                                <div class="col-md-1 offset-md-1 form-actions">
+                                    {{ form.cancel(class="btn btn-alveus-tan") }}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

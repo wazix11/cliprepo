@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+    <div class="wrapper">
+        <aside id="sidebar">
+            <div class="d-flex">
+                <button class="toggle-btn" type="button">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-item">
+                    <a href="{{ url_for('main.dashboard') }}" class="sidebar-link">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Dashboard Home</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                        data-bs-target="#clips" aria-expanded="false" aria-controls="clips">
+                        <i class="fa-solid fa-clapperboard"></i>
+                        <span>Clips</span>
+                    </a>
+                    <ul id="clips" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                        <li class="sidebar-item">
+                            <a href="{{ url_for('main.dash_clips') }}" class="sidebar-link">
+                                <span class="dot"></span>
+                                List All
+                            </a>
+                        </li>
+                        {% for label in sidebar %}
+                        <li class="sidebar-item">
+                            <a href="{{ url_for('main.dash_statuslabels_clips', id=label.id) }}" class="sidebar-link">
+                                <span class="dot" style="background-color: {{ label.color }};"></span>
+                                {{ label.name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">Import</a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="{{ url_for('auth.get_clips') }}" class="sidebar-link">Get Clips</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{{ url_for('main.dash_users') }}" class="sidebar-link">
+                        <i class="fa-solid fa-user"></i>
+                        <span>Users</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{{ url_for('main.dash_categories') }}" class="sidebar-link">
+                        <i class="fa-solid fa-table-list"></i>
+                        <span>Categories</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{{ url_for('main.dash_themes') }}" class="sidebar-link">
+                        <i class="fa-solid fa-palette"></i>
+                        <span>Themes</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                        data-bs-target="#subjects" aria-expanded="false" aria-controls="subjects">
+                        <i class="fa-solid fa-award"></i>
+                        <span>Subjects</span>
+                    </a>
+                    <ul id="subjects" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                        <li class="sidebar-item">
+                            <a href="{{ url_for('main.dash_subjects') }}" class="sidebar-link">Subjects</a>
+                        </li>
+                    </ul>
+                    <ul id="subjects" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                        <li class="sidebar-item">
+                            <a href="{{ url_for('main.dash_subject_categories') }}" class="sidebar-link">Subject Categories</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{{ url_for('main.dash_statuslabels') }}" class="sidebar-link">
+                        <i class="fa-solid fa-tag"></i>
+                        <span>Status Labels</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                        data-bs-target="#settings" aria-expanded="false" aria-controls="settings">
+                        <i class="fa-solid fa-gear"></i>
+                        <span>Settings</span>
+                    </a>
+                    <ul id="settings" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">Placeholder</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                        data-bs-target="#reports" aria-expanded="false" aria-controls="reports">
+                        <i class="fa-solid fa-chart-bar"></i>
+                        <span>Reports</span>
+                    </a>
+                    <ul id="reports" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">Activity Report</a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="#" class="sidebar-link">Clip Report</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+        <div class="main min-vh-100">
+            {% block dash_content %}{% endblock %}
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='scripts/dashboard.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,236 @@
+::after,
+::before {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    text-decoration: none;
+}
+
+li {
+    list-style: none;
+}
+
+.wrapper {
+    display: flex;
+}
+
+.main {
+    min-height: 100vh;
+    width: 100%;
+    transition: all 0.35s ease-in-out;
+}
+
+.content {
+    display: none;
+}
+
+.active {
+    display: block;
+}
+
+#sidebar {
+    width: 4.375rem;
+    min-width: 70px;
+    z-index: 1000;
+    transition: all .25s ease-in-out;
+    background-color: #333333;
+    display: flex;
+    flex-direction: column;
+}
+
+#sidebar.expand {
+    width: 260px;
+    min-width: 260px;
+}
+
+.toggle-btn {
+    background-color: transparent;
+    cursor: pointer;
+    border: 0;
+    padding: 16px 24px;
+}
+
+.toggle-btn i {
+    font-size: 1.5rem;
+    color: #ffffff;
+}
+
+#sidebar:not(.expand) a.sidebar-link span {
+    display: none;
+}
+
+.sidebar-nav {
+    padding: 32px 0;
+    padding-top: 0px;
+    flex: 1 1 auto;
+}
+
+a.sidebar-link {
+    padding: 10px 21px;
+    color: #ffffff;
+    display: block;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    border-left: 3px solid transparent;
+}
+
+.sidebar-link i {
+    flex-shrink: 0; /* Prevent the icon from shrinking */
+    font-size: 1.1rem;
+    margin-right: .75rem;
+    width: 20px;
+    text-align: center;
+}
+
+a.sidebar-link:hover {
+    background-color: rgba(255, 255, 255, .075);
+    border-left: 3px solid #B9DAFD;
+}
+
+.sidebar-item {
+    position: relative;
+}
+
+.sidebar-dropdown {
+    background-color: #414141;
+}
+
+#sidebar:not(.expand) .sidebar-item .sidebar-dropdown {
+    position: absolute;
+    top: 0;
+    left: 70px;
+    background-color: #2C2F2B;
+    padding: 0;
+    min-width: 15rem;
+    display: none;
+}
+
+#sidebar:not(.expand) .sidebar-item:hover .has-dropdown+.sidebar-dropdown {
+    display: block;
+    width: 100%;
+    opacity: 1;
+}
+
+#sidebar.expand .sidebar-link[data-bs-toggle="collapse"]::after {
+    border: solid;
+    border-width: 0 .075rem .075rem 0;
+    content: "";
+    display: inline-block;
+    padding: 2px;
+    position: absolute;
+    right: 1.5rem;
+    top: 1.1rem;
+    transform: rotate(-135deg);
+    transition: all .2s ease-out;
+}
+
+#sidebar.expand .sidebar-link[data-bs-toggle="collapse"].collapsed::after {
+    transform: rotate(45deg);
+    transition: all .2s ease-out;
+}
+
+.dot {
+    height: 0.938rem;
+    width: 0.938rem;
+    margin-right: 5px;
+    background-color: #bbb;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.box {
+    background: #FAEEE6;
+    border-radius: 10px;
+    border: 5px solid;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .1);
+    margin-bottom: 20px;
+    position: relative;
+    width: 100%;
+    color: #000;
+}
+.box.box-light {
+    border-color: rgba(241, 206, 183, .5);
+}
+.box-body {
+    padding: 10px;
+}
+
+.content-header {
+    padding: 15px;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.main-content {
+    margin-left: auto;
+    margin-right: auto;
+    min-height: 250px;
+    padding: 15px;
+}
+
+.table-toolbar,
+.table-pagination {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    white-space: nowrap;
+    margin-bottom: 3px;
+    margin-top: 3px;
+}
+.table-container {
+    position: relative;
+    overflow-x: auto;
+    max-height: 1000px;
+    width: 100%;
+}
+
+.table-container table {
+    border-collapse: collapse;
+}
+
+body {
+    overflow-x: hidden; /* Prevent the body from extending horizontally */
+}
+
+.dashboard-table th {
+    background: #FAEEE6;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+}
+.dashboard-table th a.btn {
+    padding: 0;
+    font-weight: bold;
+}
+
+.form-row {
+    margin-bottom: 10px;
+}
+.form-label {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    margin-bottom: 0;
+}
+.form-input-box {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+}
+.form-actions {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+.form-info {
+    color: #333333;
+    font-size: 0.9rem;
+    margin-top: -9px;
+}

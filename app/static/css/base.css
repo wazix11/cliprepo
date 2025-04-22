@@ -1,0 +1,179 @@
+/* Buttons */
+/* Alveus Green */
+.btn-alveus-green {
+    color: #ffffff;
+    background-color: #484D45;
+    border-color: #484D45;
+}
+.btn-alveus-green:hover,
+.btn-alveus-green:active {
+    color: #ffffff;
+    background-color: #2C2F2B;
+    border-color: #2C2F2B;
+}
+.btn-alveus-green:focus {
+    box-shadow: 0 0 0 4px rgba(99, 106, 96, 0.5);
+}
+.btn-alveus-green:disabled,
+.btn-alveus-green.dropdown-toggle {
+    background-color: #484D45;
+    border-color: #484D45;
+}
+.btn-alveus-green.dropdown-toggle:hover,
+.btn-alveus-green.dropdown-toggle:focus,
+.btn-alveus-green.dropdown-toggle:active {
+    color: #ffffff;
+    background-color: #2C2F2B;
+    border-color: #2C2F2B;
+}
+/* Alveus Tan */
+.btn-alveus-tan {
+    color: #000;
+    background-color: #FAEEE6;
+    border-color: #FAEEE6;
+}
+.btn-alveus-tan:hover,
+.btn-alveus-tan:active {
+    color: #000;
+    background-color: #F1CEB7;
+    border-color: #F1CEB7;
+}
+.btn-alveus-tan:focus {
+    box-shadow: 0 0 0 4px rgba(99, 106, 96, 0.5);
+}
+.btn-alveus-tan:disabled,
+.btn-alveus-tan.dropdown-toggle {
+    background-color: #FAEEE6;
+    border-color: #FAEEE6;
+}
+.btn-alveus-tan.dropdown-toggle:hover,
+.btn-alveus-tan.dropdown-toggle:focus,
+.btn-alveus-tan.dropdown-toggle:active {
+    color: #000;
+    background-color: #F1CEB7;
+    border-color: #F1CEB7;
+}
+.bootstrap-select .bs-placeholder .filter-option {
+    color: #A0A79E;
+}
+
+/* General section styling */
+.section {
+    position: relative;
+    z-index: 0;
+    width: 100%;
+}
+
+.section .container {
+    margin-left: auto;
+    margin-right: auto;
+    padding: 2rem;
+}
+
+/* Light theme */
+.section-light {
+    color: #000000;
+    background-color: #FAEEE6; /* bg-alveus-tan */
+}
+
+/* Dark theme */
+.section-dark {
+    color: #ffffff;
+    background-color: #484D45; /* bg-alveus-green */
+}
+
+/* Background texture for light theme */
+.section-light::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -10;
+    background-image: url('../textures/topography.svg');
+    background-repeat: repeat;
+    background-position: center;
+    background-attachment: fixed;
+    opacity: 0.03;
+}
+
+/* Background texture for dark theme */
+.section-dark::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -10;
+    background-image: url('../textures/dust.svg');
+    background-repeat: repeat;
+    background-position: center;
+    background-attachment: fixed;
+    opacity: 0.06;
+}
+
+/* Color Palettes */
+/* Alveus Green */
+.bg-alveus-green {
+    background-color: #636A60;
+}
+.bg-alveus-green-50 {
+    background-color: #E9EBE9;
+}
+.bg-alveus-green-100 {
+    background-color: #DFE1DE;
+}
+.bg-alveus-green-200 {
+    background-color: #CACEC8;
+}
+.bg-alveus-green-300 {
+    background-color: #B5BAB3;
+}
+.bg-alveus-green-400 {
+    background-color: #A0A79E;
+}
+.bg-alveus-green-500 {
+    background-color: #8C9388;
+}
+.bg-alveus-green-600 {
+    background-color: #777F73;
+}
+.bg-alveus-green-700 {
+    background-color: #636A60;
+}
+.bg-alveus-green-800 {
+    background-color: #484D45;
+}
+.bg-alveus-green-900 {
+    background-color: #2C2F2B;
+}
+/* Alveus Tan */
+.bg-alveus-tan {
+    background-color: #FAEEE6;
+}
+.bg-alveus-tan-50 {
+    background-color: #FDFAF7;
+}
+.bg-alveus-tan-100 {
+    background-color: #FAEEE6;
+}
+.bg-alveus-tan-200 {
+    background-color: #F1CEB7;
+}
+.bg-alveus-tan-300 {
+    background-color: #E7AE88;
+}
+.bg-alveus-tan-400 {
+    background-color: #DE8F5A;
+}
+.bg-alveus-tan-500 {
+    background-color: #D56F2B;
+}
+.bg-alveus-tan-600 {
+    background-color: #A65621;
+}
+.bg-alveus-tan-700 {
+    background-color: #773E18;
+}
+.bg-alveus-tan-800 {
+    background-color: #49260F;
+}
+.bg-alveus-tan-900 {
+    background-color: #1A0E05;
+}
