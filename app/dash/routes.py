@@ -210,7 +210,23 @@ def dash_clips_edit(id):
         form.category.choices = [(c.id, c.name) for c in Category.query.order_by('id')]
         form.status.choices = [(st.id, st.name) for st in Status.query.order_by('id')]
         form.themes.choices = [(t.id, t.name) for t in Theme.query.order_by('id')]
-        form.subjects.choices = [(su.id, su.name) for su in Subject.query.order_by('id')]
+        form.subjects.choices = []
+        form.subjects.option_attrs = {}
+
+        for sc in SubjectCategory.query.order_by('id'):
+            subjects = Subject.query.filter(Subject.category_id == sc.id).order_by('id').all()
+            if not subjects:
+                continue
+
+            group_choices = []
+            for su in subjects:
+                group_choices.append((su.id, su.name))
+                form.subjects.option_attrs[str(su.id)] = {
+                    'data-subtext': su.subtext or '',
+                    'data-tokens': su.keywords or ''
+                }
+
+            form.subjects.choices.append((sc.name, group_choices))
     else:
         return redirect(url_for('main.dash_clips'))
     
