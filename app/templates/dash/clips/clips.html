@@ -80,7 +80,7 @@
                                             <td style="max-width: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ clip.twitch_id }}</td>
                                             <td>{{ clip.broadcaster_name }}</td>
                                             <td>{{ clip.creator_name }}</td>
-                                            <td>{{ clip.title }}</td>
+                                            <td><a href="{{ clip.url }}" target="_blank" rel="noopener noreferrer">{{ clip.title }}</a></td>
                                             <td>{{ clip.title_override }}</td>
                                             <td>{{ clip.view_count }}</td>
                                             <td>{{ clip.created_at }}</td>
