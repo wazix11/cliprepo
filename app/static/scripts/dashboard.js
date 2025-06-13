@@ -59,16 +59,6 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 
-// unfinished function to update tables without page refresh
-async function loadTable() {
-  const response = await fetch('/load_table', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json;'},
-  })
-  const data = await response.json();
-  console.log(data);
-}
-
 function addPagination() {
   const paginationTop = document.getElementById('tablePaginationTop');
   const paginationBottom = document.getElementById('tablePaginationBottom');

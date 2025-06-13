@@ -133,21 +133,6 @@ def dash_clips():
                     # Clip.subjects.ilike(f'%{search}%')
                 )
             ).order_by(db.func.count(Clip.id).desc() if order == 'desc' else db.func.count(Clip.id).asc())
-        elif sort == 'rank':
-            query = Clip.query.outerjoin(Rank, Clip.rank_id == Rank.id).filter(
-                or_(
-                    Clip.twitch_id.ilike(f'%{search}%'),
-                    Clip.broadcaster_name.ilike(f'%{search}%'),
-                    Clip.creator_name.ilike(f'%{search}%'),
-                    Clip.title.ilike(f'%{search}%'),
-                    Clip.title_override.ilike(f'%{search}%'),
-                    Clip.notes.ilike(f'%{search}%'),
-                    # Clip.category.ilike(f'%{search}%'),
-                    # Clip.status.ilike(f'%{search}%'),
-                    # Clip.themes.ilike(f'%{search}%'),
-                    # Clip.subjects.ilike(f'%{search}%')
-                )
-            ).order_by(Rank.id.desc() if order == 'desc' else Rank.id.asc())
         else:
             query = Clip.query.filter(
                 or_(
@@ -1301,21 +1286,6 @@ def dash_statuslabels_clips(id):
                 ),
                 Clip.status_id == id
             ).order_by(db.func.count(Clip.id).desc() if order == 'desc' else db.func.count(Clip.id).asc())
-        elif sort == 'rank':
-            query = Clip.query.outerjoin(Rank, Clip.rank_id == Rank.id).filter(
-                or_(
-                    Clip.twitch_id.ilike(f'%{search}%'),
-                    Clip.broadcaster_name.ilike(f'%{search}%'),
-                    Clip.creator_name.ilike(f'%{search}%'),
-                    Clip.title.ilike(f'%{search}%'),
-                    Clip.title_override.ilike(f'%{search}%'),
-                    Clip.notes.ilike(f'%{search}%'),
-                    # Clip.category.ilike(f'%{search}%'),
-                    # Clip.themes.ilike(f'%{search}%'),
-                    # Clip.subjects.ilike(f'%{search}%')
-                ),
-                Clip.status_id == id
-            ).order_by(Rank.id.desc() if order == 'desc' else Rank.id.asc())
         else:
             query = Clip.query.filter(
                 or_(

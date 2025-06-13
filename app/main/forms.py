@@ -1,10 +1,11 @@
 from flask_wtf import FlaskForm
 from wtforms import SelectField, SelectMultipleField, StringField, SubmitField
-from wtforms.validators import DataRequired, ValidationError
+from app.dash.forms import SelectPickerWidget
 
 class ClipFilterForm(FlaskForm):
     category = SelectField('Category', coerce=int)
-    theme = SelectField('Theme', coerce=int)
-    featured = SelectMultipleField('Featured', coerce=int)
-    text_filter = StringField('Text Filter')
-    filter = SubmitField('Filter')
+    theme = SelectMultipleField('Theme', coerce=int)
+    subject = SelectMultipleField('Subject', coerce=int, widget=SelectPickerWidget())
+    search = StringField('Text Filter')
+    filter = SubmitField('Apply')
+    clear = SubmitField('Clear')

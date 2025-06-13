@@ -4,6 +4,7 @@
     color: #ffffff;
     background-color: #484D45;
     border-color: #484D45;
+    --bs-btn-active-color: #ffffff;
 }
 .btn-alveus-green:hover,
 .btn-alveus-green:active {

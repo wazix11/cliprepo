@@ -1,4 +1,4 @@
-<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mt-0">
     {% for clip in clips %}
     <div class="col">
         <div class="clip">
@@ -50,7 +50,11 @@
     {% endfor %}
 </div>
 {% if has_next %}
-<div class="col" id="load-clips" hx-get="/load-clips?page={{ currentPage }}&sort={{ sort }}&timeframe={{ timeframe }}" hx-trigger="revealed" hx-swap="outerHTML">
+<div class="col" id="load-more"
+     hx-post="/load-clips?page={{ currentPage }}&sort={{ sort }}&timeframe={{ timeframe }}"
+     hx-trigger="revealed"
+     hx-target="#load-more"
+     hx-swap="outerHTML">
     <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
     </div>

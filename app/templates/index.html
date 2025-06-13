@@ -10,78 +10,85 @@
                 <nav class="navbar navbar-dark navbar-expand-md">
                     <div class="container-fluid rounded py-2 bg-alveus-tan">
                         <ul class="nav navbar-nav ml-auto">
-                            <div class="btn-group" role="group" aria-label="Sort group with dropdown">
-                                <a href="/?sort=new" class="btn btn-alveus-green rounded-pill mx-1" role="button">New</a>
-                                <a href="/?sort=old" class="btn btn-alveus-green rounded-pill mx-1" role="button">Old</a>
-                                <div class="btn-group mx-1" role="group">
-                                    <button id="btnGroupTop" type="button" class="btn btn-alveus-green rounded-pill dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Top
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="btnGroupTop">
-                                        <li><a class="dropdown-item" href="/?sort=top&timeframe=24h">24H</a></li>
-                                        <li><a class="dropdown-item" href="/?sort=top&timeframe=7d">7D</a></li>
-                                        <li><a class="dropdown-item" href="/?sort=top&timeframe=30d">30D</a></li>
-                                        <li><a class="dropdown-item" href="/?sort=top&timeframe=1y">1Y</a></li>
-                                        <li><a class="dropdown-item" href="/?sort=top&timeframe=all">ALL</a></li>
-                                    </ul>
-                                </div>
+                            <button type="button" class="btn btn-alveus-green mx-1 sort-btn" data-sort="new">New</button>
+                            <button type="button" class="btn btn-alveus-green mx-1 sort-btn" data-sort="old">Old</button>
+                            <div class="dropdown mx-1">
+                                <button class="btn btn-alveus-green dropdown-toggle" type="button" id="topDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Top
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="topDropdown">
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="top" data-timeframe="24h">24H</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="top" data-timeframe="7d">7D</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="top" data-timeframe="30d">30D</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="top" data-timeframe="1y">1Y</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="top" data-timeframe="all">ALL</a></li>
+                                </ul>
                             </div>
                         </ul>
                         <ul class="nav navbar-nav mr-auto">
-                            <select class="selectpicker mx-1" id="categorySelect" data-style="btn-alveus-green rounded-pill" data-width="fit" placeholder="Select Category">
-                                <option selected>All Categories</option>
-                                <option>Live Cams</option>
-                                <option>Animal Care</option>
-                                <option>Shows</option>
-                                <option>Events</option>
-                                <option>Collabs</option>
-                                <option>Projects</option>
-                                <option>Bug Hunt</option>
-                                <option>Volunteer Day</option>
-                                <option>Other</option>
-                            </select>
-                            <select class="selectpicker mx-1" id="themeSelect" data-style="btn-alveus-green rounded-pill" data-width="fit" placeholder="Select Theme">
-                                <option selected>All Themes</option>
-                                <option>Funny</option>
-                                <option>Cute</option>
-                                <option>Informational</option>
-                                <option>Gross</option>
-                                <option>Drama</option>
-                            </select>
-                            <select class="selectpicker mx-1" id="featuredSelect" multiple data-style="btn-alveus-green rounded-pill" data-width="fit" data-live-search="true" data-actions-box="true" data-selected-text-format="count > 3" placeholder="Select Featured">
-                                <optgroup label="Staff">
-                                    <option data-tokens="ceo boss">Maya</option>
-                                    <option data-tokens="">Ella</option>
-                                    <option data-tokens="chase custard">Connor</option>
-                                    <option data-tokens="">Kayla</option>
-                                    <option data-tokens="">Lindsay</option>
-                                    <option data-tokens="">Sruti</option>
-                                </optgroup>
-                                <optgroup label="Ambassadors">
-                                    <option data-tokens="" data-subtext="Fox">Reed</option>
-                                    <option data-tokens="" data-subtext="Fox">Fenn</option>
-                                    <option data-tokens="moo pasture" data-subtext="Cow">Winnie</option>
-                                    <option data-tokens="pasture" data-subtext="Emu">Stompy</option>
-                                    <option data-tokens="pasture" data-subtext="Donkey">Serrano</option>
-                                    <option data-tokens="pasture" data-subtext="Donkey">Jalapeno</option>
-                                </optgroup>
-                                <optgroup label="Other Animals">
-                                    <option data-tokens="fudgy pasture" data-subtext="Horse">Acero</option>
-                                </optgroup>
-                            </select>
-                            <input type="search" class="form-control rounded-pill mx-1" placeholder="Filter..." style="max-width: 200px;">
-                            <button class="btn btn-alveus-green rounded-pill mx-1" type="button" id="filterButton">
-                                Apply Filters <i class="fa-solid fa-filter text-white"></i>
-                            </button>
+                            <form id="filter-form" class="d-flex align-items-center flex-wrap" 
+                                hx-post="/load-clips" 
+                                hx-target="#load-clips" 
+                                hx-swap="innerHTML">
+                                <input type="hidden" name="sort" id="sort-input" value="">
+                                <input type="hidden" name="timeframe" id="timeframe-input" value="">
+                                <select name="category" class="form-control selectpicker mx-1" 
+                                    data-style="btn-alveus-green" 
+                                    data-width="160px">
+                                    <option value="">Select a category</option>
+                                    {% for category in categories %}
+                                        <option value="{{ category.id }}" {% if selected_category and category.id == selected_category %}selected{% endif %}>{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <select name="themes" class="form-control selectpicker mx-1" 
+                                    data-style="btn-alveus-green" 
+                                    data-width="160px" multiple
+                                    title="Select theme(s)"
+                                    data-selected-text-format="count > 3">
+                                    {% for theme in themes %}
+                                        <option value="{{ theme.id }}" {% if theme.id in selected_themes %}selected{% endif %}>{{ theme.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <select name="subjects" class="form-control selectpicker mx-1" 
+                                    data-style="btn-alveus-green" 
+                                    data-width="160px" multiple 
+                                    data-live-search="true"
+                                    data-actions-box="true"
+                                    title="Select subject(s)"
+                                    data-selected-text-format="count > 3">
+                                    {% for subject_category in subject_categories %}
+                                        <optgroup label="{{ subject_category[0] }}">
+                                            {% for subject in subject_category[1] %}
+                                                <option value="{{ subject.id }}" data-subtext="{{ subject.subtext }}" data-tokens="{{ subject.keywords }}" {% if subject.id in selected_subjects %}selected{% endif %}>{{ subject.name }}</option>
+                                            {% endfor %}
+                                        </optgroup>
+                                    {% endfor %}
+                                </select>
+                                <input type="text" name="search" class="form-control mx-1" 
+                                    style="max-width: 200px;" 
+                                    placeholder="Filter..."
+                                    value="{{ search }}">
+                                <button type="submit" class="btn btn-alveus-green mx-1">Filter</button>
+                            </form>
                         </ul>
                     </div>
                 </nav>
             </div>
         </div>
-        <div class="col" id="load-clips" hx-get="/load-clips?page=1&sort={{ sort }}&timeframe={{ timeframe }}" hx-trigger="revealed" hx-swap="outerHTML">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+        <div class="col" id="load-clips">
+            {% include "additional_clips.html" %}
         </div>
     </div>
+    <script>
+        document.querySelectorAll('.sort-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const sort = btn.getAttribute('data-sort');
+                const timeframe = btn.getAttribute('data-timeframe') || 'all';
+                document.getElementById('sort-input').value = sort;
+                document.getElementById('timeframe-input').value = timeframe;
+                document.getElementById('filter-form').dispatchEvent(new Event('submit', { cancelable: true }));
+            });
+        });
+    </script>
 {% endblock %}

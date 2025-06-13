@@ -41,41 +41,58 @@ def format_upload_date(upload_date_str):
     else:
         return f"{int(seconds)} second{'s' if seconds > 1 else ''} ago"
     
-def format_clips(page, sort, timeframe):
+def format_clips(page, sort, timeframe, category=None, themes=[], subjects=[], search=''):
     now = dt.now(timezone.utc)
     per_page = 12
+    filters = []
+    if category:
+        filters.append(Clip.category_id == category)
+    if themes:
+        for theme_id in themes:
+            filters.append(Clip.themes.any(Theme.id == theme_id))
+    if subjects:
+        for subject_id in subjects:
+            filters.append(Clip.subjects.any(Subject.id == subject_id))
+    if search:
+        search_pattern = f"%{search.strip()}%"
+        filters.append(Clip.title.ilike(search_pattern) | 
+                       Clip.title_override.ilike(search_pattern) |
+                       Clip.broadcaster_name.ilike(search_pattern) | 
+                       Clip.creator_name.ilike(search_pattern) |
+                       Clip.category.has(Category.name.ilike(search_pattern)) |
+                       Clip.themes.any(Theme.name.ilike(search_pattern)) |
+                       Clip.subjects.any(Subject.name.ilike(search_pattern)))
+    
     if sort == 'new':
-        clips_new = Clip.query.filter(Clip.duration != 0)
-        clips = clips_new.order_by(Clip.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        order_by = Clip.created_at.desc()
     elif sort == 'old':
-        clips_old = Clip.query.filter(Clip.duration != 0)
-        clips = clips_old.order_by(Clip.created_at.asc()).paginate(page=page, per_page=per_page, error_out=False)
+        order_by = Clip.created_at.asc()
     else:
+        order_by = Clip.view_count.desc()
         if timeframe == '24h':
             last_24_hours = now - timedelta(days=1)
-            clips_last_24_hours = Clip.query.filter(Clip.created_at >= last_24_hours)
-            clips = clips_last_24_hours.order_by(Clip.view_count.desc()).paginate(page=page, per_page=per_page, error_out=False)
+            filters.append(Clip.created_at >= last_24_hours)
         elif timeframe == '7d':
             last_7_days = now - timedelta(days=7)
-            clips_last_7_days = Clip.query.filter(Clip.created_at >= last_7_days)
-            clips = clips_last_7_days.order_by(Clip.view_count.desc()).paginate(page=page, per_page=per_page, error_out=False)
+            filters.append(Clip.created_at >= last_7_days)
         elif timeframe == '30d':
             last_30_days = now - timedelta(days=30)
-            clips_last_30_days = Clip.query.filter(Clip.created_at >= last_30_days)
-            clips = clips_last_30_days.order_by(Clip.view_count.desc()).paginate(page=page, per_page=per_page, error_out=False)
+            filters.append(Clip.created_at >= last_30_days)
         elif timeframe == '1y':
             last_1_year = now - timedelta(days=365)
-            clips_last_1_year = Clip.query.filter(Clip.created_at >= last_1_year)
-            clips = clips_last_1_year.order_by(Clip.view_count.desc()).paginate(page=page, per_page=per_page, error_out=False)
-        else:
-            clips_all_time = Clip.query.filter(Clip.duration != 0)
-            clips = clips_all_time.order_by(Clip.view_count.desc()).paginate(page=page, per_page=per_page, error_out=False)
+            filters.append(Clip.created_at >= last_1_year)
+
+    # filters.append(Clip.status.has(Status.type != 'Hidden'))
+    query = Clip.query.filter(*filters)
+    clips = query.order_by(order_by).paginate(page=page, per_page=per_page, error_out=False)
+
     formatted_clips = [{
         'url': clip.url,
         'embed_url': clip.embed_url,
         'broadcaster_name': clip.broadcaster_name,
         'creator_name': clip.creator_name,
         'title': clip.title,
+        'title_override': clip.title_override,
         'view_count': format_view_count(clip.view_count),
         'created_at': format_upload_date(clip.created_at),
         'thumbnail_url': clip.thumbnail_url,
@@ -89,22 +106,111 @@ def format_clips(page, sort, timeframe):
     
     return formatted_clips, has_next
 
+def set_session_filters(route, sort='top', timeframe='all', category='', themes=[], subjects=[], search=''):
+    session[route] = {
+        'sort': sort,
+        'timeframe': timeframe,
+        'category': category,
+        'themes': themes,
+        'subjects': subjects,
+        'search': search
+    }
+
+def get_session_filters(route):
+    if route in session:
+        return session[route]
+    return {
+        'sort': 'top',
+        'timeframe': 'all',
+        'category': None,
+        'themes': [],
+        'subjects': [],
+        'search': ''
+    }
+    
+def get_value(request_value, session_value, default):
+    if request_value is not None:
+        return request_value
+    if session_value is not None:
+        return session_value
+    return default
+
 # Home page
-@bp.route('/')
+@bp.route('/', methods=['GET', 'POST'])
 def index():
-    form = ClipFilterForm()
-    sort = request.args.get('sort', 'top', type=str)
-    timeframe = request.args.get('timeframe', 'all', type=str)
-    return render_template('index.html', title='Home', sort=sort, timeframe=timeframe)
+    categories = Category.query.order_by('id').all()
+    theme_choices = Theme.query.order_by('id').all()
+    subject_choices = Subject.query.order_by('id').all()
+    subject_categories = []
+
+    # Group subjects by category
+    for sc in SubjectCategory.query.order_by('id'):
+        subject_choices = Subject.query.filter(Subject.category_id == sc.id).order_by('id').all()
+        if not subject_choices:
+            continue
+        group_choices = []
+        for su in subject_choices:
+            group_choices.append({
+                'id': su.id, 
+                'name': su.name,
+                'subtext': su.subtext or '',
+                'keywords': su.keywords or ''
+                })
+        subject_categories.append((sc.name, group_choices))
+    
+    # Get filters from session
+    session_filters = get_session_filters('main')
+    sort = get_value(request_value=None, session_value=session_filters.get('sort'), default='top')
+    timeframe = get_value(None, session_filters.get('timeframe'), 'all')
+    category = get_value(None, session_filters.get('category'), None)
+    themes = get_value(None, session_filters.get('themes', []), [])
+    subjects = get_value(None, session_filters.get('subjects', []), [])
+    search = get_value(None, session_filters.get('search'), '')
+    page = 1
+    
+    formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, search)
+    return render_template(
+        'index.html',
+        title='Home',
+        categories=categories,
+        themes=theme_choices,
+        subjects=subject_choices,
+        subject_categories=subject_categories,
+        clips=formatted_clips,
+        has_next=has_next,
+        currentPage=2,
+        sort=sort,
+        timeframe=timeframe,
+        selected_category=category,
+        selected_themes=themes,
+        selected_subjects=subjects,
+        search=search
+    )
 
 # Loads more clips and adds them to the main page as you scroll down
-@bp.route('/load-clips')
+@bp.route('/load-clips', methods=['POST'])
 def load_clips():
-    page = request.args.get('page', 2, type=int)
-    sort = request.args.get('sort', 'top', type=str)
-    timeframe = request.args.get('timeframe', 'all', type=str)
-    formatted_clips, has_next = format_clips(page, sort, timeframe)
-    return render_template('additional_clips.html', currentPage=page+1, sort=sort, timeframe=timeframe, clips=formatted_clips, has_next=has_next)
+    page = request.args.get('page', 1, type=int)
+    sort = request.form.get('sort', type=str)
+    timeframe = request.form.get('timeframe', type=str)
+    category = request.form.get('category', type=int)
+    themes = request.form.getlist('themes', type=int)
+    subjects = request.form.getlist('subjects', type=int)
+    search = request.form.get('search', type=str)
+    
+    # Set session filters
+    set_session_filters('main', sort, timeframe, category, themes, subjects, search)
+
+    # Sort and paginate
+    formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, search)
+    return render_template(
+        'additional_clips.html', 
+        currentPage=page+1, 
+        sort=sort, 
+        timeframe=timeframe, 
+        clips=formatted_clips, 
+        has_next=has_next
+    )
 
 @bp.route('/about')
 def about():
