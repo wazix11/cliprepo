@@ -1,5 +1,5 @@
 from flask import render_template, flash, redirect, url_for, request, session
-import math
+import math, os
 from datetime import datetime, timezone
 from flask_login import current_user, login_required
 from app.main import bp
@@ -10,6 +10,7 @@ from sqlalchemy import or_
 from app.dash.forms import *
 
 load_dotenv()
+EMBED_PARENT = os.environ.get('EMBED_PARENT')
 
 def set_session_filters(route, page=1, size=20, order='asc', sort='id', search=''):
     session[route] = {
@@ -246,7 +247,7 @@ def dash_clips_edit(id):
             current_clip.updated_at = datetime.now(timezone.utc)
             db.session.commit()
             return redirect(url_for('main.dash_clips'))
-    return render_template('dash/clips/edit_clip.html', title='Dashboard - Edit Clip', sidebar=sidebar_labels, form=form, clip=current_clip)
+    return render_template('dash/clips/edit_clip.html', title='Dashboard - Edit Clip', sidebar=sidebar_labels, form=form, clip=current_clip, embed_parent=EMBED_PARENT)
 
 @bp.route('/dashboard/clips/<id>/delete', methods=['GET', 'POST'])
 @login_required
