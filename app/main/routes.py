@@ -1,7 +1,5 @@
-from flask import render_template, flash, redirect, url_for, current_app, request, session
-import re, time, os
+from flask import render_template, request, session
 from datetime import datetime as dt, timedelta, timezone
-from flask_login import current_user, login_required
 from app.main.forms import *
 from app.main import bp
 from dotenv import load_dotenv
@@ -160,7 +158,7 @@ def index():
     
     # Get filters from session
     session_filters = get_session_filters('main')
-    sort = get_value(request_value=None, session_value=session_filters.get('sort'), default='top')
+    sort = get_value(None, session_filters.get('sort'), default='top')
     timeframe = get_value(None, session_filters.get('timeframe'), 'all')
     category = get_value(None, session_filters.get('category'), None)
     themes = get_value(None, session_filters.get('themes', []), [])
@@ -190,13 +188,14 @@ def index():
 # Loads more clips and adds them to the main page as you scroll down
 @bp.route('/load-clips', methods=['POST'])
 def load_clips():
+    session_filters = get_session_filters('main')
     page = request.args.get('page', 1, type=int)
-    sort = request.form.get('sort', type=str)
-    timeframe = request.form.get('timeframe', type=str)
-    category = request.form.get('category', type=int)
-    themes = request.form.getlist('themes', type=int)
-    subjects = request.form.getlist('subjects', type=int)
-    search = request.form.get('search', type=str)
+    sort = get_value(request.form.get('sort'), session_filters.get('sort'), 'top')
+    timeframe = get_value(request.form.get('timeframe'), session_filters.get('timeframe'), 'all')
+    category = get_value(request.form.get('category'), session_filters.get('category'), None)
+    themes = get_value(request.form.getlist('themes'), session_filters.get('themes', []), [])
+    subjects = get_value(request.form.getlist('subjects'), session_filters.get('subjects', []), [])
+    search = get_value(request.form.get('search'), session_filters.get('search'), '')
     
     # Set session filters
     set_session_filters('main', sort, timeframe, category, themes, subjects, search)

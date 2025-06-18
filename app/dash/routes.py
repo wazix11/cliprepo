@@ -8,6 +8,7 @@ from decorators import rank_required
 from app.models import *
 from sqlalchemy import or_
 from app.dash.forms import *
+from app.scheduler.tasks.update_clips import update_clips
 
 load_dotenv()
 EMBED_PARENT = os.environ.get('EMBED_PARENT')
@@ -276,6 +277,13 @@ def dash_clips_delete(id):
             return redirect(url_for('main.dash_clips'))
     return render_template('dash/clips/delete_clip.html', title='Dashboard - Delete Clip', sidebar=sidebar_labels, form=form, clip=clip)
     
+@bp.route('/get_clips')
+@login_required
+@rank_required('SUPERADMIN', 'ADMIN')
+def get_clips():
+    update_clips()
+    return redirect(url_for('main.dash_clips'))
+
 # 
 # 
 # 
@@ -287,7 +295,7 @@ def dash_clips_delete(id):
 #
 @bp.route('/dashboard/users')
 @login_required
-@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+@rank_required('SUPERADMIN', 'ADMIN')
 def dash_users():
     filters = get_session_filters('users')
     page = get_value(request.args.get('page', type=int), filters.get('page') if filters else None, 1)

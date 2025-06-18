@@ -160,4 +160,4 @@ cython_debug/
 #.idea/
 
 app.db
-migrations/
+latest_clip_created_at.txt

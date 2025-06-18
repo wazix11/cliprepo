@@ -41,9 +41,11 @@
                         <li class="sidebar-item">
                             <a href="#" class="sidebar-link">Import</a>
                         </li>
-                        <li class="sidebar-item">
-                            <a href="{{ url_for('auth.get_clips') }}" class="sidebar-link">Get Clips</a>
-                        </li>
+                        {% if current_user.rank.name in ['SUPERADMIN', 'ADMIN'] %}
+                            <li class="sidebar-item">
+                                <a href="{{ url_for('main.get_clips') }}" class="sidebar-link">Get Clips</a>
+                            </li>
+                        {% endif %}
                     </ul>
                 </li>
                 <li class="sidebar-item">

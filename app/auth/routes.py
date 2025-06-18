@@ -1,12 +1,11 @@
 import os, secrets, requests
 from urllib.parse import urlencode
 from dotenv import load_dotenv
-from datetime import datetime, timezone
-from flask import render_template, redirect, url_for, flash, abort, session, request
-from flask_login import login_user, logout_user, login_required, current_user
-from app import db, scheduler
+from flask import redirect, url_for, flash, abort, session, request
+from flask_login import login_user, logout_user, current_user
+from app import db
 from app.auth import bp
-from app.models import User, Clip
+from app.models import User
 
 load_dotenv()
 TWITCH_CLIENT_ID = os.environ.get('TWITCH_CLIENT_ID')
@@ -19,91 +18,13 @@ TWITCH_USERINFO_URL = 'https://api.twitch.tv/helix/users'
 TWITCH_CLIP_URL = 'https://api.twitch.tv/helix/clips'
 TWITCH_VALIDATE_URL = 'https://id.twitch.tv/oauth2/validate'
 TWITCH_REVOKE_URL = 'https://id.twitch.tv/oauth2/revoke'
+SUPERADMIN_NAMES = os.environ.get('SUPERADMIN_NAMES').lower().split(',')
 
 @bp.route('/logout')
 def logout():
     logout_user()
-    if scheduler.running:
-        scheduler.shutdown()
     flash('You have been logged out.', 'info')
     return redirect(url_for('main.index'))
-
-def update_client_credentials():
-    params = {
-        'client_id': TWITCH_CLIENT_ID,
-        'client_secret': TWITCH_CLIENT_SECRET,
-        'grant_type': 'client_credentials'
-    }
-    response = requests.post(TWITCH_TOKEN_URL, data=params)
-    data = response.json()
-    global TWITCH_CLIENT_ACCESS_TOKEN
-    TWITCH_CLIENT_ACCESS_TOKEN = data['access_token']
-
-# TODO: add error checking to make sure the access token is valid and get clips from AlveusSanctuary
-@bp.route('/get_clips')
-@login_required
-def get_clips():
-    if current_user.rank.name in ['SUPERADMIN', 'ADMIN', 'MODERATOR']:
-        if TWITCH_CLIENT_ACCESS_TOKEN == '':
-            update_client_credentials()
-        print(TWITCH_CLIENT_ACCESS_TOKEN)
-        headers = {
-            'Authorization': f'Bearer {TWITCH_CLIENT_ACCESS_TOKEN}',
-            'Client-Id': TWITCH_CLIENT_ID
-        }
-        qs = urlencode({
-            'broadcaster_id': 636587384,
-            'first': 100
-        })
-        response = requests.get(TWITCH_CLIP_URL + '?' + qs, headers=headers)
-        data = response.json()
-        clips_to_add = []
-        for clip in data['data']:
-            existing_clip = Clip.query.filter_by(twitch_id=clip['id']).first()
-
-            if existing_clip:
-                # Update existing clip fields
-                existing_clip.url = clip['url']
-                existing_clip.embed_url = clip['embed_url']
-                existing_clip.broadcaster_id = clip['broadcaster_id']
-                existing_clip.broadcaster_name = clip['broadcaster_name']
-                existing_clip.creator_id = clip['creator_id']
-                existing_clip.creator_name = clip['creator_name']
-                existing_clip.title = clip['title']
-                existing_clip.view_count = clip['view_count']
-                existing_clip.created_at = clip['created_at']
-                existing_clip.thumbnail_url = clip['thumbnail_url']
-                existing_clip.duration = clip['duration']
-                existing_clip.is_featured = clip['is_featured']
-            else:
-                # Create a new clip if it doesn't exist
-                new_clip = Clip(
-                    twitch_id=clip['id'],
-                    url=clip['url'],
-                    embed_url=clip['embed_url'],
-                    broadcaster_id=clip['broadcaster_id'],
-                    broadcaster_name=clip['broadcaster_name'],
-                    creator_id=clip['creator_id'],
-                    creator_name=clip['creator_name'],
-                    video_id=clip['video_id'],
-                    game_id=clip['game_id'],
-                    language=clip['language'],
-                    title=clip['title'],
-                    view_count=clip['view_count'],
-                    created_at=clip['created_at'],
-                    thumbnail_url=clip['thumbnail_url'],
-                    duration=clip['duration'],
-                    vod_offset=clip['vod_offset'],
-                    is_featured=clip['is_featured']
-                )
-                clips_to_add.append(new_clip)
-
-        if clips_to_add:
-            db.session.add_all(clips_to_add)
-        db.session.commit()
-        return redirect(url_for('main.index'))
-    else:
-        return redirect(url_for('main.index'))
 
 def validate_access_token(access_token):
     headers = {
@@ -149,8 +70,6 @@ def check_access_token():
             current_user.refresh_token = new_token_response.get('refresh_token')
             # Update the user's access token in the database
             db.session.commit()
-
-# scheduler.add_job(check_access_token, 'interval', hours=1)
 
 def get_client_access_token():
     pass
@@ -237,13 +156,16 @@ def oauth2_callback():
     # find or create the user in the database
     user = db.session.scalar(db.select(User).where(User.twitch_id == user_id))
     if user is None:
+        rank_id = 1
+        if user_display_name.lower() in SUPERADMIN_NAMES:
+            rank_id = 4
         user = User(twitch_id=user_id, 
                     login=user_login, 
                     display_name=user_display_name, 
                     profile_image_url=user_profile_image_url,
                     access_token=oauth2_token,
                     refresh_token=user_refresh_token,
-                    rank_id=1)
+                    rank_id=rank_id)
         db.session.add(user)
         db.session.commit()
     else:
@@ -257,5 +179,4 @@ def oauth2_callback():
 
     # log the user in
     login_user(user)
-    scheduler.start()
     return redirect(url_for('main.index'))
