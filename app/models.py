@@ -35,13 +35,6 @@ class Rank(UserMixin, db.Model):
 
     users: so.Mapped[List['User']] = so.relationship(back_populates='rank')
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'users': [{'id': user.id, 'login': user.login} for user in self.users]
-        }
-
     def __repr__(self):
         return f"<Rank id={self.id} name='{self.name}'>"
 
@@ -66,7 +59,7 @@ class User(UserMixin, db.Model):
     upvoted_clips: so.Mapped[List['Clip']] = so.relationship('Clip', secondary=upvotes, back_populates='upvoted_by')
 
     # Relationship to track activities performed by the user (admin)
-    activities: so.Mapped[List['Activity']] = so.relationship(back_populates='admin')
+    activities: so.Mapped[List['ActivityLog']] = so.relationship(back_populates='admin')
 
     updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'), nullable=True)
     # Relationship to track the user who updated this user and users updated by this user
@@ -133,30 +126,6 @@ class User(UserMixin, db.Model):
         foreign_keys='Clip.updated_by'
     )
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'twitch_id': self.twitch_id,
-            'login': self.login,
-            'display_name': self.display_name,
-            'profile_image_url': self.profile_image_url,
-            'contributions': self.contributions,
-            'last_verified': self.last_verified.isoformat() if self.last_verified else None,
-            'access_token': self.access_token,
-            'refresh_token': self.refresh_token,
-            'login_enabled': self.login_enabled,
-            'rank': {
-                'id': self.rank.id,
-                'name': self.rank.name
-            } if self.rank else None,
-            'upvoted_clips': [{'id': clip.id, 'title': clip.title} for clip in self.upvoted_clips],
-            'activities': [{'id': activity.id, 'action': activity.action, 'date': activity.date.isoformat()} for activity in self.activities],
-            'categories': [{'id': category.id, 'name': category.name} for category in self.categories],
-            'themes': [{'id': theme.id, 'name': theme.name} for theme in self.themes],
-            'statuses': [{'id': status.id, 'name': status.name} for status in self.statuses],
-            'subjects': [{'id': subject.id, 'name': subject.name} for subject in self.subjects]
-        }
-
     def __repr__(self):
         return f"<User id='{self.id}' login='{self.login}' display_name='{self.display_name}' rank='{self.rank}' contributions={self.contributions}>"
 
@@ -181,19 +150,6 @@ class Category(db.Model):
 
     clips: so.Mapped[List['Clip']] = so.relationship(back_populates='category')
     
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'notes': self.notes,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-            'created_by_user': {
-                'id': self.created_by_user.id,
-                'display_name': self.created_by_user.display_name
-            } if self.created_by_user else None,
-            'clips': [{'id': clip.id, 'title': clip.title} for clip in self.clips]
-        }
     def __repr__(self):
         return f'<Category {self.name}>'
     
@@ -214,20 +170,6 @@ class Theme(db.Model):
 
     # Relationship to track clips associated with a theme
     clips: so.Mapped[List['Clip']] = so.relationship('Clip', secondary=clip_themes, back_populates='themes')
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'notes': self.notes,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-            'created_by_user': {
-                'id': self.created_by_user.id,
-                'display_name': self.created_by_user.display_name
-            } if self.created_by_user else None,
-            'clips': [{'id': clip.id, 'title': clip.title} for clip in self.clips]
-        }
 
     def __repr__(self):
         return f'<Theme {self.name}>'
@@ -252,22 +194,6 @@ class Status(db.Model):
     # Relationship to track clips associated with a status
     clips: so.Mapped[List['Clip']] = so.relationship(back_populates='status')
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'type': self.type,
-            'color': self.color,
-            'notes': self.notes,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-            'created_by_user': {
-                'id': self.created_by_user.id,
-                'display_name': self.created_by_user.display_name
-            } if self.created_by_user else None,
-            'clips': [{'id': clip.id, 'title': clip.title} for clip in self.clips]
-        }
-
     def __repr__(self):
         return f'<Status {self.name}>'
 
@@ -288,13 +214,6 @@ class SubjectCategory(db.Model):
 
     # Relationship to track subjects associated with a subject category
     subjects: so.Mapped[List['Subject']] = so.relationship(back_populates='category')
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'subjects': [{'id': subject.id, 'name': subject.name} for subject in self.subjects]
-        }
 
     def __repr__(self):
         return f'<Subject Category {self.name}>'
@@ -323,26 +242,6 @@ class Subject(db.Model):
 
     # Relationship to track clips associated with a subject
     clips: so.Mapped[List['Clip']] = so.relationship('Clip', secondary=clip_subjects, back_populates='subjects')
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'subtext': self.subtext,
-            'keywords': self.keywords,
-            'notes': self.notes,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-            'created_by_user': {
-                'id': self.created_by_user.id,
-                'display_name': self.created_by_user.display_name
-            } if self.created_by_user else None,
-            'category': {
-                'id': self.category.id,
-                'name': self.category.name
-            } if self.category else None,
-            'clips': [{'id': clip.id, 'title': clip.title} for clip in self.clips]
-        }
 
     def __repr__(self):
         return f'<Subject {self.name}>'
@@ -390,69 +289,22 @@ class Clip(db.Model):
     # Relationship to track subjects associated with a clip
     subjects: so.Mapped[List['Subject']] = so.relationship('Subject', secondary=clip_subjects, back_populates='clips')
 
-    def to_dict(self):
-        return {
-        'id': self.id,
-        'url': self.url,
-        'embed_url': self.embed_url,
-        'broadcaster_id': self.broadcaster_id,
-        'broadcaster_name': self.broadcaster_name,
-        'creator_id': self.creator_id,
-        'creator_name': self.creator_name,
-        'video_id': self.video_id,
-        'game_id': self.game_id,
-        'language': self.language,
-        'title': self.title,
-        'title_override': self.title_override,
-        'view_count': self.view_count,
-        'created_at': self.created_at,
-        'thumbnail_url': self.thumbnail_url,
-        'duration': self.duration,
-        'vod_offset': self.vod_offset,
-        'is_featured': self.is_featured,
-        'category': {
-            'id': self.category.id,
-            'name': self.category.name
-        } if self.category else None,
-        'status': {
-            'id': self.status.id,
-            'name': self.status.name,
-            'type': self.status.type,
-            'color': self.status.color
-        } if self.status else None,
-        'upvoted_by': [{'id': user.id, 'display_name': user.display_name} for user in self.upvoted_by],
-        'themes': [{'id': theme.id, 'name': theme.name} for theme in self.themes],
-        'subjects': [{'id': subject.id, 'name': subject.name} for subject in self.subjects]
-        }
-
     def __repr__(self):
         return f"<Clip id='{self.id}' title='{self.title}' creator_name='{self.creator_name}'>"
     
-class Activity(db.Model):
+class ActivityLog(db.Model):
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True)
-    date: so.Mapped[datetime] =  so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=False)
-    action = sa.Column(sa.Enum('Create', 'Update', 'Delete', name='action_types'), nullable=False)
-    item_type: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
-    item_id: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=False)
-    changed: so.Mapped[str] = so.mapped_column(sa.String(256), nullable=False)
+    table_name: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=False)
+    row_id: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=False)
+    row_name: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True, default=None)
+    row_twitch_id: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=True, default=None)
+    timestamp: so.Mapped[datetime] =  so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=False)
+    action: so.Mapped[str] = so.mapped_column(sa.String(16), nullable=False)
+    changes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
     
     # Relationship to the User who performed the action (Admin)
     admin_id: so.Mapped[str] = so.mapped_column(sa.ForeignKey(User.twitch_id), nullable=False)
     admin: so.Mapped['User'] = so.relationship(back_populates='activities')
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'date': self.date.isoformat(),
-            'action': self.action,
-            'item_type': self.item_type,
-            'item_id': self.item_id,
-            'changed': self.changed,
-            'admin': {
-                'id': self.admin_id,
-                'display_name': self.admin
-            }
-        }
     
     def __repr__(self):
-        return f"<Activity='{self.id}' date='{self.date}' action='{self.action}'>"
+        return f"<ActivityLog='{self.id}' timestamp='{self.timestamp}' action='{self.action}'>"

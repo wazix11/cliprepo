@@ -1,5 +1,5 @@
 from app import db
-from app.models import Rank, Status
+from app.models import Rank, Status, User
 from datetime import datetime, timezone
 
 def seed_database():
@@ -19,6 +19,24 @@ def seed_database():
                                 created_at=datetime.now(timezone.utc)
                                 )
         db.session.add(default_status)
+
+    if not db.session.query(User).filter_by(twitch_id='system').first():
+        system_user = User(
+            twitch_id='system',
+            login='system',
+            display_name='System',
+            profile_image_url='',
+            contributions=0,
+            last_verified=datetime.now(timezone.utc),
+            access_token=None,
+            refresh_token=None,
+            notes='System user for automated actions',
+            login_enabled=False,
+            updated_at=datetime.now(timezone.utc),
+            rank_id=4
+        )
+        db.session.add(system_user)
+
     db.session.commit()
 
 if __name__ == '__main__':

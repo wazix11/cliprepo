@@ -1,4 +1,5 @@
 import os, secrets, requests
+from datetime import datetime, timezone
 from urllib.parse import urlencode
 from dotenv import load_dotenv
 from flask import redirect, url_for, flash, abort, session, request
@@ -172,6 +173,7 @@ def oauth2_callback():
         user.twitch_id = user_id
         user.login = user_login
         user.display_name = user_display_name
+        user.last_verified = datetime.now(timezone.utc)
         user.profile_image_url = user_profile_image_url
         user.access_token = oauth2_token
         user.refresh_token = user_refresh_token

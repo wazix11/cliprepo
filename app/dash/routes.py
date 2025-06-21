@@ -267,10 +267,10 @@ def dash_clips_delete(id):
             return redirect(url_for('main.dash_clips'))
     if form.validate_on_submit():
         # TODO: add more validation to prevent deletion of clips
-        # if the entered name doesn't match the clip name, prompt an error
-        if form.name.data != clip.display_name:
+        # if the entered name doesn't match the clip id, prompt an error
+        if form.name.data != clip.twitch_id:
             flash('Entered name does not match!', 'form-error')
-        # clip name confirmed, delete clip
+        # clip id confirmed, delete clip
         else:
             db.session.delete(clip)
             db.session.commit()

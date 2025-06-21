@@ -2,8 +2,8 @@
 
 {% block dash_content %}
     <section class="content-header">
-        <h3>Delete User</h3>
-        <a href="{{ url_for('main.dash_users') }}"><button class="btn btn-alveus-tan">Back</button></a>
+        <h3>Delete Clip</h3>
+        <a href="{{ url_for('main.dash_clips') }}"><button class="btn btn-alveus-tan">Back</button></a>
     </section>
     <section class="main-content">
         <div class="row">
@@ -25,7 +25,7 @@
                             <div class="row form-row">
                                 <div class="col-md-3"></div>
                                 <div class="col-md-8">
-                                    <p>Please enter <strong>{{ user.display_name }}</strong> to confirm deletion</p>
+                                    <p>Please enter <strong>{{ clip.twitch_id }}</strong> to confirm deletion</p>
                                 </div>
                             </div>
                             <div class="row form-row">
