@@ -1,19 +1,21 @@
-from flask import render_template, request, session
+from flask import render_template, render_template_string, request, session
+from flask_login import current_user
 from datetime import datetime as dt, timedelta, timezone
 from app.main.forms import *
 from app.main import bp
 from dotenv import load_dotenv
 from app.models import *
+from sqlalchemy import func
 
 load_dotenv()
 
-def format_view_count(view_count):
-    if view_count < 1000:
-        return str(view_count) + ' views'
-    elif view_count < 1_000_000:
-        return f'{view_count / 1000:.1f}K views'
-    elif view_count < 1_000_000_000:
-        return f'{view_count / 1_000_000:.1f}M views'
+def format_count(count, type):
+    if count < 1000:
+        return str(count) + f' {type}{'s' if count != 1 else ''}'
+    elif count < 1_000_000:
+        return f'{count / 1000:.1f}K {type}'
+    elif count < 1_000_000_000:
+        return f'{count / 1_000_000:.1f}M {type}'
 
 def format_upload_date(upload_date_str):
     upload_date = dt.fromisoformat(upload_date_str.replace('Z', '+00:00'))
@@ -65,6 +67,20 @@ def format_clips(page, sort, timeframe, category=None, themes=[], subjects=[], s
         order_by = Clip.created_at.desc()
     elif sort == 'old':
         order_by = Clip.created_at.asc()
+    elif sort == 'likes':
+        order_by = func.count(upvotes.c.user_id).desc()
+        if timeframe == '24h':
+            last_24_hours = now - timedelta(days=1)
+            filters.append(Clip.created_at >= last_24_hours)
+        elif timeframe == '7d':
+            last_7_days = now - timedelta(days=7)
+            filters.append(Clip.created_at >= last_7_days)
+        elif timeframe == '30d':
+            last_30_days = now - timedelta(days=30)
+            filters.append(Clip.created_at >= last_30_days)
+        elif timeframe == '1y':
+            last_1_year = now - timedelta(days=365)
+            filters.append(Clip.created_at >= last_1_year)
     else:
         order_by = Clip.view_count.desc()
         if timeframe == '24h':
@@ -80,31 +96,39 @@ def format_clips(page, sort, timeframe, category=None, themes=[], subjects=[], s
             last_1_year = now - timedelta(days=365)
             filters.append(Clip.created_at >= last_1_year)
 
-    # filters.append(Clip.status.has(Status.type != 'Hidden'))
-    query = Clip.query.filter(*filters)
+    filters.append(Clip.status.has(Status.type != 'Hidden'))
+    filters.append(Clip.status.has(Status.type != 'Pending'))
+
+    if sort == 'likes':
+        query = Clip.query.outerjoin(upvotes).group_by(Clip.id).filter(*filters)
+    else:
+        query = Clip.query.filter(*filters)
     clips = query.order_by(order_by).paginate(page=page, per_page=per_page, error_out=False)
 
     formatted_clips = [{
+        'twitch_id': clip.twitch_id,
         'url': clip.url,
         'embed_url': clip.embed_url,
         'broadcaster_name': clip.broadcaster_name,
         'creator_name': clip.creator_name,
         'title': clip.title,
         'title_override': clip.title_override,
-        'view_count': format_view_count(clip.view_count),
+        'view_count': format_count(clip.view_count, 'view'),
         'created_at': format_upload_date(clip.created_at),
         'thumbnail_url': clip.thumbnail_url,
         'duration': clip.duration,
         'category': clip.category,
         'themes': clip.themes,
         'subjects': clip.subjects,
-        'status': clip.status
+        'status': clip.status,
+        'upvotes': format_count(len(clip.upvoted_by), 'like'),
+        'liked': current_user.is_authenticated and current_user in clip.upvoted_by
     } for clip in clips.items]
     has_next = clips.has_next
     
     return formatted_clips, has_next
 
-def set_session_filters(route, sort='top', timeframe='all', category='', themes=[], subjects=[], search=''):
+def set_session_filters(route, sort='views', timeframe='all', category='', themes=[], subjects=[], search=''):
     session[route] = {
         'sort': sort,
         'timeframe': timeframe,
@@ -118,7 +142,7 @@ def get_session_filters(route):
     if route in session:
         return session[route]
     return {
-        'sort': 'top',
+        'sort': 'views',
         'timeframe': 'all',
         'category': None,
         'themes': [],
@@ -132,6 +156,36 @@ def get_value(request_value, session_value, default):
     if session_value is not None:
         return session_value
     return default
+
+@bp.route('/like-clip/<twitch_id>', methods=['POST'])
+def like_clip(twitch_id):
+    clip = Clip.query.filter_by(twitch_id=twitch_id).first_or_404()
+    liked = False
+    
+    if current_user.is_authenticated and clip:
+        if current_user in clip.upvoted_by:
+            clip.upvoted_by.remove(current_user)
+        else:
+            clip.upvoted_by.append(current_user)
+        db.session.commit()
+        liked = current_user in clip.upvoted_by
+    
+    return render_template_string("""
+        <span id="like-btn-{{ clip.twitch_id }}">
+            <button class="btn clip-like-btn {% if liked %}btn-danger{% else %}btn-success{% endif %}" 
+                    type="button"
+                    hx-post="/like-clip/{{ clip.twitch_id }}"
+                    hx-target="#like-btn-{{ clip.twitch_id }}"
+                    hx-swap="outerHTML">
+                {% if liked %}
+                    <i class="fa-solid fa-heart"></i>
+                {% else %}
+                    <i class="fa-regular fa-heart"></i>
+                {% endif %}
+            </button>
+            <span class="clip-like-count" id="like-count-{{ clip.twitch_id }}">{{ upvotes }}</span>
+        </span>
+    """, clip=clip, liked=liked, upvotes=format_count(len(clip.upvoted_by), 'like'))
 
 # Home page
 @bp.route('/', methods=['GET', 'POST'])
@@ -158,7 +212,7 @@ def index():
     
     # Get filters from session
     session_filters = get_session_filters('main')
-    sort = get_value(None, session_filters.get('sort'), default='top')
+    sort = get_value(None, session_filters.get('sort'), default='views')
     timeframe = get_value(None, session_filters.get('timeframe'), 'all')
     category = get_value(None, session_filters.get('category'), None)
     themes = get_value(None, session_filters.get('themes', []), [])
@@ -190,7 +244,7 @@ def index():
 def load_clips():
     session_filters = get_session_filters('main')
     page = request.args.get('page', 1, type=int)
-    sort = get_value(request.form.get('sort'), session_filters.get('sort'), 'top')
+    sort = get_value(request.form.get('sort'), session_filters.get('sort'), 'views')
     timeframe = get_value(request.form.get('timeframe'), session_filters.get('timeframe'), 'all')
     category = get_value(request.form.get('category'), session_filters.get('category'), None)
     themes = get_value(request.form.getlist('themes'), session_filters.get('themes', []), [])

@@ -175,3 +175,24 @@ button.btn.clip-theme-btn {
     border-radius: 3px;
     font-size: 0.8rem;
 }
+.clip-like-btn {
+    position: absolute;
+    top: 2%;
+    right: 2%;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    border: none;
+}
+.clip-like-count {
+    position: absolute;
+    top: 2%;
+    right: 10%;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+}

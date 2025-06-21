@@ -13,15 +13,27 @@
                             <button type="button" class="btn btn-alveus-green mx-1 sort-btn" data-sort="new">New</button>
                             <button type="button" class="btn btn-alveus-green mx-1 sort-btn" data-sort="old">Old</button>
                             <div class="dropdown mx-1">
-                                <button class="btn btn-alveus-green dropdown-toggle" type="button" id="topDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Top
+                                <button class="btn btn-alveus-green dropdown-toggle" type="button" id="viewsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Views
                                 </button>
-                                <ul class="dropdown-menu" aria-labelledby="topDropdown">
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="top" data-timeframe="24h">24H</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="top" data-timeframe="7d">7D</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="top" data-timeframe="30d">30D</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="top" data-timeframe="1y">1Y</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="top" data-timeframe="all">ALL</a></li>
+                                <ul class="dropdown-menu" aria-labelledby="viewsDropdown">
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="views" data-timeframe="24h">24H</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="views" data-timeframe="7d">7D</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="views" data-timeframe="30d">30D</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="views" data-timeframe="1y">1Y</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="views" data-timeframe="all">ALL</a></li>
+                                </ul>
+                            </div>
+                            <div class="dropdown mx-1">
+                                <button class="btn btn-alveus-green dropdown-toggle" type="button" id="likesDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Likes
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="likesDropdown">
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="likes" data-timeframe="24h">24H</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="likes" data-timeframe="7d">7D</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="likes" data-timeframe="30d">30D</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="likes" data-timeframe="1y">1Y</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="likes" data-timeframe="all">ALL</a></li>
                                 </ul>
                             </div>
                         </ul>
@@ -53,7 +65,6 @@
                                     data-style="btn-alveus-green" 
                                     data-width="160px" multiple 
                                     data-live-search="true"
-                                    data-actions-box="true"
                                     title="Select subject(s)"
                                     data-selected-text-format="count > 3">
                                     {% for subject_category in subject_categories %}

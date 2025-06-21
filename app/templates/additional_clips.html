@@ -5,8 +5,22 @@
             <div class="clip-img">
                 <a href="{{ clip.url }}" target="_blank" rel="noopener noreferrer"><img src="{{ clip.thumbnail_url }}" alt="Clip Thumbnail"></a>
                 <div class="clip-duration">{{ clip.duration }}s</div>
-                <div class="clip-views view-count">{{ clip.view_count }}</div>
-                <div class="clip-upload-date upload-date">{{ clip.created_at }}</div>
+                <div class="clip-views">{{ clip.view_count }}</div>
+                <div class="clip-upload-date">{{ clip.created_at }}</div>
+                <span id="like-btn-{{ clip.twitch_id }}">
+                    <button class="btn clip-like-btn {% if clip.liked %}btn-danger{% else %}btn-success{% endif %}" 
+                            type="button"
+                            hx-post="/like-clip/{{ clip.twitch_id }}"
+                            hx-target="#like-btn-{{ clip.twitch_id }}"
+                            hx-swap="outerHTML">
+                        {% if clip.liked %}
+                            <i class="fa-solid fa-heart"></i>
+                        {% else %}
+                            <i class="fa-regular fa-heart"></i>
+                        {% endif %}
+                    </button>
+                    <span class="clip-like-count" id="like-count-{{ clip.twitch_id }}">{{ clip.upvotes }}</span>
+                </span>
             </div>
             <div class="clip-title">
                 <a href="{{ clip.url }}" target="_blank" rel="noopener noreferrer">{{ clip.title }}</a>
