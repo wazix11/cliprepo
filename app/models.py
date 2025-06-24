@@ -10,14 +10,14 @@ upvotes = sa.Table(
     'upvotes',
     db.metadata,
     sa.Column('user_id', sa.Integer, sa.ForeignKey('user.id'), primary_key=True),
-    sa.Column('clip_id', sa.String(64), sa.ForeignKey('clip.id'), primary_key=True)
+    sa.Column('clip_id', sa.Integer, sa.ForeignKey('clip.id'), primary_key=True)
 )
 
 # Define the association table between Clip and Theme
 clip_themes = sa.Table(
     'clip_themes',
     db.metadata,
-    sa.Column('clip_id', sa.String(64), sa.ForeignKey('clip.id'), primary_key=True),
+    sa.Column('clip_id', sa.Integer, sa.ForeignKey('clip.id'), primary_key=True),
     sa.Column('theme_id', sa.Integer, sa.ForeignKey('theme.id'), primary_key=True)
 )
 
@@ -25,7 +25,7 @@ clip_themes = sa.Table(
 clip_subjects = sa.Table(
     'clip_subjects',
     db.metadata,
-    sa.Column('clip_id', sa.String(64), sa.ForeignKey('clip.id'), primary_key=True),
+    sa.Column('clip_id', sa.Integer, sa.ForeignKey('clip.id'), primary_key=True),
     sa.Column('subject_id', sa.Integer, sa.ForeignKey('subject.id'), primary_key=True)
 )
 

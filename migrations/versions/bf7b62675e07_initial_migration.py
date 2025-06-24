@@ -1,8 +1,8 @@
-"""empty message
+"""Initial migration
 
-Revision ID: 00af6e0b2dc9
+Revision ID: bf7b62675e07
 Revises: 
-Create Date: 2025-06-15 20:28:10.420513
+Create Date: 2025-06-23 22:08:15.410294
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '00af6e0b2dc9'
+revision = 'bf7b62675e07'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -28,7 +28,7 @@ def upgrade():
 
     op.create_table('user',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('twitch_id', sa.String(length=32), nullable=False),
+    sa.Column('twitch_id', sa.Integer(), nullable=False),
     sa.Column('login', sa.String(length=32), nullable=False),
     sa.Column('display_name', sa.String(length=32), nullable=False),
     sa.Column('profile_image_url', sa.String(length=256), nullable=False),
@@ -42,7 +42,7 @@ def upgrade():
     sa.Column('rank_id', sa.Integer(), nullable=False),
     sa.Column('updated_by', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['rank_id'], ['rank.id'], name=op.f('fk_user_rank_id_rank')),
-    sa.ForeignKeyConstraint(['updated_by'], ['user.twitch_id'], name=op.f('fk_user_updated_by_user')),
+    sa.ForeignKeyConstraint(['updated_by'], ['user.id'], name=op.f('fk_user_updated_by_user')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_user'))
     )
     with op.batch_alter_table('user', schema=None) as batch_op:
@@ -51,16 +51,18 @@ def upgrade():
         batch_op.create_index(batch_op.f('ix_user_rank_id'), ['rank_id'], unique=False)
         batch_op.create_index(batch_op.f('ix_user_twitch_id'), ['twitch_id'], unique=True)
 
-    op.create_table('activity',
+    op.create_table('activity_log',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('date', sa.DateTime(), nullable=False),
-    sa.Column('action', sa.Enum('Create', 'Update', 'Delete', name='action_types'), nullable=False),
-    sa.Column('item_type', sa.String(length=64), nullable=False),
-    sa.Column('item_id', sa.Integer(), nullable=False),
-    sa.Column('changed', sa.String(length=256), nullable=False),
-    sa.Column('admin_id', sa.String(length=32), nullable=False),
-    sa.ForeignKeyConstraint(['admin_id'], ['user.twitch_id'], name=op.f('fk_activity_admin_id_user')),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_activity'))
+    sa.Column('table_name', sa.String(length=32), nullable=False),
+    sa.Column('row_id', sa.Integer(), nullable=False),
+    sa.Column('row_name', sa.String(length=32), nullable=True),
+    sa.Column('row_twitch_id', sa.String(length=64), nullable=True),
+    sa.Column('timestamp', sa.DateTime(), nullable=False),
+    sa.Column('action', sa.String(length=16), nullable=False),
+    sa.Column('changes', sa.Text(), nullable=True),
+    sa.Column('admin_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['admin_id'], ['user.id'], name=op.f('fk_activity_log_admin_id_user')),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_activity_log'))
     )
     op.create_table('category',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -70,8 +72,8 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('created_by', sa.Integer(), nullable=True),
     sa.Column('updated_by', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['created_by'], ['user.twitch_id'], name=op.f('fk_category_created_by_user')),
-    sa.ForeignKeyConstraint(['updated_by'], ['user.twitch_id'], name=op.f('fk_category_updated_by_user')),
+    sa.ForeignKeyConstraint(['created_by'], ['user.id'], name=op.f('fk_category_created_by_user')),
+    sa.ForeignKeyConstraint(['updated_by'], ['user.id'], name=op.f('fk_category_updated_by_user')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_category')),
     sa.UniqueConstraint('name', name=op.f('uq_category_name'))
     )
@@ -85,8 +87,8 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('created_by', sa.Integer(), nullable=True),
     sa.Column('updated_by', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['created_by'], ['user.twitch_id'], name=op.f('fk_status_created_by_user')),
-    sa.ForeignKeyConstraint(['updated_by'], ['user.twitch_id'], name=op.f('fk_status_updated_by_user')),
+    sa.ForeignKeyConstraint(['created_by'], ['user.id'], name=op.f('fk_status_created_by_user')),
+    sa.ForeignKeyConstraint(['updated_by'], ['user.id'], name=op.f('fk_status_updated_by_user')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_status')),
     sa.UniqueConstraint('name', name=op.f('uq_status_name'))
     )
@@ -98,8 +100,8 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('created_by', sa.Integer(), nullable=True),
     sa.Column('updated_by', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['created_by'], ['user.twitch_id'], name=op.f('fk_subject_category_created_by_user')),
-    sa.ForeignKeyConstraint(['updated_by'], ['user.twitch_id'], name=op.f('fk_subject_category_updated_by_user')),
+    sa.ForeignKeyConstraint(['created_by'], ['user.id'], name=op.f('fk_subject_category_created_by_user')),
+    sa.ForeignKeyConstraint(['updated_by'], ['user.id'], name=op.f('fk_subject_category_updated_by_user')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_subject_category')),
     sa.UniqueConstraint('name', name=op.f('uq_subject_category_name'))
     )
@@ -111,8 +113,8 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('created_by', sa.Integer(), nullable=True),
     sa.Column('updated_by', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['created_by'], ['user.twitch_id'], name=op.f('fk_theme_created_by_user')),
-    sa.ForeignKeyConstraint(['updated_by'], ['user.twitch_id'], name=op.f('fk_theme_updated_by_user')),
+    sa.ForeignKeyConstraint(['created_by'], ['user.id'], name=op.f('fk_theme_created_by_user')),
+    sa.ForeignKeyConstraint(['updated_by'], ['user.id'], name=op.f('fk_theme_updated_by_user')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_theme')),
     sa.UniqueConstraint('name', name=op.f('uq_theme_name'))
     )
@@ -121,13 +123,13 @@ def upgrade():
     sa.Column('twitch_id', sa.String(length=64), nullable=False),
     sa.Column('url', sa.String(length=128), nullable=False),
     sa.Column('embed_url', sa.String(length=128), nullable=False),
-    sa.Column('broadcaster_id', sa.String(length=32), nullable=False),
+    sa.Column('broadcaster_id', sa.Integer(), nullable=False),
     sa.Column('broadcaster_name', sa.String(length=32), nullable=False),
-    sa.Column('creator_id', sa.String(length=32), nullable=False),
+    sa.Column('creator_id', sa.Integer(), nullable=False),
     sa.Column('creator_name', sa.String(length=32), nullable=False),
     sa.Column('video_id', sa.String(length=32), nullable=True),
     sa.Column('game_id', sa.String(length=32), nullable=True),
-    sa.Column('language', sa.String(length=16), nullable=False),
+    sa.Column('language', sa.String(length=16), nullable=True),
     sa.Column('title', sa.String(length=256), nullable=False),
     sa.Column('title_override', sa.String(length=256), nullable=True),
     sa.Column('view_count', sa.Integer(), nullable=False),
@@ -144,7 +146,7 @@ def upgrade():
     sa.ForeignKeyConstraint(['category_id'], ['category.id'], name=op.f('fk_clip_category_id_category')),
     sa.ForeignKeyConstraint(['creator_id'], ['user.twitch_id'], name=op.f('fk_clip_creator_id_user')),
     sa.ForeignKeyConstraint(['status_id'], ['status.id'], name=op.f('fk_clip_status_id_status')),
-    sa.ForeignKeyConstraint(['updated_by'], ['user.twitch_id'], name=op.f('fk_clip_updated_by_user')),
+    sa.ForeignKeyConstraint(['updated_by'], ['user.id'], name=op.f('fk_clip_updated_by_user')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_clip')),
     sa.UniqueConstraint('twitch_id', name=op.f('uq_clip_twitch_id'))
     )
@@ -167,8 +169,8 @@ def upgrade():
     sa.Column('updated_by', sa.Integer(), nullable=True),
     sa.Column('category_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['category_id'], ['subject_category.id'], name=op.f('fk_subject_category_id_subject_category')),
-    sa.ForeignKeyConstraint(['created_by'], ['user.twitch_id'], name=op.f('fk_subject_created_by_user')),
-    sa.ForeignKeyConstraint(['updated_by'], ['user.twitch_id'], name=op.f('fk_subject_updated_by_user')),
+    sa.ForeignKeyConstraint(['created_by'], ['user.id'], name=op.f('fk_subject_created_by_user')),
+    sa.ForeignKeyConstraint(['updated_by'], ['user.id'], name=op.f('fk_subject_updated_by_user')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_subject')),
     sa.UniqueConstraint('name', name=op.f('uq_subject_name'))
     )
@@ -176,22 +178,22 @@ def upgrade():
         batch_op.create_index(batch_op.f('ix_subject_category_id'), ['category_id'], unique=False)
 
     op.create_table('clip_subjects',
-    sa.Column('clip_id', sa.String(length=64), nullable=False),
+    sa.Column('clip_id', sa.Integer(), nullable=False),
     sa.Column('subject_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['clip_id'], ['clip.id'], name=op.f('fk_clip_subjects_clip_id_clip')),
     sa.ForeignKeyConstraint(['subject_id'], ['subject.id'], name=op.f('fk_clip_subjects_subject_id_subject')),
     sa.PrimaryKeyConstraint('clip_id', 'subject_id', name=op.f('pk_clip_subjects'))
     )
     op.create_table('clip_themes',
-    sa.Column('clip_id', sa.String(length=64), nullable=False),
+    sa.Column('clip_id', sa.Integer(), nullable=False),
     sa.Column('theme_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['clip_id'], ['clip.id'], name=op.f('fk_clip_themes_clip_id_clip')),
     sa.ForeignKeyConstraint(['theme_id'], ['theme.id'], name=op.f('fk_clip_themes_theme_id_theme')),
     sa.PrimaryKeyConstraint('clip_id', 'theme_id', name=op.f('pk_clip_themes'))
     )
     op.create_table('upvotes',
-    sa.Column('user_id', sa.String(length=32), nullable=False),
-    sa.Column('clip_id', sa.String(length=64), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('clip_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['clip_id'], ['clip.id'], name=op.f('fk_upvotes_clip_id_clip')),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], name=op.f('fk_upvotes_user_id_user')),
     sa.PrimaryKeyConstraint('user_id', 'clip_id', name=op.f('pk_upvotes'))
@@ -219,7 +221,7 @@ def downgrade():
     op.drop_table('subject_category')
     op.drop_table('status')
     op.drop_table('category')
-    op.drop_table('activity')
+    op.drop_table('activity_log')
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_user_twitch_id'))
         batch_op.drop_index(batch_op.f('ix_user_rank_id'))
