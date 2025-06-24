@@ -13,9 +13,9 @@ def format_count(count, type):
     if count < 1000:
         return str(count) + f' {type}{'s' if count != 1 else ''}'
     elif count < 1_000_000:
-        return f'{count / 1000:.1f}K {type}'
+        return f'{count / 1000:.1f}K {type}s'
     elif count < 1_000_000_000:
-        return f'{count / 1_000_000:.1f}M {type}'
+        return f'{count / 1_000_000:.1f}M {type}s'
 
 def format_upload_date(upload_date_str):
     upload_date = dt.fromisoformat(upload_date_str.replace('Z', '+00:00'))

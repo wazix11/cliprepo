@@ -40,7 +40,7 @@ class Rank(UserMixin, db.Model):
 
 class User(UserMixin, db.Model):
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True)
-    twitch_id: so.Mapped[str] = so.mapped_column(sa.String(32), index=True, unique=True)
+    twitch_id: so.Mapped[int] = so.mapped_column(sa.Integer, index=True, unique=True)
     login: so.Mapped[str] = so.mapped_column(sa.String(32), index=True, unique=True)
     display_name: so.Mapped[str] = so.mapped_column(sa.String(32), index=True, unique=True)
     profile_image_url: so.Mapped[str] = so.mapped_column(sa.String(256))
@@ -251,9 +251,9 @@ class Clip(db.Model):
     twitch_id: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True)
     url: so.Mapped[str] = so.mapped_column(sa.String(128))
     embed_url: so.Mapped[str] = so.mapped_column(sa.String(128))
-    broadcaster_id: so.Mapped[str] = so.mapped_column(sa.String(32))
+    broadcaster_id: so.Mapped[int] = so.mapped_column(sa.Integer)
     broadcaster_name: so.Mapped[str] = so.mapped_column(sa.String(32), index=True)
-    creator_id: so.Mapped[str] = so.mapped_column(sa.String(32), sa.ForeignKey('user.twitch_id'))
+    creator_id: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'))
     creator: so.Mapped['User'] = so.relationship('User', back_populates='created_clips', foreign_keys=[creator_id])
     creator_name: so.Mapped[str] = so.mapped_column(sa.String(32), index=True)
     video_id: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True)
@@ -303,7 +303,7 @@ class ActivityLog(db.Model):
     changes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
     
     # Relationship to the User who performed the action (Admin)
-    admin_id: so.Mapped[str] = so.mapped_column(sa.ForeignKey(User.twitch_id), nullable=False)
+    admin_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.twitch_id), nullable=False)
     admin: so.Mapped['User'] = so.relationship(back_populates='activities')
     
     def __repr__(self):

@@ -29,6 +29,14 @@ def activity_log_listener(mapper, connection, target, action):
     ):
         return
     
+    # Only log Clip updates if more than just 'view_count' changed
+    if (
+        action == 'update'
+        and target.__tablename__ == 'clip'
+        and set(changes.keys()) <= {'view_count'}
+    ):
+        return
+    
     if action == 'update' and not changes:
         return
     

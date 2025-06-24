@@ -47,7 +47,7 @@ def get_clips(started_at, after=None):
     data = response.json()
     return data
 
-def update_clips(started_at=None, after=None):
+def update_clips(started_at=None, after=None, save_to_file=True):
     latest_clip_file = './app/scheduler/latest_clip_created_at.txt'
     if started_at is None:
         started_at = '2021-07-21T00:00:00Z'
@@ -117,8 +117,9 @@ def update_clips(started_at=None, after=None):
         if latest_created_at:
             if latest_created_at != previous_created_at and latest_created_at > previous_created_at:
                 print(f"Latest clip created at: {latest_created_at}")
-                with open(latest_clip_file, 'w') as f:
-                    f.write(latest_created_at)
+                if save_to_file:
+                    with open(latest_clip_file, 'w') as f:
+                        f.write(latest_created_at)
             elif latest_created_at == previous_created_at:
                 # Only add 6 days if latest_created_at is the same as previous
                 dt = datetime.fromisoformat(latest_created_at.replace('Z', '+00:00'))
@@ -129,8 +130,9 @@ def update_clips(started_at=None, after=None):
                 if new_created_at > now:
                     new_created_at = now
                 print(f"No new clips found. Advancing created_at to: {new_created_at}")
-                with open(latest_clip_file, 'w') as f:
-                    f.write(new_created_at)
+                if save_to_file:
+                    with open(latest_clip_file, 'w') as f:
+                        f.write(new_created_at)
                 latest_created_at = new_created_at
         elif previous_created_at:
             # If no latest_created_at found, use previous and add 6 days
@@ -142,8 +144,9 @@ def update_clips(started_at=None, after=None):
             if new_created_at > now:
                 new_created_at = now
             print(f"No clips found. Advancing created_at to: {new_created_at}")
-            with open(latest_clip_file, 'w') as f:
-                f.write(new_created_at)
+            if save_to_file:
+                with open(latest_clip_file, 'w') as f:
+                    f.write(new_created_at)
             latest_created_at = new_created_at
 
 
