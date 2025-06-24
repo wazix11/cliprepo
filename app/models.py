@@ -9,7 +9,7 @@ from app import db, login
 upvotes = sa.Table(
     'upvotes',
     db.metadata,
-    sa.Column('user_id', sa.String(32), sa.ForeignKey('user.id'), primary_key=True),
+    sa.Column('user_id', sa.Integer, sa.ForeignKey('user.id'), primary_key=True),
     sa.Column('clip_id', sa.String(64), sa.ForeignKey('clip.id'), primary_key=True)
 )
 
@@ -61,11 +61,11 @@ class User(UserMixin, db.Model):
     # Relationship to track activities performed by the user (admin)
     activities: so.Mapped[List['ActivityLog']] = so.relationship(back_populates='admin')
 
-    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'), nullable=True)
+    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
     # Relationship to track the user who updated this user and users updated by this user
     updated_by_user: so.Mapped['User'] = so.relationship(
         'User',
-        remote_side='User.twitch_id',
+        remote_side='User.id',
         back_populates='updated_users'
     )
     updated_users: so.Mapped[List['User']] = so.relationship(
@@ -141,11 +141,11 @@ class Category(db.Model):
     updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
 
     # Relationship to track which user created a category
-    created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'), nullable=True)
+    created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
     created_by_user: so.Mapped['User'] = so.relationship('User', back_populates='categories', foreign_keys=[created_by])
 
     # Relationship to track which user last updated a category
-    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'), nullable=True)
+    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
     updated_by_user: so.Mapped['User'] = so.relationship('User', back_populates='updated_categories', foreign_keys=[updated_by])
 
     clips: so.Mapped[List['Clip']] = so.relationship(back_populates='category')
@@ -161,11 +161,11 @@ class Theme(db.Model):
     updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
 
     # Relationship to track which user created a theme
-    created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'), nullable=True)
+    created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
     created_by_user: so.Mapped['User'] = so.relationship('User', back_populates='themes', foreign_keys=[created_by])
 
     # Relationship to track which user last updated a theme
-    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'), nullable=True)
+    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
     updated_by_user: so.Mapped['User'] = so.relationship('User', back_populates='updated_themes', foreign_keys=[updated_by])
 
     # Relationship to track clips associated with a theme
@@ -184,11 +184,11 @@ class Status(db.Model):
     updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
 
     # Relationship to track which user created a status
-    created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'), nullable=True)
+    created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
     created_by_user: so.Mapped['User'] = so.relationship('User', back_populates='statuses', foreign_keys=[created_by])
 
     # Relationship to track which user last updated a status
-    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'), nullable=True)
+    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
     updated_by_user: so.Mapped['User'] = so.relationship('User', back_populates='updated_statuses', foreign_keys=[updated_by])
 
     # Relationship to track clips associated with a status
@@ -205,11 +205,11 @@ class SubjectCategory(db.Model):
     updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
 
     # Relationship to track which user created a subject category
-    created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'), nullable=True)
+    created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
     created_by_user: so.Mapped['User'] = so.relationship('User', back_populates='subject_categories', foreign_keys=[created_by])
 
     # Relationship to track which user last updated a subject category
-    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'), nullable=True)
+    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
     updated_by_user: so.Mapped['User'] = so.relationship('User', back_populates='updated_subject_categories', foreign_keys=[updated_by])
 
     # Relationship to track subjects associated with a subject category
@@ -229,11 +229,11 @@ class Subject(db.Model):
     public: so.Mapped[bool] = so.mapped_column(sa.Boolean, nullable=False)
 
     # Relationship to track which user created a subject
-    created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'), nullable=True)
+    created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
     created_by_user: so.Mapped['User'] = so.relationship('User', back_populates='subjects', foreign_keys=[created_by])
 
     # Relationship to track which user last updated a subject
-    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'), nullable=True)
+    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
     updated_by_user: so.Mapped['User'] = so.relationship('User', back_populates='updated_subjects', foreign_keys=[updated_by])
 
     # Relationship to track subject categories associated with a subject
@@ -277,7 +277,7 @@ class Clip(db.Model):
     status: so.Mapped['Status'] = so.relationship(back_populates='clips')
 
     # Relationship to track which user last updated a clip
-    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'), nullable=True)
+    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
     updated_by_user: so.Mapped['User'] = so.relationship('User', back_populates='updated_clips', foreign_keys=[updated_by])
 
     # Relationship to track users who upvoted this clip
@@ -303,7 +303,7 @@ class ActivityLog(db.Model):
     changes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
     
     # Relationship to the User who performed the action (Admin)
-    admin_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.twitch_id), nullable=False)
+    admin_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), nullable=False)
     admin: so.Mapped['User'] = so.relationship(back_populates='activities')
     
     def __repr__(self):
