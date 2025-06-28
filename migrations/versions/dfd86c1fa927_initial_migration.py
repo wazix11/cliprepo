@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: bf7b62675e07
+Revision ID: dfd86c1fa927
 Revises: 
-Create Date: 2025-06-23 22:08:15.410294
+Create Date: 2025-06-28 14:17:18.883019
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'bf7b62675e07'
+revision = 'dfd86c1fa927'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -37,7 +37,7 @@ def upgrade():
     sa.Column('access_token', sa.String(length=64), nullable=True),
     sa.Column('refresh_token', sa.String(length=64), nullable=True),
     sa.Column('notes', sa.Text(), nullable=True),
-    sa.Column('login_enabled', sa.Boolean(), server_default=sa.text('1'), nullable=False),
+    sa.Column('login_enabled', sa.Boolean(), server_default=sa.text('true'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('rank_id', sa.Integer(), nullable=False),
     sa.Column('updated_by', sa.Integer(), nullable=True),
@@ -60,7 +60,7 @@ def upgrade():
     sa.Column('timestamp', sa.DateTime(), nullable=False),
     sa.Column('action', sa.String(length=16), nullable=False),
     sa.Column('changes', sa.Text(), nullable=True),
-    sa.Column('admin_id', sa.Integer(), nullable=False),
+    sa.Column('admin_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['admin_id'], ['user.id'], name=op.f('fk_activity_log_admin_id_user')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_activity_log'))
     )
@@ -144,7 +144,6 @@ def upgrade():
     sa.Column('status_id', sa.Integer(), nullable=True),
     sa.Column('updated_by', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['category_id'], ['category.id'], name=op.f('fk_clip_category_id_category')),
-    sa.ForeignKeyConstraint(['creator_id'], ['user.twitch_id'], name=op.f('fk_clip_creator_id_user')),
     sa.ForeignKeyConstraint(['status_id'], ['status.id'], name=op.f('fk_clip_status_id_status')),
     sa.ForeignKeyConstraint(['updated_by'], ['user.id'], name=op.f('fk_clip_updated_by_user')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_clip')),

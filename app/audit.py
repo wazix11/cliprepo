@@ -7,9 +7,9 @@ from app.models import *
 def get_current_user_id():
     from flask_login import current_user
     try:
-        return current_user.id if current_user.is_authenticated else 'system'
+        return current_user.id if current_user.is_authenticated else None
     except AttributeError:
-        return 'system'
+        return None
 
 def activity_log_listener(mapper, connection, target, action):
     changes = {}

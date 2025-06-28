@@ -234,7 +234,7 @@ def dash_clips_edit(id):
             return redirect(url_for('main.dash_clips'))
         # otherwise handle changes
         else:
-            if current_clip.updated_by != int(current_user.twitch_id):
+            if current_clip.updated_by != int(current_user.id):
                 curr_user = User.query.filter(User.id == current_user.id).first()
                 curr_user.contributions += 1
                 db.session.commit()
@@ -244,7 +244,7 @@ def dash_clips_edit(id):
             current_clip.status_id = form.status.data
             current_clip.themes = [Theme.query.get(theme_id) for theme_id in form.themes.data]
             current_clip.subjects = [Subject.query.get(subject_id) for subject_id in form.subjects.data]
-            current_clip.updated_by = current_user.twitch_id
+            current_clip.updated_by = current_user.id
             current_clip.updated_at = datetime.now(timezone.utc)
             db.session.commit()
             return redirect(url_for('main.dash_clips'))
@@ -394,7 +394,7 @@ def dash_users_edit(id):
             curr_user.contributions = form.contributions.data
             curr_user.login_enabled = form.enabled.data
             curr_user.notes = form.notes.data
-            curr_user.updated_by = current_user.twitch_id
+            curr_user.updated_by = current_user.id
             curr_user.updated_at = datetime.now(timezone.utc)
             db.session.commit()
             return redirect(url_for('main.dash_users'))
@@ -518,8 +518,8 @@ def dash_categories_create():
                                 notes=form.notes.data,
                                 created_at=datetime.now(timezone.utc),
                                 updated_at=datetime.now(timezone.utc),
-                                created_by=current_user.twitch_id,
-                                updated_by=current_user.twitch_id)
+                                created_by=current_user.id,
+                                updated_by=current_user.id)
             db.session.add(category)
             db.session.commit()
             return redirect(url_for('main.dash_categories'))
@@ -558,7 +558,7 @@ def dash_categories_edit(id):
             if category is None or category.name == current_category.name:
                 current_category.name = form.name.data
                 current_category.notes = form.notes.data
-                current_category.updated_by = current_user.twitch_id
+                current_category.updated_by = current_user.id
                 current_category.updated_at = datetime.now(timezone.utc)
                 db.session.commit()
                 return redirect(url_for('main.dash_categories'))
@@ -688,8 +688,8 @@ def dash_themes_create():
                                 notes=form.notes.data,
                                 created_at=datetime.now(timezone.utc),
                                 updated_at=datetime.now(timezone.utc),
-                                created_by=current_user.twitch_id,
-                                updated_by=current_user.twitch_id)
+                                created_by=current_user.id,
+                                updated_by=current_user.id)
             db.session.add(theme)
             db.session.commit()
             return redirect(url_for('main.dash_themes'))
@@ -729,7 +729,7 @@ def dash_themes_edit(id):
                 current_theme.name = form.name.data
                 current_theme.notes = form.notes.data
                 current_theme.updated_at = datetime.now(timezone.utc)
-                current_theme.updated_by = current_user.twitch_id
+                current_theme.updated_by = current_user.id
                 db.session.commit()
                 return redirect(url_for('main.dash_themes'))
             # theme already exists, prompt name change
@@ -876,8 +876,8 @@ def dash_subjects_create():
                             notes=form.notes.data,
                             created_at=datetime.now(timezone.utc),
                             updated_at=datetime.now(timezone.utc),
-                            created_by=current_user.twitch_id,
-                            updated_by=current_user.twitch_id)
+                            created_by=current_user.id,
+                            updated_by=current_user.id)
             db.session.add(subject)
             db.session.commit()
             return redirect(url_for('main.dash_subjects'))
@@ -927,7 +927,7 @@ def dash_subjects_edit(id):
                 current_subject.public = form.public.data
                 current_subject.notes = form.notes.data
                 current_subject.updated_at = datetime.now(timezone.utc)
-                current_subject.updated_by = current_user.twitch_id
+                current_subject.updated_by = current_user.id
                 db.session.commit()
                 return redirect(url_for('main.dash_subjects'))
             # subject already exists, prompt name change
@@ -1056,8 +1056,8 @@ def dash_subject_categories_create():
                                                 notes=form.notes.data,
                                                 created_at=datetime.now(timezone.utc),
                                                 updated_at=datetime.now(timezone.utc),
-                                                created_by=current_user.twitch_id,
-                                                updated_by=current_user.twitch_id)
+                                                created_by=current_user.id,
+                                                updated_by=current_user.id)
             db.session.add(subject_category)
             db.session.commit()
             return redirect(url_for('main.dash_subject_categories'))
@@ -1098,7 +1098,7 @@ def dash_subject_categories_edit(id):
                 current_subject_category.name = form.name.data
                 current_subject_category.notes = form.notes.data
                 current_subject_category.updated_at = datetime.now(timezone.utc)
-                current_subject_category.updated_by = current_user.twitch_id
+                current_subject_category.updated_by = current_user.id
                 db.session.commit()
                 return redirect(url_for('main.dash_subject_categories'))
             # subject category already exists, prompt name change
@@ -1238,8 +1238,8 @@ def dash_statuslabels_create():
                             notes=form.notes.data,
                             created_at=datetime.now(timezone.utc),
                             updated_at=datetime.now(timezone.utc),
-                            created_by=current_user.twitch_id,
-                            updated_by=current_user.twitch_id)
+                            created_by=current_user.id,
+                            updated_by=current_user.id)
             db.session.add(status)
             db.session.commit()
             return redirect(url_for('main.dash_statuslabels'))
@@ -1370,7 +1370,7 @@ def dash_statuslabels_edit(id):
                 current_status.color = form.color.data
                 current_status.notes = form.notes.data
                 current_status.updated_at = datetime.now(timezone.utc)
-                current_status.updated_by = current_user.twitch_id
+                current_status.updated_by = current_user.id
                 db.session.commit()
                 return redirect(url_for('main.dash_statuslabels'))
             # status already exists, prompt name change

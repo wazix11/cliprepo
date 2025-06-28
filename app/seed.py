@@ -22,7 +22,8 @@ def seed_database():
 
     if not db.session.query(User).filter_by(twitch_id='system').first():
         system_user = User(
-            twitch_id='system',
+            id=1,
+            twitch_id=1,
             login='system',
             display_name='System',
             profile_image_url='',

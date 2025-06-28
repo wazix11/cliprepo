@@ -8,7 +8,7 @@ from app import db
 from app.auth import bp
 from app.models import User
 
-load_dotenv()
+load_dotenv(override=True)
 TWITCH_CLIENT_ID = os.environ.get('TWITCH_CLIENT_ID')
 TWITCH_CLIENT_SECRET = os.environ.get('TWITCH_CLIENT_SECRET')
 TWITCH_CLIENT_ACCESS_TOKEN = ''

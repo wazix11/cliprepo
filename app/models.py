@@ -112,14 +112,7 @@ class User(UserMixin, db.Model):
     updated_subject_categories: so.Mapped[List['Subject']] = so.relationship(
         'SubjectCategory', back_populates='updated_by_user', foreign_keys='SubjectCategory.updated_by'
     )
-
-    # Relationships to track clips created/updated by the user
-    created_clips: so.Mapped[List['Clip']] = so.relationship(
-        'Clip',
-        primaryjoin="User.twitch_id == Clip.creator_id",
-        back_populates='creator',
-        foreign_keys='Clip.creator_id'
-    )
+    
     updated_clips: so.Mapped[List['Clip']] = so.relationship(
         'Clip',
         back_populates='updated_by_user',
@@ -253,8 +246,7 @@ class Clip(db.Model):
     embed_url: so.Mapped[str] = so.mapped_column(sa.String(128))
     broadcaster_id: so.Mapped[int] = so.mapped_column(sa.Integer)
     broadcaster_name: so.Mapped[str] = so.mapped_column(sa.String(32), index=True)
-    creator_id: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.twitch_id'))
-    creator: so.Mapped['User'] = so.relationship('User', back_populates='created_clips', foreign_keys=[creator_id])
+    creator_id: so.Mapped[int] = so.mapped_column(sa.Integer)
     creator_name: so.Mapped[str] = so.mapped_column(sa.String(32), index=True)
     video_id: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True)
     game_id: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True)
@@ -302,8 +294,8 @@ class ActivityLog(db.Model):
     action: so.Mapped[str] = so.mapped_column(sa.String(16), nullable=False)
     changes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
     
-    # Relationship to the User who performed the action (Admin)
-    admin_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), nullable=False)
+    # Relationship to the User who performed the action
+    admin_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), nullable=True)
     admin: so.Mapped['User'] = so.relationship(back_populates='activities')
     
     def __repr__(self):
