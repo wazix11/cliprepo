@@ -11,6 +11,7 @@ from app.models import User
 load_dotenv(override=True)
 TWITCH_CLIENT_ID = os.environ.get('TWITCH_CLIENT_ID')
 TWITCH_CLIENT_SECRET = os.environ.get('TWITCH_CLIENT_SECRET')
+TWITCH_OAUTH_REDIRECT_URI = os.environ.get('TWITCH_OAUTH_REDIRECT_URI')
 TWITCH_CLIENT_ACCESS_TOKEN = ''
 TWITCH_AUTHORIZE_URL = 'https://id.twitch.tv/oauth2/authorize'
 TWITCH_SCOPES = []
@@ -86,8 +87,7 @@ def oauth2_authorize():
     # create a query string with all the OAuth2 parameters
     qs = urlencode({
         'client_id': TWITCH_CLIENT_ID,
-        'redirect_uri': url_for('auth.oauth2_callback',
-                                _external=True),
+        'redirect_uri': f'{TWITCH_OAUTH_REDIRECT_URI}/callback',
         'response_type': 'code',
         'scope': ' '.join(TWITCH_SCOPES),
         'state': session['oauth2_state'],
@@ -125,8 +125,7 @@ def oauth2_callback():
         'client_secret': TWITCH_CLIENT_SECRET,
         'code': request.args['code'],
         'grant_type': 'authorization_code',
-        'redirect_uri': url_for('auth.oauth2_callback',
-                                _external=True),
+        'redirect_uri': f'{TWITCH_OAUTH_REDIRECT_URI}/callback',
     }, headers={'Accept': 'application/json'})
     if response.status_code != 200:
         print('Access token request failed')

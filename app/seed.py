@@ -20,7 +20,7 @@ def seed_database():
                                 )
         db.session.add(default_status)
 
-    if not db.session.query(User).filter_by(twitch_id='system').first():
+    if not db.session.query(User).filter_by(twitch_id=1).first():
         system_user = User(
             id=1,
             twitch_id=1,
