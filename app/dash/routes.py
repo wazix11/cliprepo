@@ -1,5 +1,5 @@
-from flask import render_template, flash, redirect, url_for, request, session
-import math, os
+from flask import render_template, render_template_string, flash, redirect, url_for, request, session
+import math, os, subprocess
 from datetime import datetime, timezone
 from flask_login import current_user, login_required
 from app.main import bp
@@ -10,8 +10,9 @@ from sqlalchemy import or_
 from app.dash.forms import *
 from app.scheduler.tasks.update_clips import update_clips
 
-load_dotenv()
+load_dotenv(override=True)
 EMBED_PARENT = os.environ.get('EMBED_PARENT')
+GOACCESS_REPORT_PATH = os.environ.get('GOACCESS_REPORT_PATH', 'app/static/report.html')
 
 def set_session_filters(route, page=1, size=20, order='asc', sort='id', search=''):
     session[route] = {
@@ -1409,3 +1410,21 @@ def dash_statuslabels_delete(id):
             db.session.commit()
             return redirect(url_for('main.dash_statuslabels'))
     return render_template('dash/statuslabels/delete_statuslabel.html', title='Dashboard - Delete Status Label', sidebar=sidebar_labels, form=form, status=status)
+
+@bp.route('/dashboard/reports/goaccess', methods=['GET'])
+@login_required
+@rank_required('SUPERADMIN')
+def dash_reports_goaccess():
+    sidebar_labels = Status.query.order_by('id')
+    # Generate GoAccess report in the static directory
+    try:
+        subprocess.run([
+            '/usr/bin/goaccess',
+            '-f', '/var/log/nginx/access.log',
+            '-o', GOACCESS_REPORT_PATH,
+            '--log-format=COMBINED'
+        ], check=True)
+    except subprocess.CalledProcessError as e:
+        flash(f'Error generating GoAccess report: {e}', 'error')
+        return redirect(url_for('main.dashboard'))
+    return render_template('dash/reports/goaccess.html', title='Dashboard - GoAccess Reports', sidebar=sidebar_labels)

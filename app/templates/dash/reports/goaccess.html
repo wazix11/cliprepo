@@ -1,0 +1,15 @@
+{% extends "dash/dashboard_base.html" %}
+
+{% block dash_content %}
+    <section class="main-content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-light">
+                    <div class="box-body">
+                        <iframe src="{{ url_for('static', filename='report.html') }}" width="100%" height="800px" style="border: none;"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
