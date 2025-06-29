@@ -1411,23 +1411,13 @@ def dash_statuslabels_delete(id):
             return redirect(url_for('main.dash_statuslabels'))
     return render_template('dash/statuslabels/delete_statuslabel.html', title='Dashboard - Delete Status Label', sidebar=sidebar_labels, form=form, status=status)
 
-@bp.route('/dashboard/reports/goaccess', methods=['GET'])
+@bp.route('/dashboard/reports/goaccess-live', methods=['GET'])
 @login_required
 @rank_required('SUPERADMIN')
-def dash_reports_goaccess():
+def dash_reports_goaccess_live():
     sidebar_labels = Status.query.order_by('id')
-    # Generate GoAccess report in the static directory
-    try:
-        subprocess.run([
-            '/usr/bin/goaccess',
-            '-f', '/var/log/nginx/access.log',
-            '-o', GOACCESS_REPORT_PATH,
-            '--log-format=COMBINED'
-        ], check=True)
-    except subprocess.CalledProcessError as e:
-        flash(f'Error generating GoAccess report: {e.stderr or e}', 'danger')
-        return redirect(url_for('main.dashboard'))
-    except FileNotFoundError:
-        flash('GoAccess is not installed or not found in the expected path.', 'danger')
-        return redirect(url_for('main.dashboard'))
-    return render_template('dash/reports/goaccess.html', title='Dashboard - GoAccess Reports', sidebar=sidebar_labels)
+    return render_template(
+        'dash/reports/goaccess_live.html',
+        title='Dashboard - GoAccess Live Reports',
+        sidebar=sidebar_labels
+    )
