@@ -1425,6 +1425,9 @@ def dash_reports_goaccess():
             '--log-format=COMBINED'
         ], check=True)
     except subprocess.CalledProcessError as e:
-        flash(f'Error generating GoAccess report: {e}', 'error')
+        flash(f'Error generating GoAccess report: {e.stderr or e}', 'danger')
+        return redirect(url_for('main.dashboard'))
+    except FileNotFoundError:
+        flash('GoAccess is not installed or not found in the expected path.', 'danger')
         return redirect(url_for('main.dashboard'))
     return render_template('dash/reports/goaccess.html', title='Dashboard - GoAccess Reports', sidebar=sidebar_labels)
