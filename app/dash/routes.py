@@ -1,5 +1,5 @@
-from flask import render_template, render_template_string, flash, redirect, url_for, request, session
-import math, os, subprocess
+from flask import render_template, flash, redirect, url_for, request, session
+import math, os
 from datetime import datetime, timezone
 from flask_login import current_user, login_required
 from app.main import bp
@@ -1419,5 +1419,6 @@ def dash_reports_goaccess():
     return render_template(
         'dash/reports/goaccess.html',
         title='Dashboard - GoAccess Reports',
-        sidebar=sidebar_labels
+        sidebar=sidebar_labels,
+        now=int(datetime.now(timezone.utc).timestamp())
     )
