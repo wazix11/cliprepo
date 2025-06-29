@@ -241,7 +241,7 @@ class Subject(db.Model):
     
 class Clip(db.Model):
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True)
-    twitch_id: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True)
+    twitch_id: so.Mapped[str] = so.mapped_column(sa.String(128), unique=True)
     url: so.Mapped[str] = so.mapped_column(sa.String(128))
     embed_url: so.Mapped[str] = so.mapped_column(sa.String(128))
     broadcaster_id: so.Mapped[int] = so.mapped_column(sa.Integer)
