@@ -1,7 +1,7 @@
 from app import create_app, apscheduler
 from app.scheduler.tasks.update_clips import update_clips
 from datetime import datetime, timezone, timedelta
-import os
+import os, subprocess
 
 app = create_app()
 
@@ -24,8 +24,20 @@ def update_recent_clips_job():
         six_days_ago = (datetime.now(timezone.utc) - timedelta(days=6)).isoformat(timespec='seconds').replace('+00:00', 'Z')
         update_clips(started_at=six_days_ago, save_to_file=False)
 
+def update_goaccess_report():
+    try:
+        subprocess.run([
+            '/usr/bin/goaccess',
+            '-f', '/var/log/alveusclips_access.log',
+            '-o', '/home/waz/AlveusClips/app/static/report.html',
+            '--log-format=COMBINED'
+        ])
+    except Exception as e:
+        print(f"Error updating GoAccess report: {e}", 'error')
+
 apscheduler.add_job(update_clips_job, 'interval', minutes=5, misfire_grace_time=30)
 apscheduler.add_job(update_recent_clips_job, 'interval', minutes=1, misfire_grace_time=15)
+apscheduler.add_job(update_goaccess_report, 'interval', minutes=5, misfire_grace_time=30)
 
 apscheduler.start()
 print("Scheduler started. Press Ctrl+C to exit.")
