@@ -1411,13 +1411,13 @@ def dash_statuslabels_delete(id):
             return redirect(url_for('main.dash_statuslabels'))
     return render_template('dash/statuslabels/delete_statuslabel.html', title='Dashboard - Delete Status Label', sidebar=sidebar_labels, form=form, status=status)
 
-@bp.route('/dashboard/reports/goaccess-live', methods=['GET'])
+@bp.route('/dashboard/reports/goaccess', methods=['GET'])
 @login_required
 @rank_required('SUPERADMIN')
-def dash_reports_goaccess_live():
+def dash_reports_goaccess():
     sidebar_labels = Status.query.order_by('id')
     return render_template(
-        'dash/reports/goaccess_live.html',
-        title='Dashboard - GoAccess Live Reports',
+        'dash/reports/goaccess.html',
+        title='Dashboard - GoAccess Reports',
         sidebar=sidebar_labels
     )
