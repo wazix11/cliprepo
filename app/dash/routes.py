@@ -119,7 +119,7 @@ def dash_clips():
         'subjects': 'Subjects',
     }
     # Make sure the sort input is valid
-    if sort in columns.keys():
+    if sort in columns.keys() and sort not in ['category', 'status', 'themes', 'subjects']:
         if sort == 'clips':
             query = Clip.query.outerjoin(Clip, Clip.twitch_id == Clip.creator_id).group_by(Clip.twitch_id).filter(
                 or_(

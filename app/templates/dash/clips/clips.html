@@ -59,14 +59,18 @@
                                 <thead>
                                     <tr>
                                         {% for key, val in columns|items %}
-                                            {% if key == sort %}
-                                                {% if order == 'desc' %}
-                                                <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-down" style="margin-left: 10px;"></i></a></th>
-                                                {% else %}
-                                                <th><a href="?page={{ num }}&size={{ size }}&order=desc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-up" style="margin-left: 10px;"></i></a></th>
-                                                {% endif %}
+                                            {% if key in ['category', 'status', 'themes', 'subjects'] %}
+                                                <th class="text-center">{{ val }}</th>
                                             {% else %}
-                                                <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort" style="margin-left: 10px;"></i></a></th>
+                                                {% if key == sort %}
+                                                    {% if order == 'desc' %}
+                                                    <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-down" style="margin-left: 10px;"></i></a></th>
+                                                    {% else %}
+                                                    <th><a href="?page={{ num }}&size={{ size }}&order=desc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-up" style="margin-left: 10px;"></i></a></th>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort" style="margin-left: 10px;"></i></a></th>
+                                                {% endif %}
                                             {% endif %}
                                         {% endfor %}
                                         <th>Actions</th>

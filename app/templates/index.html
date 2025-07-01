@@ -44,37 +44,43 @@
                                 hx-swap="innerHTML">
                                 <input type="hidden" name="sort" id="sort-input" value="">
                                 <input type="hidden" name="timeframe" id="timeframe-input" value="">
-                                <select name="category" class="form-control selectpicker mx-1" 
-                                    data-style="btn-alveus-green" 
-                                    data-width="160px">
-                                    <option value="">Select a category</option>
-                                    {% for category in categories %}
-                                        <option value="{{ category.id }}" {% if selected_category and category.id == selected_category %}selected{% endif %}>{{ category.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <select name="themes" class="form-control selectpicker mx-1" 
-                                    data-style="btn-alveus-green" 
-                                    data-width="160px" multiple
-                                    title="Select theme(s)"
-                                    data-selected-text-format="count > 3">
-                                    {% for theme in themes %}
-                                        <option value="{{ theme.id }}" {% if theme.id in selected_themes %}selected{% endif %}>{{ theme.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <select name="subjects" class="form-control selectpicker mx-1" 
-                                    data-style="btn-alveus-green" 
-                                    data-width="160px" multiple 
-                                    data-live-search="true"
-                                    title="Select subject(s)"
-                                    data-selected-text-format="count > 3">
-                                    {% for subject_category in subject_categories %}
-                                        <optgroup label="{{ subject_category[0] }}">
-                                            {% for subject in subject_category[1] %}
-                                                <option value="{{ subject.id }}" data-subtext="{{ subject.subtext }}" data-tokens="{{ subject.keywords }}" {% if subject.id in selected_subjects %}selected{% endif %}>{{ subject.name }}</option>
-                                            {% endfor %}
-                                        </optgroup>
-                                    {% endfor %}
-                                </select>
+                                {% if categories %}
+                                    <select name="category" class="form-control selectpicker mx-1" 
+                                        data-style="btn-alveus-green" 
+                                        data-width="160px">
+                                        <option value="">Select a category</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category.id }}" {% if selected_category and category.id == selected_category %}selected{% endif %}>{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% endif %}
+                                {% if themes %}
+                                    <select name="themes" class="form-control selectpicker mx-1" 
+                                        data-style="btn-alveus-green" 
+                                        data-width="160px" multiple
+                                        title="Select theme(s)"
+                                        data-selected-text-format="count > 3">
+                                        {% for theme in themes %}
+                                            <option value="{{ theme.id }}" {% if theme.id in selected_themes %}selected{% endif %}>{{ theme.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% endif %}
+                                {% if subjects %}
+                                    <select name="subjects" class="form-control selectpicker mx-1" 
+                                        data-style="btn-alveus-green" 
+                                        data-width="160px" multiple 
+                                        data-live-search="true"
+                                        title="Select subject(s)"
+                                        data-selected-text-format="count > 3">
+                                        {% for subject_category in subject_categories %}
+                                            <optgroup label="{{ subject_category[0] }}">
+                                                {% for subject in subject_category[1] %}
+                                                    <option value="{{ subject.id }}" data-subtext="{{ subject.subtext }}" data-tokens="{{ subject.keywords }}" {% if subject.id in selected_subjects %}selected{% endif %}>{{ subject.name }}</option>
+                                                {% endfor %}
+                                            </optgroup>
+                                        {% endfor %}
+                                    </select>
+                                {% endif %}
                                 <input type="text" name="search" class="form-control mx-1" 
                                     style="max-width: 200px;" 
                                     placeholder="Filter..."
