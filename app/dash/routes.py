@@ -12,7 +12,6 @@ from app.scheduler.tasks.update_clips import update_clips
 
 load_dotenv(override=True)
 EMBED_PARENT = os.environ.get('EMBED_PARENT')
-GOACCESS_REPORT_PATH = os.environ.get('GOACCESS_REPORT_PATH', 'app/static/report.html')
 
 def set_session_filters(route, page=1, size=20, order='asc', sort='id', search=''):
     session[route] = {

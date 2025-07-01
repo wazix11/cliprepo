@@ -29,7 +29,7 @@ def update_goaccess_report():
         subprocess.run([
             '/usr/bin/goaccess',
             '-f', '/var/log/alveusclips_access.log',
-            '-o', '/home/waz/AlveusClips/app/static/report.html',
+            '-o', '/home/ubuntu/AlveusClips/app/static/report.html',
             '--log-format=COMBINED'
         ])
     except Exception as e:
