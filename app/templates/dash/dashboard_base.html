@@ -41,19 +41,16 @@
                         <li class="sidebar-item">
                             <a href="#" class="sidebar-link">Import</a>
                         </li>
-                        {% if current_user.rank.name in ['SUPERADMIN', 'ADMIN'] %}
-                            <li class="sidebar-item">
-                                <a href="{{ url_for('main.get_clips') }}" class="sidebar-link">Get Clips</a>
-                            </li>
-                        {% endif %}
                     </ul>
                 </li>
+                {% if current_user.rank.name in ['SUPERADMIN', 'ADMIN'] %}
                 <li class="sidebar-item">
                     <a href="{{ url_for('main.dash_users') }}" class="sidebar-link">
                         <i class="fa-solid fa-user"></i>
                         <span>Users</span>
                     </a>
                 </li>
+                {% endif %}
                 <li class="sidebar-item">
                     <a href="{{ url_for('main.dash_categories') }}" class="sidebar-link">
                         <i class="fa-solid fa-table-list"></i>
@@ -89,6 +86,7 @@
                         <span>Status Labels</span>
                     </a>
                 </li>
+                {% if current_user.rank.name in ['SUPERADMIN', 'ADMIN'] %}
                 <li class="sidebar-item">
                     <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
                         data-bs-target="#settings" aria-expanded="false" aria-controls="settings">
@@ -101,6 +99,8 @@
                         </li>
                     </ul>
                 </li>
+                {% endif %}
+                {% if current_user.rank.name in ['SUPERADMIN', 'ADMIN'] %}
                 <li class="sidebar-item">
                     <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
                         data-bs-target="#reports" aria-expanded="false" aria-controls="reports">
@@ -114,11 +114,14 @@
                         <li class="sidebar-item">
                             <a href="#" class="sidebar-link">Clip Report</a>
                         </li>
+                        {% if current_user.rank.name == 'SUPERADMIN' %}
                         <li class="sidebar-item">
                             <a href="{{ url_for('main.dash_reports_goaccess') }}" class="sidebar-link">GoAccess Report</a>
                         </li>
+                        {% endif %}
                     </ul>
                 </li>
+                {% endif %}
             </ul>
         </aside>
         <div class="main min-vh-100">

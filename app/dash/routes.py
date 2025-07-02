@@ -8,7 +8,6 @@ from decorators import rank_required
 from app.models import *
 from sqlalchemy import or_
 from app.dash.forms import *
-from app.scheduler.tasks.update_clips import update_clips
 
 load_dotenv(override=True)
 EMBED_PARENT = os.environ.get('EMBED_PARENT')
@@ -252,7 +251,7 @@ def dash_clips_edit(id):
 
 @bp.route('/dashboard/clips/<id>/delete', methods=['GET', 'POST'])
 @login_required
-@rank_required('SUPERADMIN', 'ADMIN')
+@rank_required('SUPERADMIN')
 def dash_clips_delete(id):
     clip = Clip.query.filter(Clip.id == id).first()
     if clip != None:
@@ -276,13 +275,6 @@ def dash_clips_delete(id):
             db.session.commit()
             return redirect(url_for('main.dash_clips'))
     return render_template('dash/clips/delete_clip.html', title='Dashboard - Delete Clip', sidebar=sidebar_labels, form=form, clip=clip)
-    
-@bp.route('/get_clips')
-@login_required
-@rank_required('SUPERADMIN', 'ADMIN')
-def get_clips():
-    update_clips()
-    return redirect(url_for('main.dash_clips'))
 
 # 
 # 
@@ -503,7 +495,7 @@ def dash_categories():
 
 @bp.route('/dashboard/categories/create', methods=['GET', 'POST'])
 @login_required
-@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+@rank_required('SUPERADMIN', 'ADMIN')
 def dash_categories_create():
     form = categoryForm()
     sidebar_labels = Status.query.order_by('id')
@@ -530,7 +522,7 @@ def dash_categories_create():
     
 @bp.route('/dashboard/categories/<id>/edit', methods=['GET', 'POST'])
 @login_required
-@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+@rank_required('SUPERADMIN', 'ADMIN')
 def dash_categories_edit(id):
     current_category = Category.query.filter(Category.id == id).first()
     current_category_info = []
@@ -673,7 +665,7 @@ def dash_themes():
 
 @bp.route('/dashboard/themes/create', methods=['GET', 'POST'])
 @login_required
-@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+@rank_required('SUPERADMIN', 'ADMIN')
 def dash_themes_create():
     form = themeForm()
     sidebar_labels = Status.query.order_by('id')
@@ -700,7 +692,7 @@ def dash_themes_create():
     
 @bp.route('/dashboard/themes/<id>/edit', methods=['GET', 'POST'])
 @login_required
-@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+@rank_required('SUPERADMIN', 'ADMIN')
 def dash_themes_edit(id):
     current_theme = Theme.query.filter(Theme.id == id).first()
     current_theme_info = []
@@ -856,7 +848,7 @@ def dash_subjects():
     
 @bp.route('/dashboard/subjects/create', methods=['GET', 'POST'])
 @login_required
-@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+@rank_required('SUPERADMIN', 'ADMIN')
 def dash_subjects_create():
     form = subjectForm()
     form.category.choices = [(c.id, c.name) for c in SubjectCategory.query.order_by('id')]
@@ -888,7 +880,7 @@ def dash_subjects_create():
     
 @bp.route('/dashboard/subjects/<id>/edit', methods=['GET', 'POST'])
 @login_required
-@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+@rank_required('SUPERADMIN', 'ADMIN')
 def dash_subjects_edit(id):
     current_subject = Subject.query.filter(Subject.id == id).first()
     current_subject_info = []
@@ -1041,7 +1033,7 @@ def dash_subject_categories():
    
 @bp.route('/dashboard/subject_categories/create', methods=['GET', 'POST'])
 @login_required
-@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+@rank_required('SUPERADMIN', 'ADMIN')
 def dash_subject_categories_create():
     form = subjectCategoryForm()
     sidebar_labels = Status.query.order_by('id')
@@ -1068,7 +1060,7 @@ def dash_subject_categories_create():
     
 @bp.route('/dashboard/subject_categories/<id>/edit', methods=['GET', 'POST'])
 @login_required
-@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+@rank_required('SUPERADMIN', 'ADMIN')
 def dash_subject_categories_edit(id):
     current_subject_category = SubjectCategory.query.filter(SubjectCategory.id == id).first()
     current_subject_category_info = []
@@ -1221,7 +1213,7 @@ def dash_statuslabels():
     
 @bp.route('/dashboard/statuslabels/create', methods=['GET', 'POST'])
 @login_required
-@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+@rank_required('SUPERADMIN', 'ADMIN')
 def dash_statuslabels_create():
     form = statusLabelForm()
     sidebar_labels = Status.query.order_by('id')
@@ -1336,7 +1328,7 @@ def dash_statuslabels_clips(id):
 
 @bp.route('/dashboard/statuslabels/<id>/edit', methods=['GET', 'POST'])
 @login_required
-@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+@rank_required('SUPERADMIN', 'ADMIN')
 def dash_statuslabels_edit(id):
     current_status = Status.query.filter(Status.id == id).first()
     current_status_info = []
