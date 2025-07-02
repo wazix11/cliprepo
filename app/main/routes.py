@@ -219,7 +219,6 @@ def index():
     subjects = get_value(None, session_filters.get('subjects', []), [])
     search = get_value(None, session_filters.get('search'), '')
     page = 1
-    print(subject_choices)
     
     formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, search)
     return render_template(
