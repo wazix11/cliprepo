@@ -23,7 +23,13 @@
                 </span>
             </div>
             <div class="clip-title">
-                <a href="{{ clip.url }}" target="_blank" rel="noopener noreferrer">{{ clip.title }}</a>
+                <a href="{{ clip.url }}" target="_blank" rel="noopener noreferrer">
+                    {% if clip.title_override %}
+                        {{ clip.title_override }}
+                    {% else %}
+                        {{ clip.title }}
+                    {% endif %}
+                </a>
             </div>
             <div class="clip-info">
                 <div class="row">
@@ -68,7 +74,8 @@
      hx-post="/load-clips?page={{ currentPage }}&sort={{ sort }}&timeframe={{ timeframe }}"
      hx-trigger="revealed"
      hx-target="#load-more"
-     hx-swap="outerHTML">
+     hx-swap="outerHTML"
+     hx-include="#filter-form">
     <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
     </div>

@@ -85,7 +85,7 @@ button.btn.clip-theme-btn {
     font-weight: bold;
     max-width: 90%;
     white-space: nowrap;
-    overflow: hidden;
+    overflow: clip;
     text-overflow: ellipsis;
     margin-top: 5px;
 }

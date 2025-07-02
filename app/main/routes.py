@@ -247,8 +247,8 @@ def load_clips():
     sort = get_value(request.form.get('sort'), session_filters.get('sort'), 'views')
     timeframe = get_value(request.form.get('timeframe'), session_filters.get('timeframe'), 'all')
     category = get_value(request.form.get('category'), session_filters.get('category'), None)
-    themes = get_value(request.form.getlist('themes'), session_filters.get('themes', []), [])
-    subjects = get_value(request.form.getlist('subjects'), session_filters.get('subjects', []), [])
+    themes = get_value(request.form.getlist('themes'), session_filters.get('themes'), [])
+    subjects = get_value(request.form.getlist('subjects'), session_filters.get('subjects'), [])
     search = get_value(request.form.get('search'), session_filters.get('search'), '')
     
     # Set session filters
