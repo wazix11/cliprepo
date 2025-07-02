@@ -197,11 +197,11 @@ def index():
 
     # Group subjects by category
     for sc in SubjectCategory.query.order_by('id'):
-        subject_choices = Subject.query.filter(Subject.category_id == sc.id).order_by('id').all()
-        if not subject_choices:
+        sc_subject_choices = Subject.query.filter(Subject.category_id == sc.id).order_by('id').all()
+        if not sc_subject_choices:
             continue
         group_choices = []
-        for su in subject_choices:
+        for su in sc_subject_choices:
             group_choices.append({
                 'id': su.id, 
                 'name': su.name,
@@ -219,6 +219,7 @@ def index():
     subjects = get_value(None, session_filters.get('subjects', []), [])
     search = get_value(None, session_filters.get('search'), '')
     page = 1
+    print(subject_choices)
     
     formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, search)
     return render_template(
