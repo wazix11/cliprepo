@@ -101,21 +101,21 @@ def dash_clips():
     set_session_filters('clips', page, size, order, sort, search)
     columns = {
         'id': 'ID',
-        'twitch_id': 'Twitch ID',
         'broadcaster_name': 'Broadcaster',
         'creator_name': 'Creator',
         'title': 'Title',
         'title_override': 'Title Override',
         'view_count': 'Views',
         'created_at': 'Created At',
-        'updated_by': 'Updated By',
-        'updated_at': 'Updated At',
         'duration': 'Duration',
         'notes': 'Notes',
         'category': 'Category',
         'status': 'Status',
         'themes': 'Themes',
         'subjects': 'Subjects',
+        'updated_by': 'Updated By',
+        'updated_at': 'Updated At',
+        'twitch_id': 'Twitch ID',
     }
     # Make sure the sort input is valid
     if sort in columns.keys() and sort not in ['category', 'status', 'themes', 'subjects']:
@@ -1253,25 +1253,25 @@ def dash_statuslabels_clips(id):
     set_session_filters('clips', page, size, order, sort, search)
     columns = {
         'id': 'ID',
-        'twitch_id': 'Twitch ID',
         'broadcaster_name': 'Broadcaster',
         'creator_name': 'Creator',
         'title': 'Title',
         'title_override': 'Title Override',
         'view_count': 'Views',
         'created_at': 'Created At',
-        'updated_by': 'Updated By',
-        'updated_at': 'Updated At',
         'duration': 'Duration',
         'notes': 'Notes',
         'category': 'Category',
         'status': 'Status',
         'themes': 'Themes',
         'subjects': 'Subjects',
+        'updated_by': 'Updated By',
+        'updated_at': 'Updated At',
+        'twitch_id': 'Twitch ID',
     }
     statuslabel = Status.query.filter(Status.id == id).first()
     # Make sure the sort input is valid
-    if sort in columns.keys():
+    if sort in columns.keys() and sort not in ['category', 'status', 'themes', 'subjects']:
         if sort == 'clips':
             query = Clip.query.outerjoin(Clip, Clip.twitch_id == Clip.creator_id).group_by(Clip.twitch_id).filter(
                 or_(

@@ -58,34 +58,41 @@
                             <table class="table table-striped dashboard-table" id="clipTable">
                                 <thead>
                                     <tr>
+                                        <th>Actions</th>
                                         {% for key, val in columns|items %}
-                                            {% if key == sort %}
-                                                {% if order == 'desc' %}
-                                                <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-down" style="margin-left: 10px;"></i></a></th>
-                                                {% else %}
-                                                <th><a href="?page={{ num }}&size={{ size }}&order=desc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-up" style="margin-left: 10px;"></i></a></th>
-                                                {% endif %}
+                                            {% if key in ['category', 'status', 'themes', 'subjects'] %}
+                                                <th class="text-center">{{ val }}</th>
                                             {% else %}
-                                                <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort" style="margin-left: 10px;"></i></a></th>
+                                                {% if key == sort %}
+                                                    {% if order == 'desc' %}
+                                                    <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-down" style="margin-left: 10px;"></i></a></th>
+                                                    {% else %}
+                                                    <th><a href="?page={{ num }}&size={{ size }}&order=desc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-up" style="margin-left: 10px;"></i></a></th>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort" style="margin-left: 10px;"></i></a></th>
+                                                {% endif %}
                                             {% endif %}
                                         {% endfor %}
-                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% if clips.total > 0 %}
                                         {% for clip in clips %}
                                         <tr>
+                                            <td style="white-space: nowrap;">
+                                                <a href="{{ url_for('main.dash_clips_edit', id=clip.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
+                                                {% if current_user.rank_id >= 3 %}
+                                                    <a href="{{ url_for('main.dash_clips_delete', id=clip.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                {% endif %}
+                                            </td>
                                             <td>{{ clip.id }}</td>
-                                            <td style="max-width: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ clip.twitch_id }}</td>
                                             <td>{{ clip.broadcaster_name }}</td>
                                             <td>{{ clip.creator_name }}</td>
                                             <td><a href="{{ clip.url }}" target="_blank" rel="noopener noreferrer">{{ clip.title }}</a></td>
                                             <td>{{ clip.title_override }}</td>
                                             <td>{{ clip.view_count }}</td>
                                             <td>{{ clip.created_at }}</td>
-                                            <td>{{ clip.updated_by_user.display_name }}</td>
-                                            <td>{{ clip.updated_at }}</td>
                                             <td>{{ clip.duration }}</td>
                                             <td>{{ clip.notes }}</td>
                                             <td>{{ clip.category.name }}</td>
@@ -100,14 +107,9 @@
                                                     {{ subject.name }}{% if not loop.last %}, {% endif %}
                                                 {% endfor %}
                                             </td>
-                                            <td style="white-space: nowrap;">
-                                                <a href="{{ url_for('main.dash_clips_edit', id=clip.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
-                                                {% if current_user.rank_id < 3 %}
-                                                    <a href="{{ url_for('main.dash_clips_delete', id=clip.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
-                                                {% else %}
-                                                    <a href="{{ url_for('main.dash_clips_delete', id=clip.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
-                                                {% endif %}
-                                            </td>
+                                            <td>{{ clip.updated_by_user.display_name }}</td>
+                                            <td>{{ clip.updated_at }}</td>
+                                            <td style="max-width: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ clip.twitch_id }}</td>
                                         </tr>
                                         {% endfor %}
                                     {% else %}
