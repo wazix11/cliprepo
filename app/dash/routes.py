@@ -218,8 +218,14 @@ def dash_clips_edit(id):
     
     sidebar_labels = Status.query.order_by('id')
 
+    if request.method == 'GET':
+        referrer = request.referrer
+        if referrer and not referrer.endswith(request.path):
+            session['edit_clip_referrer'] = referrer
+
     if request.method == 'POST':
         if form.cancel.data:
+            session.pop('edit_clip_referrer', None)
             return redirect(url_for('main.dash_clips'))
     if form.validate_on_submit():
         form_info = [form.title_override.data, 
@@ -230,6 +236,7 @@ def dash_clips_edit(id):
                      form.subjects.data] # list to compare with current_clip_info
         # if the form data hasn't changed, just redirect to clips page
         if form_info == current_clip_info:
+            session.pop('edit_clip_referrer', None)
             return redirect(url_for('main.dash_clips'))
         # otherwise handle changes
         else:
@@ -246,6 +253,10 @@ def dash_clips_edit(id):
             current_clip.updated_by = current_user.id
             current_clip.updated_at = datetime.now(timezone.utc)
             db.session.commit()
+
+            referrer = session.pop('edit_clip_referrer', None)
+            if referrer:
+                return redirect(referrer)
             return redirect(url_for('main.dash_clips'))
     return render_template('dash/clips/edit_clip.html', title='Dashboard - Edit Clip', sidebar=sidebar_labels, form=form, clip=current_clip, embed_parent=EMBED_PARENT)
 
