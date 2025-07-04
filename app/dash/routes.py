@@ -119,8 +119,11 @@ def dash_clips():
     }
     # Make sure the sort input is valid
     if sort in columns.keys() and sort not in ['category', 'status', 'themes', 'subjects']:
-        if sort == 'clips':
-            query = Clip.query.outerjoin(Clip, Clip.twitch_id == Clip.creator_id).group_by(Clip.twitch_id).filter(
+        query = (
+            Clip.query
+            .join(Status, Clip.status_id == Status.id)
+            .filter(Status.type != 'Hidden')
+            .filter(
                 or_(
                     Clip.twitch_id.ilike(f'%{search}%'),
                     Clip.broadcaster_name.ilike(f'%{search}%'),
@@ -133,38 +136,31 @@ def dash_clips():
                     # Clip.themes.ilike(f'%{search}%'),
                     # Clip.subjects.ilike(f'%{search}%')
                 )
-            ).order_by(db.func.count(Clip.id).desc() if order == 'desc' else db.func.count(Clip.id).asc())
-        else:
-            query = Clip.query.filter(
-                or_(
-                    Clip.twitch_id.ilike(f'%{search}%'),
-                    Clip.broadcaster_name.ilike(f'%{search}%'),
-                    Clip.creator_name.ilike(f'%{search}%'),
-                    Clip.title.ilike(f'%{search}%'),
-                    Clip.title_override.ilike(f'%{search}%'),
-                    Clip.notes.ilike(f'%{search}%'),
-                    # Clip.category.ilike(f'%{search}%'),
-                    # Clip.status.ilike(f'%{search}%'),
-                    # Clip.themes.ilike(f'%{search}%'),
-                    # Clip.subjects.ilike(f'%{search}%')
-                )
-            ).order_by(getattr(Clip, sort).desc() if order == 'desc' else getattr(Clip, sort).asc())
+            )
+            .order_by(getattr(Clip, sort).desc() if order == 'desc' else getattr(Clip, sort).asc())
+        )
     else:
         # Default to sort by id
-        query = Clip.query.filter(
-            or_(
-                Clip.twitch_id.ilike(f'%{search}%'),
-                Clip.broadcaster_name.ilike(f'%{search}%'),
-                Clip.creator_name.ilike(f'%{search}%'),
-                Clip.title.ilike(f'%{search}%'),
-                Clip.title_override.ilike(f'%{search}%'),
-                Clip.notes.ilike(f'%{search}%'),
-                # Clip.category.ilike(f'%{search}%'),
-                # Clip.status.ilike(f'%{search}%'),
-                # Clip.themes.ilike(f'%{search}%'),
-                # Clip.subjects.ilike(f'%{search}%')
+        query = (
+            Clip.query
+            .join(Status, Clip.status_id == Status.id)
+            .filter(Status.type != 'Hidden')
+            .filter(
+                or_(
+                    Clip.twitch_id.ilike(f'%{search}%'),
+                    Clip.broadcaster_name.ilike(f'%{search}%'),
+                    Clip.creator_name.ilike(f'%{search}%'),
+                    Clip.title.ilike(f'%{search}%'),
+                    Clip.title_override.ilike(f'%{search}%'),
+                    Clip.notes.ilike(f'%{search}%'),
+                    # Clip.category.ilike(f'%{search}%'),
+                    # Clip.status.ilike(f'%{search}%'),
+                    # Clip.themes.ilike(f'%{search}%'),
+                    # Clip.subjects.ilike(f'%{search}%')
+                )
             )
-        ).order_by(Clip.id.desc() if order == 'desc' else Clip.id.asc())
+            .order_by(Clip.id.desc() if order == 'desc' else Clip.id.asc())
+        )
     # Default to page 1 if page number isn't valid
     if page > math.ceil(query.count()/size) or page < 1:
         page = 1
@@ -1283,36 +1279,20 @@ def dash_statuslabels_clips(id):
     statuslabel = Status.query.filter(Status.id == id).first()
     # Make sure the sort input is valid
     if sort in columns.keys() and sort not in ['category', 'status', 'themes', 'subjects']:
-        if sort == 'clips':
-            query = Clip.query.outerjoin(Clip, Clip.twitch_id == Clip.creator_id).group_by(Clip.twitch_id).filter(
-                or_(
-                    Clip.twitch_id.ilike(f'%{search}%'),
-                    Clip.broadcaster_name.ilike(f'%{search}%'),
-                    Clip.creator_name.ilike(f'%{search}%'),
-                    Clip.title.ilike(f'%{search}%'),
-                    Clip.title_override.ilike(f'%{search}%'),
-                    Clip.notes.ilike(f'%{search}%'),
-                    # Clip.category.ilike(f'%{search}%'),
-                    # Clip.themes.ilike(f'%{search}%'),
-                    # Clip.subjects.ilike(f'%{search}%')
-                ),
-                Clip.status_id == id
-            ).order_by(db.func.count(Clip.id).desc() if order == 'desc' else db.func.count(Clip.id).asc())
-        else:
-            query = Clip.query.filter(
-                or_(
-                    Clip.twitch_id.ilike(f'%{search}%'),
-                    Clip.broadcaster_name.ilike(f'%{search}%'),
-                    Clip.creator_name.ilike(f'%{search}%'),
-                    Clip.title.ilike(f'%{search}%'),
-                    Clip.title_override.ilike(f'%{search}%'),
-                    Clip.notes.ilike(f'%{search}%'),
-                    # Clip.category.ilike(f'%{search}%'),
-                    # Clip.themes.ilike(f'%{search}%'),
-                    # Clip.subjects.ilike(f'%{search}%')
-                ),
-                Clip.status_id == id
-            ).order_by(getattr(Clip, sort).desc() if order == 'desc' else getattr(Clip, sort).asc())
+        query = Clip.query.filter(
+            or_(
+                Clip.twitch_id.ilike(f'%{search}%'),
+                Clip.broadcaster_name.ilike(f'%{search}%'),
+                Clip.creator_name.ilike(f'%{search}%'),
+                Clip.title.ilike(f'%{search}%'),
+                Clip.title_override.ilike(f'%{search}%'),
+                Clip.notes.ilike(f'%{search}%'),
+                # Clip.category.ilike(f'%{search}%'),
+                # Clip.themes.ilike(f'%{search}%'),
+                # Clip.subjects.ilike(f'%{search}%')
+            ),
+            Clip.status_id == id
+        ).order_by(getattr(Clip, sort).desc() if order == 'desc' else getattr(Clip, sort).asc())
     else:
         # Default to sort by id
         query = Clip.query.filter(
