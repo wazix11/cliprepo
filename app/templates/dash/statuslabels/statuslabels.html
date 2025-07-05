@@ -92,10 +92,12 @@
                                             <td>{{ label.updated_at }}</td>
                                             <td style="white-space: nowrap;">
                                                 <a href="{{ url_for('main.dash_statuslabels_edit', id=label.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
-                                                {% if label.clips|length > 0 %}
-                                                    <a href="{{ url_for('main.dash_statuslabels_delete', id=label.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
-                                                {% else %}
-                                                    <a href="{{ url_for('main.dash_statuslabels_delete', id=label.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                {% if current_user.rank_id >= 3 %}
+                                                    {% if label.clips|length > 0 %}
+                                                        <a href="{{ url_for('main.dash_statuslabels_delete', id=label.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                    {% else %}
+                                                        <a href="{{ url_for('main.dash_statuslabels_delete', id=label.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                    {% endif %}
                                                 {% endif %}
                                             </td>
                                         </tr>

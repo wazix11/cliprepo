@@ -87,10 +87,12 @@
                                             <td>{{ theme.updated_at }}</td>
                                             <td style="white-space: nowrap;">
                                                 <a href="{{ url_for('main.dash_themes_edit', id=theme.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
-                                                {% if theme.clips|length > 0 %}
-                                                    <a href="{{ url_for('main.dash_themes_delete', id=theme.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
-                                                {% else %}
-                                                    <a href="{{ url_for('main.dash_themes_delete', id=theme.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                {% if current_user.rank_id >= 3 %}
+                                                    {% if theme.clips|length > 0 %}
+                                                        <a href="{{ url_for('main.dash_themes_delete', id=theme.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                    {% else %}
+                                                        <a href="{{ url_for('main.dash_themes_delete', id=theme.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                    {% endif %}
                                                 {% endif %}
                                             </td>
                                         </tr>
