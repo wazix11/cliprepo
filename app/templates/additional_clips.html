@@ -23,7 +23,7 @@
                 </span>
             </div>
             <div class="clip-title">
-                <a href="{{ clip.url }}" target="_blank" rel="noopener noreferrer">
+                <a href="{{ clip.url }}" target="_blank" rel="noopener noreferrer" {% if clip.title_override %}title="{{ clip.title_override }}"{% else %}title="{{ clip.title }}"{% endif %}>
                     {% if clip.title_override %}
                         {{ clip.title_override }}
                     {% else %}
