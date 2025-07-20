@@ -256,7 +256,7 @@ class Clip(db.Model):
     view_count: so.Mapped[int] = so.mapped_column(sa.Integer)
     created_at: so.Mapped[str] = so.mapped_column(sa.String(32))
     thumbnail_url: so.Mapped[str] = so.mapped_column(sa.String(256))
-    duration: so.Mapped[int] = so.mapped_column(sa.Integer)
+    duration: so.Mapped[float] = so.mapped_column(sa.Float)
     vod_offset: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
     is_featured: so.Mapped[bool] = so.mapped_column(sa.Boolean)
     notes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
