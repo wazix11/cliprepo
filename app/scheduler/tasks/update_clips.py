@@ -71,9 +71,9 @@ def update_clips(started_at=None, after=None, save_to_file=True):
                 # Update existing clip fields
                 existing_clip.url = clip['url']
                 existing_clip.embed_url = clip['embed_url']
-                existing_clip.broadcaster_id = clip['broadcaster_id']
+                existing_clip.broadcaster_id = int(clip['broadcaster_id'])
                 existing_clip.broadcaster_name = clip['broadcaster_name']
-                existing_clip.creator_id = clip['creator_id']
+                existing_clip.creator_id = int(clip['creator_id'])
                 existing_clip.creator_name = clip['creator_name']
                 existing_clip.title = clip['title']
                 existing_clip.view_count = clip['view_count']
