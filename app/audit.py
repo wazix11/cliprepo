@@ -37,7 +37,8 @@ def activity_log_listener(mapper, connection, target, action):
             if key in changes:
                 old = changes[key]['old']
                 new = changes[key]['new']
-                if old == new:
+                # Compare as strings to avoid type mismatch (e.g., int vs str)
+                if str(old) == str(new):
                     del changes[key]
         # If only 'view_count' remains, skip logging
         if set(changes.keys()) <= {'view_count'}:
