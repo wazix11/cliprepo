@@ -1,0 +1,68 @@
+{% extends "dash/dashboard_base.html" %}
+
+{% block dash_content %}
+    <section class="main-content">
+        <div class="row">
+            <div class="col-md-4">
+                <h2>Table Info</h2>
+                <ul>
+                    {% for table in tables_rows %}
+                        <li>{{ table[0] }}: {{ table[1] }} rows ({{ table[2] }} MB)</li>
+                    {% endfor %}
+                </ul>
+                <h2>Select Status</h2>
+                <ul>
+                    {% for status in select_rows %}
+                        <li>{{ status[0] }}: {{ status[1] }}</li>
+                    {% endfor %}
+                </ul>
+                <h2>Threads Status</h2>
+                <ul>
+                    {% for status in threads_rows %}
+                        <li>{{ status[0] }}: {{ status[1] }}</li>
+                    {% endfor %}
+                </ul>
+                <h2>Uptime Status</h2>
+                <ul>
+                    {% for status in uptime_rows %}
+                        <li>{{ status[0] }}: {{ status[1] }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h2>Queries</h2>
+                <ul>
+                    {% for query in queries_rows %}
+                        <li>{{ query[0] }}: {{ query[1] }}</li>
+                    {% endfor %}
+                </ul>
+                <h2>Command Status</h2>
+                <ul>
+                    {% for status in status_com_rows %}
+                        <li>{{ status[0] }}: {{ status[1] }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h2>Bytes Status</h2>
+                <ul>
+                    {% for status in bytes_rows %}
+                        <li>{{ status[0] }}: {{ status[1] }}</li>
+                    {% endfor %}
+                </ul>
+                <h2>Connection Status</h2>
+                <ul>
+                    {% for status in connection_rows %}
+                        <li>{{ status[0] }}: {{ status[1] }}</li>
+                    {% endfor %}
+                </ul>
+                <h2>InnoDB Status</h2>
+                <ul>
+                    {% for status in innodb_rows %}
+                        <li>{{ status[0] }}: {{ status[1] }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </section>
+{% endblock %}

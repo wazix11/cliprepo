@@ -6,7 +6,7 @@ from app.main import bp
 from dotenv import load_dotenv
 from decorators import rank_required
 from app.models import *
-from sqlalchemy import or_
+from sqlalchemy import or_, text
 from app.dash.forms import *
 
 load_dotenv(override=True)
@@ -1403,4 +1403,73 @@ def dash_reports_goaccess():
         title='Dashboard - GoAccess Reports',
         sidebar=sidebar_labels,
         now=int(datetime.now(timezone.utc).timestamp())
+    )
+
+@bp.route('/dashboard/reports/database', methods=['GET'])
+@login_required
+@rank_required('SUPERADMIN')
+def dash_reports_database():
+    sidebar_labels = Status.query.order_by('id')
+    tables_result = db.session.execute(text("""
+        SELECT table_name, table_rows, round((data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)'
+        FROM information_schema.tables
+        WHERE table_schema = 'alveusclips'
+        ORDER BY (data_length + index_length)
+        DESC
+    """))
+    tables_rows = tables_result.fetchall()
+
+    bytes_result = db.session.execute(text("""
+        SHOW GLOBAL STATUS LIKE 'Bytes_%'
+    """))
+    bytes_rows = bytes_result.fetchall()
+
+    status_com_result = db.session.execute(text("""
+        SHOW GLOBAL STATUS LIKE 'Com_%'
+    """))
+    status_com_rows = status_com_result.fetchall()
+
+    connection_result = db.session.execute(text("""
+        SHOW GLOBAL STATUS LIKE 'Connection%'
+    """))
+    connection_rows = connection_result.fetchall()
+
+    innodb_result = db.session.execute(text("""
+        SHOW GLOBAL STATUS LIKE 'Innodb_%'
+    """))
+    innodb_rows = innodb_result.fetchall()
+
+    queries_result = db.session.execute(text("""
+        SHOW GLOBAL STATUS LIKE 'Queries'
+    """))
+    queries_rows = queries_result.fetchall()
+
+    select_result = db.session.execute(text("""
+        SHOW GLOBAL STATUS LIKE 'Select%'
+    """))
+    select_rows = select_result.fetchall()
+
+    threads_result = db.session.execute(text("""
+        SHOW GLOBAL STATUS LIKE 'Threads_%'
+    """))
+    threads_rows = threads_result.fetchall()
+
+    uptime_result = db.session.execute(text("""
+        SHOW GLOBAL STATUS LIKE 'Uptime%'
+    """))
+    uptime_rows = uptime_result.fetchall()
+
+    return render_template(
+        'dash/reports/database.html',
+        title='Dashboard - Database Reports',
+        sidebar=sidebar_labels,
+        tables_rows=tables_rows,
+        bytes_rows=bytes_rows,
+        status_com_rows=status_com_rows,
+        connection_rows=connection_rows,
+        innodb_rows=innodb_rows,
+        queries_rows=queries_rows,
+        select_rows=select_rows,
+        threads_rows=threads_rows,
+        uptime_rows=uptime_rows
     )
