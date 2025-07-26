@@ -1,5 +1,5 @@
 from flask import render_template, flash, redirect, url_for, request, session
-import math, os
+import math, os, json
 from datetime import datetime, timezone
 from flask_login import current_user, login_required
 from app.main import bp
@@ -1392,6 +1392,67 @@ def dash_statuslabels_delete(id):
             db.session.commit()
             return redirect(url_for('main.dash_statuslabels'))
     return render_template('dash/statuslabels/delete_statuslabel.html', title='Dashboard - Delete Status Label', sidebar=sidebar_labels, form=form, status=status)
+
+@bp.route('/dashboard/reports/activity')
+@login_required
+@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+def dash_reports_activity():
+    filters = get_session_filters('activity')
+    page = get_value(request.args.get('page', type=int), filters.get('page') if filters else None, 1)
+    size = get_value(request.args.get('size', type=int), filters.get('size') if filters else None, 20)
+    order = get_value(request.args.get('order', type=str), filters.get('order') if filters else None, 'asc')
+    sort = get_value(request.args.get('sort', type=str), filters.get('sort') if filters else None, 'id')
+    search = get_value(request.args.get('search', type=str), filters.get('search') if filters else None, '')
+    set_session_filters('activity', page, size, order, sort, search)
+    columns = {
+        'id': 'ID',
+        'timestamp': 'Timestamp',
+        'admin': 'Created By',
+        'action': 'Action',
+        'table_name': 'Table Name',
+        'row_id': 'Row ID',
+        'row_twitch_id': 'Row Twitch ID',
+        'changes_json': 'Changed'
+    }
+    # Make sure the sort input is valid
+    if sort in columns.keys() and sort != 'changes_json':
+        query = ActivityLog.query.filter(
+            or_(
+                ActivityLog.id.ilike(f'%{search}%'),
+                ActivityLog.table_name.ilike(f'%{search}%'),
+                ActivityLog.row_id.ilike(f'%{search}%'),
+                ActivityLog.row_twitch_id.ilike(f'%{search}%'),
+                ActivityLog.timestamp.ilike(f'%{search}%'),
+                ActivityLog.action.ilike(f'%{search}%'),
+                ActivityLog.changes.ilike(f'%{search}%')
+            )
+        ).order_by(getattr(ActivityLog, sort).desc() if order == 'desc' else getattr(ActivityLog, sort).asc())
+    else:
+        # Default to sort by id
+        query = ActivityLog.query.filter(
+            or_(
+                ActivityLog.id.ilike(f'%{search}%'),
+                ActivityLog.table_name.ilike(f'%{search}%'),
+                ActivityLog.row_id.ilike(f'%{search}%'),
+                ActivityLog.row_twitch_id.ilike(f'%{search}%'),
+                ActivityLog.timestamp.ilike(f'%{search}%'),
+                ActivityLog.action.ilike(f'%{search}%'),
+                ActivityLog.changes.ilike(f'%{search}%')
+            )
+        ).order_by(ActivityLog.id.desc() if order == 'desc' else ActivityLog.id.asc())
+    # Default to page 1 if page number isn't valid
+    if page > math.ceil(query.count()/size) or page < 1:
+        page = 1
+    activities = db.paginate(query, page=page, per_page=size, error_out=False)
+    
+    for activity in activities.items:
+        activity.changes_json = None
+        if activity.changes:
+            activity.changes_json = json.loads(activity.changes)
+
+    pages = activities.iter_pages(left_edge=2, left_current=1, right_edge=2, right_current=1)
+    sidebar_labels = Status.query.order_by('id')
+    return render_template('dash/reports/activity.html', title='Dashboard - Activity Report', sidebar=sidebar_labels, activities=activities, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
 
 @bp.route('/dashboard/reports/goaccess', methods=['GET'])
 @login_required

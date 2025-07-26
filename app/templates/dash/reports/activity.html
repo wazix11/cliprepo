@@ -2,8 +2,7 @@
 
 {% block dash_content %}
     <section class="content-header">
-        <h3>Categories</h3>
-        <a href="{{ url_for('main.dash_categories_create') }}"><button class="btn btn-alveus-tan">Create</button></a>
+        <h3>Activity Report</h3>
     </section>
     <section class="main-content">
         <div class="row">
@@ -23,10 +22,10 @@
                         </div>
                         <div class="table-pagination">
                             <span>
-                                <span>Showing {{ categories.first }} to {{ categories.last }} of {{ categories.total }} rows</span>
+                                <span>Showing {{ activities.first }} to {{ activities.last }} of {{ activities.total }} rows</span>
                                 <span class="dropdown">
                                     <button class="btn btn-alveus-green dropdown-toggle" type="button" id="sizeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        {{ categories.per_page }}
+                                        {{ activities.per_page }}
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="sizeDropdown">
                                         <li><a class="dropdown-item" href="?page={{ num }}&size=5&order={{ order }}&sort={{ sort }}&search={{ search }}">5</a></li>
@@ -40,7 +39,7 @@
                                 </span>
                             </span>
                             <span id="tablePaginationTop">
-                                {% if categories.per_page < categories.total %}
+                                {% if activities.per_page < activities.total %}
                                 <div class="btn-group" role="group">
                                     {% for num in pages %}
                                         {% if num == None %}
@@ -70,36 +69,39 @@
                                                 <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort" style="margin-left: 10px;"></i></a></th>
                                             {% endif %}
                                         {% endfor %}
-                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% if categories.total > 0 %}
-                                        {% for category in categories %}
+                                    {% if activities.total > 0 %}
+                                        {% for activity in activities %}
                                         <tr>
-                                            <td>{{ category.id }}</td>
-                                            <td>{{ category.name }}</td>
-                                            <td>{{ category.clips|length }}</td>
-                                            <td>{{ category.notes }}</td>
-                                            <td>{{ category.created_by_user.display_name }}</td>
-                                            <td>{{ category.created_at }}</td>
-                                            <td>{{ category.updated_by_user.display_name }}</td>
-                                            <td>{{ category.updated_at }}</td>
-                                            <td style="white-space: nowrap;">
-                                                <a href="{{ url_for('main.dash_categories_edit', id=category.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
-                                                {% if current_user.rank_id >= 3 %}
-                                                    {% if category.clips|length > 0 %}
-                                                        <a href="{{ url_for('main.dash_categories_delete', id=category.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
-                                                    {% else %}
-                                                        <a href="{{ url_for('main.dash_categories_delete', id=category.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
-                                                    {% endif %}
+                                            <td>{{ activity.id }}</td>
+                                            <td>{{ activity.timestamp }}</td>
+                                            <td>{{ activity.admin.display_name }}</td>
+                                            <td>{{ activity.action }}</td>
+                                            <td>{{ activity.table_name }}</td>
+                                            <td>{{ activity.row_id }}</td>
+                                            <td>{{ activity.row_twitch_id }}</td>
+                                            <td>
+                                                {% if activity.changes_json %}
+                                                    {% for change in activity.changes_json %}
+                                                        {% if activity.changes_json[change]['old'] is not none or activity.changes_json[change]['new'] != '' %}
+                                                            {{ change }}: 
+                                                            {% if activity.changes_json[change]['old'] is not none %}
+                                                            <del>{{ activity.changes_json[change]['old'] }}</del> 
+                                                            {% endif %}
+                                                            <i class="fa-solid fa-arrow-right"></i> 
+                                                            {{ activity.changes_json[change]['new'] }}
+                                                            <br>
+                                                        {% endif %}
+                                                    {% endfor %}
                                                 {% endif %}
                                             </td>
                                         </tr>
                                         {% endfor %}
                                     {% else %}
                                         <tr>
-                                            <td class="text-center" colspan="100%">No categories found.</td>
+                                            <td class="text-center" colspan="100%">No activities found.</td>
                                         </tr>
                                     {% endif %}
                                 </tbody>
@@ -107,10 +109,10 @@
                         </div>
                         <div class="table-pagination">
                             <span>
-                                <span>Showing {{ categories.first }} to {{ categories.last }} of {{ categories.total }} rows</span>
+                                <span>Showing {{ activities.first }} to {{ activities.last }} of {{ activities.total }} rows</span>
                                 <span class="dropup">
                                     <button class="btn btn-alveus-green dropdown-toggle" type="button" id="sizeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        {{ categories.per_page }}
+                                        {{ activities.per_page }}
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="sizeDropdown">
                                         <li><a class="dropdown-item" href="?page={{ num }}&size=5&order={{ order }}&sort={{ sort }}&search={{ search }}">5</a></li>
