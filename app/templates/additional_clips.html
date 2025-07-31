@@ -6,7 +6,7 @@
                 <a href="{{ clip.url }}" target="_blank" rel="noopener noreferrer"><img src="{{ clip.thumbnail_url }}" alt="Clip Thumbnail"></a>
                 <div class="clip-duration">{{ clip.duration }}s</div>
                 <div class="clip-views">{{ clip.view_count }}</div>
-                <div class="clip-upload-date">{{ clip.created_at }}</div>
+                <div class="clip-upload-date" title="{{ clip.created_at }}">{{ clip.created_at_formatted }}</div>
                 <span id="like-btn-{{ clip.twitch_id }}">
                     <button class="btn clip-like-btn {% if clip.liked %}btn-danger{% else %}btn-success{% endif %}" 
                             type="button"
