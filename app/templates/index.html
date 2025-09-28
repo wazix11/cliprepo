@@ -10,30 +10,27 @@
                 <nav class="navbar navbar-dark navbar-expand-md">
                     <div class="container-fluid rounded py-2 bg-alveus-tan">
                         <ul class="nav navbar-nav ml-auto">
-                            <button type="button" class="btn btn-alveus-green mx-1 sort-btn" data-sort="new">New</button>
-                            <button type="button" class="btn btn-alveus-green mx-1 sort-btn" data-sort="old">Old</button>
                             <div class="dropdown mx-1">
-                                <button class="btn btn-alveus-green dropdown-toggle" type="button" id="viewsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Views
+                                <button class="btn btn-alveus-green dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Sort By
                                 </button>
-                                <ul class="dropdown-menu" aria-labelledby="viewsDropdown">
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="views" data-timeframe="24h">24H</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="views" data-timeframe="7d">7D</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="views" data-timeframe="30d">30D</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="views" data-timeframe="1y">1Y</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="views" data-timeframe="all">ALL</a></li>
+                                <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="new">New</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="old">Old</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="views">Views</a></li>
+                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="likes">Likes</a></li>
                                 </ul>
                             </div>
                             <div class="dropdown mx-1">
-                                <button class="btn btn-alveus-green dropdown-toggle" type="button" id="likesDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Likes
+                                <button class="btn btn-alveus-green dropdown-toggle" type="button" id="timeframeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Timeframe
                                 </button>
-                                <ul class="dropdown-menu" aria-labelledby="likesDropdown">
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="likes" data-timeframe="24h">24H</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="likes" data-timeframe="7d">7D</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="likes" data-timeframe="30d">30D</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="likes" data-timeframe="1y">1Y</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="likes" data-timeframe="all">ALL</a></li>
+                                <ul class="dropdown-menu" aria-labelledby="timeframeDropdown">
+                                    <li><a class="dropdown-item timeframe-btn" href="#" data-timeframe="24h">Last 24 Hours</a></li>
+                                    <li><a class="dropdown-item timeframe-btn" href="#" data-timeframe="7d">Last 7 Days</a></li>
+                                    <li><a class="dropdown-item timeframe-btn" href="#" data-timeframe="30d">Last 30 Days</a></li>
+                                    <li><a class="dropdown-item timeframe-btn" href="#" data-timeframe="1y">Last 1 Year</a></li>
+                                    <li><a class="dropdown-item timeframe-btn" href="#" data-timeframe="all">All Time</a></li>
                                 </ul>
                             </div>
                         </ul>
@@ -44,52 +41,82 @@
                                 hx-swap="innerHTML">
                                 <input type="hidden" name="sort" id="sort-input" value="">
                                 <input type="hidden" name="timeframe" id="timeframe-input" value="">
-                                {% if categories %}
-                                    <select name="category" class="form-control selectpicker mx-1" 
-                                        data-style="btn-alveus-green" 
-                                        data-width="160px">
-                                        <option value="">Select a category</option>
-                                        {% for category in categories %}
-                                            <option value="{{ category.id }}" {% if selected_category and category.id == selected_category %}selected{% endif %}>{{ category.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                {% endif %}
-                                {% if themes %}
-                                    <select name="themes" class="form-control selectpicker mx-1" 
-                                        data-style="btn-alveus-green" 
-                                        data-width="160px" multiple
-                                        title="Select theme(s)"
-                                        data-selected-text-format="count > 3">
-                                        {% for theme in themes %}
-                                            <option value="{{ theme.id }}" {% if theme.id in selected_themes %}selected{% endif %}>{{ theme.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                {% endif %}
-                                {% if subjects %}
-                                    <select name="subjects" class="form-control selectpicker mx-1" 
-                                        data-style="btn-alveus-green" 
-                                        data-width="160px" multiple 
-                                        data-live-search="true"
-                                        title="Select subject(s)"
-                                        data-selected-text-format="count > 3">
-                                        {% for subject_category in subject_categories %}
-                                            <optgroup label="{{ subject_category[0] }}">
-                                                {% for subject in subject_category[1] %}
-                                                    <option value="{{ subject.id }}" data-subtext="{{ subject.subtext }}" data-tokens="{{ subject.keywords }}" {% if subject.id in selected_subjects %}selected{% endif %}>{{ subject.name }}</option>
-                                                {% endfor %}
-                                            </optgroup>
-                                        {% endfor %}
-                                    </select>
-                                {% endif %}
+                                <input type="hidden" name="category" id="hidden-category-input" value="">
+                                <input type="hidden" name="themes" id="hidden-themes-input" value="">
+                                <input type="hidden" name="subjects" id="hidden-subjects-input" value="">
+                                <button type="button" class="btn btn-alveus-green mx-1" title="Advanced Filters" data-bs-toggle="modal" data-bs-target="#advancedFilterModal">
+                                    <i class="fa-solid fa-filter"></i>
+                                </button>
                                 <input type="text" name="search" class="form-control mx-1" 
                                     style="max-width: 200px;" 
                                     placeholder="Filter..."
                                     value="{{ search }}">
                                 <button type="submit" class="btn btn-alveus-green mx-1">Filter</button>
+                                <button type="button" class="btn btn-alveus-green mx-1" title="Clear Filters" id="clear-filters-btn">
+                                    <i class="fa-solid fa-ban"></i>
+                                </button>
                             </form>
                         </ul>
                     </div>
                 </nav>
+            </div>
+        </div>
+        <div class="modal fade" id="advancedFilterModal" tabindex="-1" aria-labelledby="advancedFilterModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="advancedFilterModalLabel">Advanced Filters</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {% if categories %}
+                            <label for="category-select" class="form-label">Category</label>
+                            <select id="category-select" name="category" class="form-control selectpicker mb-2"
+                                data-style="btn-alveus-green"
+                                data-width="100%">
+                                <option value="">Select a category</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if selected_category and category.id == selected_category %}selected{% endif %}>{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                        {% if themes %}
+                            <label for="themes-select" class="form-label">Themes</label>
+                            <select id="themes-select" name="themes" class="form-control selectpicker mb-2"
+                                data-style="btn-alveus-green"
+                                data-width="100%"
+                                multiple
+                                title="Select theme(s)"
+                                data-selected-text-format="count > 3">
+                                {% for theme in themes %}
+                                    <option value="{{ theme.id }}" {% if theme.id in selected_themes %}selected{% endif %}>{{ theme.name }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                        {% if subjects %}
+                            <label for="subjects-select" class="form-label">Subjects</label>
+                            <select id="subjects-select" name="subjects" class="form-control selectpicker mb-2"
+                                data-style="btn-alveus-green"
+                                data-width="100%"
+                                multiple
+                                data-live-search="true"
+                                title="Select subject(s)"
+                                data-selected-text-format="count > 3">
+                                {% for subject_category in subject_categories %}
+                                    <optgroup label="{{ subject_category[0] }}">
+                                        {% for subject in subject_category[1] %}
+                                            <option value="{{ subject.id }}" data-subtext="{{ subject.subtext }}" data-tokens="{{ subject.keywords }}" {% if subject.id in selected_subjects %}selected{% endif %}>{{ subject.name }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-alveus-green" id="apply-advanced-filters">Apply Filters</button>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col" id="load-clips">
@@ -97,15 +124,70 @@
         </div>
     </div>
     <script>
+        const sortLabels = {
+            new: "New",
+            old: "Old",
+            views: "Views",
+            likes: "Likes"
+        };
+        const timeframeLabels = {
+            "24h": "Last 24 Hours",
+            "7d": "Last 7 Days",
+            "30d": "Last 30 Days",
+            "1y": "Last 1 Year",
+            all: "All Time"
+        };
+        
+        window.addEventListener('DOMContentLoaded', function() {
+            const initialSort = "{{ sort|default('') }}";
+            const initialTimeframe = "{{ timeframe|default('') }}";
+            if (sortLabels[initialSort]) {
+                document.getElementById('sortDropdown').innerText = sortLabels[initialSort];
+            }
+            if (timeframeLabels[initialTimeframe]) {
+                document.getElementById('timeframeDropdown').innerText = timeframeLabels[initialTimeframe];
+            }
+        });
+
         document.querySelectorAll('.sort-btn').forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 const sort = btn.getAttribute('data-sort');
-                const timeframe = btn.getAttribute('data-timeframe') || 'all';
                 document.getElementById('sort-input').value = sort;
-                document.getElementById('timeframe-input').value = timeframe;
+                document.getElementById('sortDropdown').innerText = sortLabels[sort] || "Sort By";
                 document.getElementById('filter-form').dispatchEvent(new Event('submit', { cancelable: true }));
             });
+        });
+        document.querySelectorAll('.timeframe-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const timeframe = btn.getAttribute('data-timeframe');
+                document.getElementById('timeframe-input').value = timeframe;
+                document.getElementById('timeframeDropdown').innerText = timeframeLabels[timeframe] || "Timeframe";
+                document.getElementById('filter-form').dispatchEvent(new Event('submit', { cancelable: true }));
+            });
+        });
+        // Advanced filter modal form handler
+        document.getElementById('apply-advanced-filters').addEventListener('click', function() {
+            // Copy advanced filter values to main form
+            document.getElementById('hidden-category-input').value = document.getElementById('category-select').value;
+            document.getElementById('hidden-themes-input').value = Array.from(document.getElementById('themes-select').selectedOptions).map(opt => opt.value).join(',');
+            document.getElementById('hidden-subjects-input').value = Array.from(document.getElementById('subjects-select').selectedOptions).map(opt => opt.value).join(',');
+            // Submit main filter form
+            document.getElementById('filter-form').dispatchEvent(new Event('submit', { cancelable: true }));
+            // Close modal
+            var modal = bootstrap.Modal.getInstance(document.getElementById('advancedFilterModal'));
+            modal.hide();
+        });
+
+        document.getElementById('clear-filters-btn').addEventListener('click', function() {
+            document.getElementById('sort-input').value = '';
+            document.getElementById('timeframe-input').value = '';
+            document.getElementById('hidden-category-input').value = '';
+            document.getElementById('hidden-themes-input').value = '';
+            document.getElementById('hidden-subjects-input').value = '';
+            document.querySelector('input[name="search"]').value = '';
+            document.getElementById('filter-form').dispatchEvent(new Event('submit', { cancelable: true }));
         });
     </script>
 {% endblock %}

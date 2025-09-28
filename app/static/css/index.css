@@ -63,6 +63,11 @@ button.btn.clip-theme-btn {
     color: #E7AE88 !important;
 }
 
+.modal-content {
+    background-color: #FAEEE6;
+    color: #000;
+}
+
 .clip {
     max-width: 100%;
     border-radius: 5px;

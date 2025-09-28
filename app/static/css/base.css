@@ -61,7 +61,6 @@
 /* General section styling */
 .section {
     position: relative;
-    z-index: 0;
     width: 100%;
 }
 

@@ -1,4 +1,4 @@
-from flask import render_template, render_template_string, request, session
+from flask import render_template, render_template_string, send_from_directory, request, session
 from flask_login import current_user
 from datetime import datetime as dt, timedelta, timezone
 from app.main.forms import *
@@ -69,32 +69,21 @@ def format_clips(page, sort, timeframe, category=None, themes=[], subjects=[], s
         order_by = Clip.created_at.asc()
     elif sort == 'likes':
         order_by = func.count(upvotes.c.user_id).desc()
-        if timeframe == '24h':
-            last_24_hours = now - timedelta(days=1)
-            filters.append(Clip.created_at >= last_24_hours)
-        elif timeframe == '7d':
-            last_7_days = now - timedelta(days=7)
-            filters.append(Clip.created_at >= last_7_days)
-        elif timeframe == '30d':
-            last_30_days = now - timedelta(days=30)
-            filters.append(Clip.created_at >= last_30_days)
-        elif timeframe == '1y':
-            last_1_year = now - timedelta(days=365)
-            filters.append(Clip.created_at >= last_1_year)
     else:
         order_by = Clip.view_count.desc()
-        if timeframe == '24h':
-            last_24_hours = now - timedelta(days=1)
-            filters.append(Clip.created_at >= last_24_hours)
-        elif timeframe == '7d':
-            last_7_days = now - timedelta(days=7)
-            filters.append(Clip.created_at >= last_7_days)
-        elif timeframe == '30d':
-            last_30_days = now - timedelta(days=30)
-            filters.append(Clip.created_at >= last_30_days)
-        elif timeframe == '1y':
-            last_1_year = now - timedelta(days=365)
-            filters.append(Clip.created_at >= last_1_year)
+    
+    if timeframe == '24h':
+        last_24_hours = now - timedelta(days=1)
+        filters.append(Clip.created_at >= last_24_hours)
+    elif timeframe == '7d':
+        last_7_days = now - timedelta(days=7)
+        filters.append(Clip.created_at >= last_7_days)
+    elif timeframe == '30d':
+        last_30_days = now - timedelta(days=30)
+        filters.append(Clip.created_at >= last_30_days)
+    elif timeframe == '1y':
+        last_1_year = now - timedelta(days=365)
+        filters.append(Clip.created_at >= last_1_year)
 
     filters.append(Clip.status.has(Status.type != 'Hidden'))
     filters.append(Clip.status.has(Status.type != 'Pending'))
@@ -188,6 +177,10 @@ def like_clip(twitch_id):
         </span>
     """, clip=clip, liked=liked, upvotes=format_count(len(clip.upvoted_by), 'like'))
 
+@bp.route('/favicon.ico')
+def favicon():
+    return send_from_directory('static', 'favicon.ico')
+
 # Home page
 @bp.route('/', methods=['GET', 'POST'])
 def index():
@@ -248,8 +241,25 @@ def load_clips():
     sort = get_value(request.form.get('sort'), session_filters.get('sort'), 'views')
     timeframe = get_value(request.form.get('timeframe'), session_filters.get('timeframe'), 'all')
     category = get_value(request.form.get('category'), session_filters.get('category'), None)
-    themes = get_value(request.form.getlist('themes'), session_filters.get('themes'), [])
-    subjects = get_value(request.form.getlist('subjects'), session_filters.get('subjects'), [])
+    if category in [None, '', 'null']:
+        category = None
+
+    themes_raw = get_value(request.form.getlist('themes'), session_filters.get('themes'), [])
+    if isinstance(themes_raw, str):
+        themes = [t for t in themes_raw.split(',') if t]
+    elif isinstance(themes_raw, list):
+        themes = [t for t in themes_raw if t]
+    else:
+        themes = []
+
+    subjects_raw = get_value(request.form.getlist('subjects'), session_filters.get('subjects'), [])
+    if isinstance(subjects_raw, str):
+        subjects = [s for s in subjects_raw.split(',') if s]
+    elif isinstance(subjects_raw, list):
+        subjects = [s for s in subjects_raw if s]
+    else:
+        subjects = []
+
     search = get_value(request.form.get('search'), session_filters.get('search'), '')
     
     # Set session filters
