@@ -113,6 +113,7 @@ def dash_clips():
         'status': 'Status',
         'themes': 'Themes',
         'subjects': 'Subjects',
+        'layout': 'Layout',
         'updated_by': 'Updated By',
         'updated_at': 'Updated At',
         'twitch_id': 'Twitch ID',
@@ -181,17 +182,20 @@ def dash_clips_edit(id):
                             current_clip.category_id,
                             current_clip.status_id,
                             [theme.id for theme in current_clip.themes],
-                            [subject.id for subject in current_clip.subjects]]
+                            [subject.id for subject in current_clip.subjects],
+                            current_clip.layout_id]
         # populate the form with the existing data
         form = clipForm(title_override=current_clip.title_override, 
                         notes=current_clip.notes,
                         category=current_clip.category_id,
                         status=current_clip.status_id,
                         themes=[theme.id for theme in current_clip.themes],
-                        subjects=[subject.id for subject in current_clip.subjects])
-        form.category.choices = [(c.id, c.name) for c in Category.query.order_by('id')]
+                        subjects=[subject.id for subject in current_clip.subjects],
+                        layout=current_clip.layout_id)
+        form.category.choices = [(None, '-- None --')] + [(c.id, c.name) for c in Category.query.order_by('id')]
         form.status.choices = [(st.id, st.name) for st in Status.query.order_by('id')]
         form.themes.choices = [(t.id, t.name) for t in Theme.query.order_by('id')]
+        form.layout.choices = [(None, '-- None --')] + [(l.id, l.name) for l in Layout.query.order_by('id')]
         form.subjects.choices = []
         form.subjects.option_attrs = {}
 
@@ -229,7 +233,8 @@ def dash_clips_edit(id):
                      form.category.data,
                      form.status.data,
                      form.themes.data,
-                     form.subjects.data] # list to compare with current_clip_info
+                     form.subjects.data,
+                     form.layout.data] # list to compare with current_clip_info
         # if the form data hasn't changed, just redirect to clips page
         if form_info == current_clip_info:
             session.pop('edit_clip_referrer', None)
@@ -242,10 +247,11 @@ def dash_clips_edit(id):
                 db.session.commit()
             current_clip.title_override = form.title_override.data
             current_clip.notes = form.notes.data
-            current_clip.category_id = form.category.data
+            current_clip.category_id = form.category.data if form.category.data else None
             current_clip.status_id = form.status.data
             current_clip.themes = [Theme.query.get(theme_id) for theme_id in form.themes.data]
             current_clip.subjects = [Subject.query.get(subject_id) for subject_id in form.subjects.data]
+            current_clip.layout_id = form.layout.data if form.layout.data else None
             current_clip.updated_by = current_user.id
             current_clip.updated_at = datetime.now(timezone.utc)
             db.session.commit()
@@ -1272,6 +1278,7 @@ def dash_statuslabels_clips(id):
         'status': 'Status',
         'themes': 'Themes',
         'subjects': 'Subjects',
+        'layout': 'Layout',
         'updated_by': 'Updated By',
         'updated_at': 'Updated At',
         'twitch_id': 'Twitch ID',
@@ -1393,6 +1400,185 @@ def dash_statuslabels_delete(id):
             return redirect(url_for('main.dash_statuslabels'))
     return render_template('dash/statuslabels/delete_statuslabel.html', title='Dashboard - Delete Status Label', sidebar=sidebar_labels, form=form, status=status)
 
+# 
+# 
+# 
+# 
+# Layouts
+# 
+# 
+# 
+#
+@bp.route('/dashboard/layouts')
+@login_required
+@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+def dash_layouts():
+    filters = get_session_filters('layouts')
+    page = get_value(request.args.get('page', type=int), filters.get('page') if filters else None, 1)
+    size = get_value(request.args.get('size', type=int), filters.get('size') if filters else None, 20)
+    order = get_value(request.args.get('order', type=str), filters.get('order') if filters else None, 'asc')
+    sort = get_value(request.args.get('sort', type=str), filters.get('sort') if filters else None, 'id')
+    search = get_value(request.args.get('search', type=str), filters.get('search') if filters else None, '')
+    set_session_filters('layouts', page, size, order, sort, search)
+    columns = {
+        'id': 'ID',
+        'name': 'Name',
+        'clips': 'Clips',
+        'notes': 'Notes',
+        'created_by': 'Created By',
+        'created_at': 'Created At',
+        'updated_by': 'Updated By',
+        'updated_at': 'Updated At'
+    }
+    # Make sure the sort input is valid
+    if sort in columns.keys():
+        # Sorting by clip count requires joining Clip and Layout tables
+        if sort == 'clips':
+            query = Layout.query.outerjoin(Clip, Layout.id == Clip.layout_id).group_by(Layout.id).filter(
+                or_(
+                    Layout.id.ilike(f'%{search}%'),
+                    Layout.name.ilike(f'%{search}%'),
+                    Layout.notes.ilike(f'%{search}%'),
+                    Layout.created_by.ilike(f'%{search}%'),
+                    Layout.created_at.ilike(f'%{search}%'),
+                    Layout.updated_at.ilike(f'%{search}%')
+                )
+            ).order_by(db.func.count(Clip.id).desc() if order == 'desc' else db.func.count(Clip.id).asc())
+        else:
+            query = Layout.query.filter(
+                or_(
+                    Layout.id.ilike(f'%{search}%'),
+                    Layout.name.ilike(f'%{search}%'),
+                    Layout.notes.ilike(f'%{search}%'),
+                    Layout.created_by.ilike(f'%{search}%'),
+                    Layout.created_at.ilike(f'%{search}%'),
+                    Layout.updated_at.ilike(f'%{search}%')
+                )
+            ).order_by(getattr(Layout, sort).desc() if order == 'desc' else getattr(Layout, sort).asc())
+    else:
+        # Default to sort by id
+        query = Layout.query.filter(
+            or_(
+                Layout.id.ilike(f'%{search}%'),
+                Layout.name.ilike(f'%{search}%'),
+                Layout.notes.ilike(f'%{search}%'),
+                Layout.created_by.ilike(f'%{search}%'),
+                Layout.created_at.ilike(f'%{search}%'),
+                Layout.updated_at.ilike(f'%{search}%')
+            )
+        ).order_by(Layout.id.desc() if order == 'desc' else Layout.id.asc())
+    # Default to page 1 if page number isn't valid
+    if page > math.ceil(query.count()/size) or page < 1:
+        page = 1
+    layouts = db.paginate(query, page=page, per_page=size, error_out=False)
+    pages = layouts.iter_pages(left_edge=2, left_current=1, right_edge=2, right_current=1)
+    sidebar_labels = Status.query.order_by('id')
+    return render_template('dash/layouts/layouts.html', title='Dashboard - Layouts', sidebar=sidebar_labels, layouts=layouts, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
+
+@bp.route('/dashboard/layouts/create', methods=['GET', 'POST'])
+@login_required
+@rank_required('SUPERADMIN', 'ADMIN')
+def dash_layouts_create():
+    form = layoutForm()
+    sidebar_labels = Status.query.order_by('id')
+    if request.method == 'POST':
+        if form.cancel.data:
+            return redirect(url_for('main.dash_layouts'))
+    if form.validate_on_submit():
+        layout = Layout.query.filter(Layout.name.ilike(form.name.data)).first()
+        # layout doesn't already exist, create it
+        if layout is None:
+            layout = Layout(name=form.name.data,
+                                notes=form.notes.data,
+                                created_at=datetime.now(timezone.utc),
+                                updated_at=datetime.now(timezone.utc),
+                                created_by=current_user.id,
+                                updated_by=current_user.id)
+            db.session.add(layout)
+            db.session.commit()
+            return redirect(url_for('main.dash_layouts'))
+        # layout already exists, prompt name change
+        else:
+            flash('Name must be unique!', 'form-error')
+    return render_template('dash/layouts/create_layout.html', title='Dashboard - Create Layout', sidebar=sidebar_labels, form=form)
+
+@bp.route('/dashboard/layouts/<id>/edit', methods=['GET', 'POST'])
+@login_required
+@rank_required('SUPERADMIN', 'ADMIN')
+def dash_layouts_edit(id):
+    current_layout = Layout.query.filter(Layout.id == id).first()
+    current_layout_info = []
+    if current_layout != None:
+        current_layout_info = [current_layout.name, current_layout.notes] # list to compare to for edits
+        # populate the form with the existing data
+        form = layoutForm(name=current_layout.name, notes=current_layout.notes)
+    else:
+        return redirect(url_for('main.dash_layouts'))
+    
+    sidebar_labels = Status.query.order_by('id')
+
+    if request.method == 'POST':
+        if form.cancel.data:
+            return redirect(url_for('main.dash_layouts'))
+    if form.validate_on_submit():
+        form_info = [form.name.data, form.notes.data] # list to compare with current_layout_info
+        # if the form data hasn't changed, just redirect to layouts page
+        if form_info == current_layout_info:
+            return redirect(url_for('main.dash_layouts'))
+        # otherwise handle changes
+        else:
+            layout = Layout.query.filter(Layout.name.ilike(form.name.data)).first()
+            # layout doesn't already exist or is the current layout, allow edit
+            if layout is None or layout.name == current_layout.name:
+                current_layout.name = form.name.data
+                current_layout.notes = form.notes.data
+                current_layout.updated_by = current_user.id
+                current_layout.updated_at = datetime.now(timezone.utc)
+                db.session.commit()
+                return redirect(url_for('main.dash_layouts'))
+            # layout already exists, prompt name change
+            else:
+                flash('Name must be unique!', 'form-error')
+    return render_template('dash/layouts/edit_layout.html', title='Dashboard - Edit Layout', sidebar=sidebar_labels, form=form)
+
+@bp.route('/dashboard/layouts/<id>/delete', methods=['GET', 'POST'])
+@login_required
+@rank_required('SUPERADMIN', 'ADMIN')
+def dash_layouts_delete(id):
+    layout = Layout.query.filter(Layout.id == id).first()
+    if layout != None:
+        if len(layout.clips) > 0:
+            # Don't allow deletion of layouts with clips assigned
+            return redirect(url_for('main.dash_layouts'))
+        form = deleteForm()
+    else:
+        return redirect(url_for('main.dash_layouts'))
+    
+    sidebar_labels = Status.query.order_by('id')
+
+    if request.method == 'POST':
+        if form.cancel.data:
+            return redirect(url_for('main.dash_layouts'))
+    if form.validate_on_submit():
+        # if the entered name doesn't match the layout name, prompt an error
+        if form.name.data != layout.name:
+            flash('Entered name does not match!', 'form-error')
+        # layout name confirmed, delete layout
+        else:
+            db.session.delete(layout)
+            db.session.commit()
+            return redirect(url_for('main.dash_layouts'))
+    return render_template('dash/layouts/delete_layout.html', title='Dashboard - Delete Layout', sidebar=sidebar_labels, form=form, layout=layout)
+
+# 
+#
+#
+#
+# Reports
+#
+#
+#
+#
 @bp.route('/dashboard/reports/activity')
 @login_required
 @rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')

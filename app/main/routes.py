@@ -41,7 +41,7 @@ def format_upload_date(upload_date_str):
     else:
         return f"{int(seconds)} second{'s' if seconds > 1 else ''} ago"
     
-def format_clips(page, sort, timeframe, category=None, themes=[], subjects=[], search=''):
+def format_clips(page, sort, timeframe, category=None, themes=[], subjects=[], layout=None, search=''):
     now = dt.now(timezone.utc)
     per_page = 12
     filters = []
@@ -53,6 +53,8 @@ def format_clips(page, sort, timeframe, category=None, themes=[], subjects=[], s
     if subjects:
         for subject_id in subjects:
             filters.append(Clip.subjects.any(Subject.id == subject_id))
+    if layout:
+        filters.append(Clip.layout_id == layout)
     if search:
         search_pattern = f"%{search.strip()}%"
         filters.append(Clip.title.ilike(search_pattern) | 
@@ -61,7 +63,8 @@ def format_clips(page, sort, timeframe, category=None, themes=[], subjects=[], s
                        Clip.creator_name.ilike(search_pattern) |
                        Clip.category.has(Category.name.ilike(search_pattern)) |
                        Clip.themes.any(Theme.name.ilike(search_pattern)) |
-                       Clip.subjects.any(Subject.name.ilike(search_pattern)))
+                       Clip.subjects.any(Subject.name.ilike(search_pattern)) |
+                       Clip.layout.has(Layout.name.ilike(search_pattern)))
     
     if sort == 'new':
         order_by = Clip.created_at.desc()
@@ -110,6 +113,7 @@ def format_clips(page, sort, timeframe, category=None, themes=[], subjects=[], s
         'category': clip.category,
         'themes': clip.themes,
         'subjects': clip.subjects,
+        'layout': clip.layout,
         'status': clip.status,
         'upvotes': format_count(len(clip.upvoted_by), 'like'),
         'liked': current_user.is_authenticated and current_user in clip.upvoted_by
@@ -118,13 +122,14 @@ def format_clips(page, sort, timeframe, category=None, themes=[], subjects=[], s
     
     return formatted_clips, has_next
 
-def set_session_filters(route, sort='views', timeframe='all', category='', themes=[], subjects=[], search=''):
+def set_session_filters(route, sort='views', timeframe='all', category='', themes=[], subjects=[], layout='', search=''):
     session[route] = {
         'sort': sort,
         'timeframe': timeframe,
         'category': category,
         'themes': themes,
         'subjects': subjects,
+        'layout': layout,
         'search': search
     }
 
@@ -137,6 +142,7 @@ def get_session_filters(route):
         'category': None,
         'themes': [],
         'subjects': [],
+        'layout': None,
         'search': ''
     }
     
@@ -187,6 +193,7 @@ def index():
     categories = Category.query.order_by('id').all()
     theme_choices = Theme.query.order_by('id').all()
     subject_choices = Subject.query.order_by('id').all()
+    layout_choices = Layout.query.order_by('id').all()
     subject_categories = []
 
     # Group subjects by category
@@ -211,16 +218,18 @@ def index():
     category = get_value(None, session_filters.get('category'), None)
     themes = get_value(None, session_filters.get('themes', []), [])
     subjects = get_value(None, session_filters.get('subjects', []), [])
+    layout = get_value(None, session_filters.get('layout'), None)
     search = get_value(None, session_filters.get('search'), '')
     page = 1
     
-    formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, search)
+    formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, layout, search)
     return render_template(
         'index.html',
         title='Home',
         categories=categories,
         themes=theme_choices,
         subjects=subject_choices,
+        layouts=layout_choices,
         subject_categories=subject_categories,
         clips=formatted_clips,
         has_next=has_next,
@@ -230,6 +239,7 @@ def index():
         selected_category=category,
         selected_themes=themes,
         selected_subjects=subjects,
+        selected_layout=layout,
         search=search
     )
 
@@ -243,6 +253,10 @@ def load_clips():
     category = get_value(request.form.get('category'), session_filters.get('category'), None)
     if category in [None, '', 'null']:
         category = None
+    
+    layout = get_value(request.form.get('layout'), session_filters.get('layout'), None)
+    if layout in [None, '', 'null']:
+        layout = None
 
     themes_raw = get_value(request.form.getlist('themes'), session_filters.get('themes'), [])
     if isinstance(themes_raw, str):
@@ -263,10 +277,10 @@ def load_clips():
     search = get_value(request.form.get('search'), session_filters.get('search'), '')
     
     # Set session filters
-    set_session_filters('main', sort, timeframe, category, themes, subjects, search)
+    set_session_filters('main', sort, timeframe, category, themes, subjects, layout, search)
 
     # Sort and paginate
-    formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, search)
+    formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, layout, search)
     return render_template(
         'additional_clips.html', 
         currentPage=page+1, 

@@ -2,11 +2,12 @@
 
 {% block dash_content %}
     <section class="content-header">
-        <h3>{{ header }}</h3>
+        <h3>Layouts</h3>
+        <a href="{{ url_for('main.dash_layouts_create') }}"><button class="btn btn-alveus-tan">Create</button></a>
     </section>
     <section class="main-content">
         <div class="row">
-            <div class="col-md-10">
+            <div class="col-md-12">
                 <div class="box box-light">
                     <div class="box-body">
                         <div class="table-toolbar">
@@ -22,10 +23,10 @@
                         </div>
                         <div class="table-pagination">
                             <span>
-                                <span>Showing {{ clips.first }} to {{ clips.last }} of {{ clips.total }} rows</span>
+                                <span>Showing {{ layouts.first }} to {{ layouts.last }} of {{ layouts.total }} rows</span>
                                 <span class="dropdown">
                                     <button class="btn btn-alveus-green dropdown-toggle" type="button" id="sizeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        {{ clips.per_page }}
+                                        {{ layouts.per_page }}
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="sizeDropdown">
                                         <li><a class="dropdown-item" href="?page={{ num }}&size=5&order={{ order }}&sort={{ sort }}&search={{ search }}">5</a></li>
@@ -39,7 +40,7 @@
                                 </span>
                             </span>
                             <span id="tablePaginationTop">
-                                {% if clips.per_page < clips.total%}
+                                {% if layouts.per_page < layouts.total %}
                                 <div class="btn-group" role="group">
                                     {% for num in pages %}
                                         {% if num == None %}
@@ -55,67 +56,50 @@
                             </span>
                         </div>
                         <div class="table-container">
-                            <table class="table table-striped dashboard-table" id="clipTable">
+                            <table class="table table-striped dashboard-table" id="layoutTable">
                                 <thead>
                                     <tr>
-                                        <th>Actions</th>
                                         {% for key, val in columns|items %}
-                                            {% if key in ['category', 'status', 'themes', 'subjects', 'layout'] %}
-                                                <th class="text-center">{{ val }}</th>
-                                            {% else %}
-                                                {% if key == sort %}
-                                                    {% if order == 'desc' %}
-                                                    <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-down" style="margin-left: 10px;"></i></a></th>
-                                                    {% else %}
-                                                    <th><a href="?page={{ num }}&size={{ size }}&order=desc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-up" style="margin-left: 10px;"></i></a></th>
-                                                    {% endif %}
+                                            {% if key == sort %}
+                                                {% if order == 'desc' %}
+                                                <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-down" style="margin-left: 10px;"></i></a></th>
                                                 {% else %}
-                                                    <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort" style="margin-left: 10px;"></i></a></th>
+                                                <th><a href="?page={{ num }}&size={{ size }}&order=desc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-up" style="margin-left: 10px;"></i></a></th>
                                                 {% endif %}
+                                            {% else %}
+                                                <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort" style="margin-left: 10px;"></i></a></th>
                                             {% endif %}
                                         {% endfor %}
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% if clips.total > 0 %}
-                                        {% for clip in clips %}
+                                    {% if layouts.total > 0 %}
+                                        {% for layout in layouts %}
                                         <tr>
+                                            <td>{{ layout.id }}</td>
+                                            <td>{{ layout.name }}</td>
+                                            <td>{{ layout.clips|length }}</td>
+                                            <td>{{ layout.notes }}</td>
+                                            <td>{{ layout.created_by_user.display_name }}</td>
+                                            <td>{{ layout.created_at }}</td>
+                                            <td>{{ layout.updated_by_user.display_name }}</td>
+                                            <td>{{ layout.updated_at }}</td>
                                             <td style="white-space: nowrap;">
-                                                <a href="{{ url_for('main.dash_clips_edit', id=clip.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
+                                                <a href="{{ url_for('main.dash_layouts_edit', id=layout.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
                                                 {% if current_user.rank_id >= 3 %}
-                                                    <a href="{{ url_for('main.dash_clips_delete', id=clip.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                    {% if layout.clips|length > 0 %}
+                                                        <a href="{{ url_for('main.dash_layouts_delete', id=layout.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                    {% else %}
+                                                        <a href="{{ url_for('main.dash_layouts_delete', id=layout.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                    {% endif %}
                                                 {% endif %}
                                             </td>
-                                            <td>{{ clip.id }}</td>
-                                            <td>{{ clip.broadcaster_name }}</td>
-                                            <td>{{ clip.creator_name }}</td>
-                                            <td><a href="{{ clip.url }}" target="_blank" rel="noopener noreferrer">{{ clip.title }}</a></td>
-                                            <td>{{ clip.title_override }}</td>
-                                            <td>{{ clip.view_count }}</td>
-                                            <td>{{ clip.created_at }}</td>
-                                            <td>{{ clip.duration }}</td>
-                                            <td>{{ clip.notes }}</td>
-                                            <td>{{ clip.category.name }}</td>
-                                            <td>{{ clip.status.name }}</td>
-                                            <td>
-                                                {% for theme in clip.themes %}
-                                                    {{ theme.name }}{% if not loop.last %}, {% endif %}
-                                                {% endfor %}
-                                            </td>
-                                            <td>
-                                                {% for subject in clip.subjects %}
-                                                    {{ subject.name }}{% if not loop.last %}, {% endif %}
-                                                {% endfor %}
-                                            </td>
-                                            <td>{{ clip.layout.name }}</td>
-                                            <td>{{ clip.updated_by_user.display_name }}</td>
-                                            <td>{{ clip.updated_at }}</td>
-                                            <td style="max-width: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ clip.twitch_id }}</td>
                                         </tr>
                                         {% endfor %}
                                     {% else %}
                                         <tr>
-                                            <td class="text-center" colspan="100%">No clips found.</td>
+                                            <td class="text-center" colspan="100%">No layouts found.</td>
                                         </tr>
                                     {% endif %}
                                 </tbody>
@@ -123,10 +107,10 @@
                         </div>
                         <div class="table-pagination">
                             <span>
-                                <span>Showing {{ clips.first }} to {{ clips.last }} of {{ clips.total }} rows</span>
+                                <span>Showing {{ layouts.first }} to {{ layouts.last }} of {{ layouts.total }} rows</span>
                                 <span class="dropup">
                                     <button class="btn btn-alveus-green dropdown-toggle" type="button" id="sizeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        {{ clips.per_page }}
+                                        {{ layouts.per_page }}
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="sizeDropdown">
                                         <li><a class="dropdown-item" href="?page={{ num }}&size=5&order={{ order }}&sort={{ sort }}&search={{ search }}">5</a></li>

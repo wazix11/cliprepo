@@ -112,6 +112,14 @@ class User(UserMixin, db.Model):
     updated_subject_categories: so.Mapped[List['Subject']] = so.relationship(
         'SubjectCategory', back_populates='updated_by_user', foreign_keys='SubjectCategory.updated_by'
     )
+
+    # Relationships to track layouts created/updated by the user
+    layouts: so.Mapped[List['Layout']] = so.relationship(
+        'Layout', back_populates='created_by_user', foreign_keys='Layout.created_by'
+    )
+    updated_layouts: so.Mapped[List['Layout']] = so.relationship(
+        'Layout', back_populates='updated_by_user', foreign_keys='Layout.updated_by'
+    )
     
     updated_clips: so.Mapped[List['Clip']] = so.relationship(
         'Clip',
@@ -239,6 +247,26 @@ class Subject(db.Model):
     def __repr__(self):
         return f'<Subject {self.name}>'
     
+class Layout(db.Model):
+    id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True)
+    name: so.Mapped[str] = so.mapped_column(sa.String(32), unique=True, nullable=False)
+    notes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
+    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
+    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
+
+    # Relationship to track which user created a layout
+    created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
+    created_by_user: so.Mapped['User'] = so.relationship('User', back_populates='layouts', foreign_keys=[created_by])
+
+    # Relationship to track which user last updated a layout
+    updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
+    updated_by_user: so.Mapped['User'] = so.relationship('User', back_populates='updated_layouts', foreign_keys=[updated_by])
+
+    clips: so.Mapped[List['Clip']] = so.relationship(back_populates='layout')
+    
+    def __repr__(self):
+        return f'<Layout {self.name}>'
+    
 class Clip(db.Model):
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True)
     twitch_id: so.Mapped[str] = so.mapped_column(sa.String(128), unique=True)
@@ -267,6 +295,9 @@ class Clip(db.Model):
 
     status_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Status.id), index=True, nullable=True)
     status: so.Mapped['Status'] = so.relationship(back_populates='clips')
+
+    layout_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Layout.id), index=True, nullable=True)
+    layout: so.Mapped['Layout'] = so.relationship(back_populates='clips')
 
     # Relationship to track which user last updated a clip
     updated_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)

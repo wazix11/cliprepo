@@ -31,10 +31,11 @@ class deleteForm(FlaskForm):
 class clipForm(FlaskForm):
     title_override = StringField('Title Override')
     notes = TextAreaField('Notes')
-    category = SelectField('Category', coerce=int)
+    category = SelectField('Category', coerce=lambda x: int(x) if x else None)
     status = SelectField('Status', coerce=int)
     themes = SelectMultipleField('Themes', coerce=int)
     subjects = SelectMultipleField('Subjects', coerce=int, widget=SelectPickerWidget())
+    layout = SelectField('Layout', coerce=lambda x: int(x) if x else None)
     save = SubmitField('Save')
     cancel = SubmitField('Cancel', render_kw={'formnovalidate': True})
 
@@ -78,6 +79,12 @@ class statusLabelForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
     status_type = SelectField('Status Type', choices=['', 'Visible', 'Pending', 'Hidden'], validators=[DataRequired()])
     color = StringField('Color', widget=ColorInput())
+    notes = TextAreaField('Notes')
+    save = SubmitField('Save')
+    cancel = SubmitField('Cancel', render_kw={'formnovalidate': True})
+
+class layoutForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
     notes = TextAreaField('Notes')
     save = SubmitField('Save')
     cancel = SubmitField('Cancel', render_kw={'formnovalidate': True})

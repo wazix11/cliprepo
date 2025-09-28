@@ -86,6 +86,12 @@
                         <span>Status Labels</span>
                     </a>
                 </li>
+                <li class="sidebar-item">
+                    <a href="{{ url_for('main.dash_layouts') }}" class="sidebar-link">
+                        <i class="fa-solid fa-camera"></i>
+                        <span>Layouts</span>
+                    </a>
+                </li>
                 {% if current_user.rank.name in ['SUPERADMIN', 'ADMIN'] %}
                 <li class="sidebar-item">
                     <a href="#" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"

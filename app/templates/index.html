@@ -44,6 +44,7 @@
                                 <input type="hidden" name="category" id="hidden-category-input" value="">
                                 <input type="hidden" name="themes" id="hidden-themes-input" value="">
                                 <input type="hidden" name="subjects" id="hidden-subjects-input" value="">
+                                <input type="hidden" name="layout" id="hidden-layout-input" value="">
                                 <button type="button" class="btn btn-alveus-green mx-1" title="Advanced Filters" data-bs-toggle="modal" data-bs-target="#advancedFilterModal">
                                     <i class="fa-solid fa-filter"></i>
                                 </button>
@@ -111,6 +112,17 @@
                                 {% endfor %}
                             </select>
                         {% endif %}
+                        {% if layouts %}
+                            <label for="layout-select" class="form-label">Layout</label>
+                            <select id="layout-select" name="layout" class="form-control selectpicker mb-2"
+                                data-style="btn-alveus-green"
+                                data-width="100%">
+                                <option value="">Select a layout</option>
+                                {% for layout in layouts %}
+                                    <option value="{{ layout.id }}" {% if selected_layout and layout.id == selected_layout %}selected{% endif %}>{{ layout.name }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -173,6 +185,7 @@
             document.getElementById('hidden-category-input').value = document.getElementById('category-select').value;
             document.getElementById('hidden-themes-input').value = Array.from(document.getElementById('themes-select').selectedOptions).map(opt => opt.value).join(',');
             document.getElementById('hidden-subjects-input').value = Array.from(document.getElementById('subjects-select').selectedOptions).map(opt => opt.value).join(',');
+            document.getElementById('hidden-layout-input').value = document.getElementById('layout-select').value;
             // Submit main filter form
             document.getElementById('filter-form').dispatchEvent(new Event('submit', { cancelable: true }));
             // Close modal
@@ -186,6 +199,9 @@
             document.getElementById('hidden-category-input').value = '';
             document.getElementById('hidden-themes-input').value = '';
             document.getElementById('hidden-subjects-input').value = '';
+            document.getElementById('hidden-layout-input').value = '';
+            document.getElementById('sortDropdown').innerText = 'Sort By';
+            document.getElementById('timeframeDropdown').innerText = 'Timeframe';
             document.querySelector('input[name="search"]').value = '';
             document.getElementById('filter-form').dispatchEvent(new Event('submit', { cancelable: true }));
         });

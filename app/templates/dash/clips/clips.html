@@ -60,7 +60,7 @@
                                     <tr>
                                         <th>Actions</th>
                                         {% for key, val in columns|items %}
-                                            {% if key in ['category', 'status', 'themes', 'subjects'] %}
+                                            {% if key in ['category', 'status', 'themes', 'subjects', 'layout'] %}
                                                 <th class="text-center">{{ val }}</th>
                                             {% else %}
                                                 {% if key == sort %}
@@ -107,6 +107,7 @@
                                                     {{ subject.name }}{% if not loop.last %}, {% endif %}
                                                 {% endfor %}
                                             </td>
+                                            <td>{{ clip.layout.name }}</td>
                                             <td>{{ clip.updated_by_user.display_name }}</td>
                                             <td>{{ clip.updated_at }}</td>
                                             <td style="max-width: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ clip.twitch_id }}</td>
