@@ -18,20 +18,20 @@
                     <select id="sort-select" name="sort" class="form-control selectpicker mb-2"
                         data-style="btn-alveus-tan"
                         data-width="100%">
-                        <option value="views">Most Viewed</option>
-                        <option value="new">Newest</option>
-                        <option value="old">Oldest</option>
-                        <option value="likes">Most Liked</option>
+                        <option value="views" {% if sort == 'views' %}selected{% endif %}>Most Viewed</option>
+                        <option value="new" {% if sort == 'new' %}selected{% endif %}>Newest</option>
+                        <option value="old" {% if sort == 'old' %}selected{% endif %}>Oldest</option>
+                        <option value="likes" {% if sort == 'likes' %}selected{% endif %}>Most Liked</option>
                     </select>
                     <label for="timeframe-select" class="form-label" style="color: white;">Time Frame</label>
                     <select id="timeframe-select" name="timeframe" class="form-control selectpicker mb-2"
                         data-style="btn-alveus-tan"
                         data-width="100%">
-                        <option value="all">All Time</option>
-                        <option value="24h">Last 24 Hours</option>
-                        <option value="7d">Last Week</option>
-                        <option value="30d">Last Month</option>
-                        <option value="1y">Last Year</option>
+                        <option value="all" {% if timeframe == 'all' %}selected{% endif %}>All Time</option>
+                        <option value="24h" {% if timeframe == '24h' %}selected{% endif %}>Last 24 Hours</option>
+                        <option value="7d" {% if timeframe == '7d' %}selected{% endif %}>Last Week</option>
+                        <option value="30d" {% if timeframe == '30d' %}selected{% endif %}>Last Month</option>
+                        <option value="1y" {% if timeframe == '1y' %}selected{% endif %}>Last Year</option>
                     </select>
                     {% if categories %}
                             <label for="category-select" class="form-label" style="color: white;">Category</label>

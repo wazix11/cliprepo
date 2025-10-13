@@ -324,7 +324,9 @@ def clip_queue():
         subject_categories.append((sc.name, group_choices))
 
     filters = {}
-    formatted_clips, _ = format_clips(1, 'views', '7d')
+    default_sort = 'views'
+    default_timeframe = '7d'
+    formatted_clips, _ = format_clips(1, default_sort, default_timeframe)
     return render_template(
         'main/clip_queue.html',
         title='Clip Queue',
@@ -336,6 +338,8 @@ def clip_queue():
         clips=formatted_clips,
         clip_index=0,
         filters=filters,
+        sort=default_sort,
+        timeframe=default_timeframe,
         embed_parent=EMBED_PARENT
     )
 
