@@ -346,7 +346,7 @@ def clip_queue():
 @bp.route('/clip-queue/filter', methods=['POST'])
 def clip_queue_filter():
     sort = request.form.get('sort', 'views')
-    timeframe = request.form.get('timeframe', 'all')
+    timeframe = request.form.get('timeframe', '7d')
     category = request.form.get('category')
     themes = request.form.getlist('themes')
     subjects = request.form.getlist('subjects')
@@ -379,7 +379,7 @@ def clip_queue_next():
     filters = request.form.get('filters')
     filters = json.loads(filters) if filters else {}
     sort = filters.get('sort', 'views')
-    timeframe = filters.get('timeframe', 'all')
+    timeframe = filters.get('timeframe', '7d')
     category = filters.get('category')
     themes = filters.get('themes', [])
     subjects = filters.get('subjects', [])
@@ -414,7 +414,7 @@ def clip_queue_prev():
     filters = request.form.get('filters')
     filters = json.loads(filters) if filters else {}
     sort = filters.get('sort', 'views')
-    timeframe = filters.get('timeframe', 'all')
+    timeframe = filters.get('timeframe', '7d')
     category = filters.get('category')
     themes = filters.get('themes', [])
     subjects = filters.get('subjects', [])
