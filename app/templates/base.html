@@ -37,6 +37,11 @@
                 </button>
                 <ul id="collapsingNavbar" class="navbar-nav mr-auto w-100 justify-content-end">
                     <li class="nav-item active">
+                        <a class="nav-link text-white" href="{{ url_for('main.clip_queue') }}">
+                            <h5>Clip Queue</h5>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
                         <a class="nav-link text-white" href="{{ url_for('main.about') }}">
                             <h5>About</h5>
                         </a>
@@ -69,7 +74,7 @@
         </nav>
         {% endblock %}
         {% block content %}
-        <div class="section section-dark min-vh-100">
+        <div class="section section-dark" style="min-height: calc(100vh - 114.75px);">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}

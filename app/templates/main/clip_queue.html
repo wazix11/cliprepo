@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <div class="container-fluid pt-0 d-flex flex-row" style="height: calc(100vh - 114.75px); margin: 0; padding: 0;">
+        <div class="flex-grow-1 d-flex flex-column pt-3 align-items-center justify-content-center" id="clip-viewer" style="min-width: 0; height: 100%;">
+            {% include 'main/clip_viewer.html' %}
+        </div>
+        <div style="height: 100%; width: 320px; z-index: 1050; flex-shrink: 0;">
+            <form id="clip-filter-form"
+                hx-post="/clip-queue/filter"
+                hx-target="#clip-viewer"
+                hx-swap="innerHTML"
+                class="card p-3"
+                style="height: 100%; background: #333333; overflow-y: auto;">
+                <div class="mb-2">
+                    <label for="sort-select" class="form-label" style="color: white;">Sort By</label>
+                    <select id="sort-select" name="sort" class="form-control selectpicker mb-2"
+                        data-style="btn-alveus-tan"
+                        data-width="100%">
+                        <option value="views">Most Viewed</option>
+                        <option value="new">Newest</option>
+                        <option value="old">Oldest</option>
+                        <option value="likes">Most Liked</option>
+                    </select>
+                    <label for="timeframe-select" class="form-label" style="color: white;">Time Frame</label>
+                    <select id="timeframe-select" name="timeframe" class="form-control selectpicker mb-2"
+                        data-style="btn-alveus-tan"
+                        data-width="100%">
+                        <option value="all">All Time</option>
+                        <option value="24h">Last 24 Hours</option>
+                        <option value="7d">Last Week</option>
+                        <option value="30d">Last Month</option>
+                        <option value="1y">Last Year</option>
+                    </select>
+                    {% if categories %}
+                            <label for="category-select" class="form-label" style="color: white;">Category</label>
+                            <select id="category-select" name="category" class="form-control selectpicker mb-2"
+                                data-style="btn-alveus-tan"
+                                data-width="100%">
+                                <option value="">Select a category</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                        {% if themes %}
+                            <label for="themes-select" class="form-label" style="color: white;">Themes</label>
+                            <select id="themes-select" name="themes" class="form-control selectpicker mb-2"
+                                data-style="btn-alveus-tan"
+                                data-width="100%"
+                                multiple
+                                title="Select theme(s)"
+                                data-selected-text-format="count > 3">
+                                {% for theme in themes %}
+                                    <option value="{{ theme.id }}">{{ theme.name }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                        {% if subjects %}
+                            <label for="subjects-select" class="form-label" style="color: white;">Subjects</label>
+                            <select id="subjects-select" name="subjects" class="form-control selectpicker mb-2"
+                                data-style="btn-alveus-tan"
+                                data-width="100%"
+                                multiple
+                                data-live-search="true"
+                                title="Select subject(s)"
+                                data-selected-text-format="count > 3">
+                                {% for subject_category in subject_categories %}
+                                    <optgroup label="{{ subject_category[0] }}">
+                                        {% for subject in subject_category[1] %}
+                                            <option value="{{ subject.id }}" data-subtext="{{ subject.subtext }}" data-tokens="{{ subject.keywords }}">{{ subject.name }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                        {% if layouts %}
+                            <label for="layout-select" class="form-label" style="color: white;">Layout</label>
+                            <select id="layout-select" name="layout" class="form-control selectpicker mb-2"
+                                data-style="btn-alveus-tan"
+                                data-width="100%">
+                                <option value="">Select a layout</option>
+                                {% for layout in layouts %}
+                                    <option value="{{ layout.id }}">{{ layout.name }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" style="color: white;">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Search clips">
+                </div>
+                <button type="submit" class="btn btn-alveus-tan w-100">Apply Filters</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

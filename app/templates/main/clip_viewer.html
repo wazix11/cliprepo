@@ -1,0 +1,30 @@
+{% if clips %}
+    <div class="flex-grow-1 d-flex flex-column justify-content-center align-items-center" style="width: 100%; min-height: 0;">
+        <iframe class="embed-responsive-item"
+                src="{{ clips[clip_index]['embed_url'] }}&parent={{ embed_parent }}&autoplay=true"
+                allowfullscreen
+                style="width: 100%; height: 100%; min-height: 0; border: none; flex-grow: 1;">
+        </iframe>
+    </div>
+    <div class="d-flex justify-content-between align-items-center" style="width: 100%;">
+        <button class="btn btn-secondary"
+                hx-post="/clip-queue/prev"
+                hx-vals='{"clip_index": {{ clip_index }}, "filters": {{ filters|tojson }}, "page": {{ page|default(1) }} }'
+                hx-target="#clip-viewer"
+                hx-swap="innerHTML"
+                {% if page == 1 and clip_index == 0 %}disabled{% endif %}>
+            Previous
+        </button>
+        <span>{{ clips[clip_index]['title'] }}</span>
+        <button class="btn btn-secondary"
+                hx-post="/clip-queue/next"
+                hx-vals='{"clip_index": {{ clip_index }}, "filters": {{ filters|tojson }}, "page": {{ page|default(1) }} }'
+                hx-target="#clip-viewer"
+                hx-swap="innerHTML"
+                {% if not has_next and clip_index + 1 >= clips|length %}disabled{% endif %}>
+            Next
+        </button>
+    </div>
+{% else %}
+    <div>No clips found.</div>
+{% endif %}

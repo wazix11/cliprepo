@@ -6,8 +6,10 @@ from app.main import bp
 from dotenv import load_dotenv
 from app.models import *
 from sqlalchemy import func
+import os, json
 
-load_dotenv()
+load_dotenv(override=True)
+EMBED_PARENT = os.environ.get('EMBED_PARENT')
 
 def format_count(count, type):
     if count < 1000:
@@ -298,6 +300,139 @@ def about():
 def leaderboard():
     return render_template('main/leaderboard.html', title='Leaderboard')
 
-@bp.route('/clips')
-def clips():
-    pass
+@bp.route('/clip-queue', methods=['GET'])
+def clip_queue():
+    categories = Category.query.order_by('id').all()
+    theme_choices = Theme.query.order_by('id').all()
+    subject_choices = Subject.query.order_by('id').all()
+    layout_choices = Layout.query.order_by('id').all()
+    subject_categories = []
+
+    # Group subjects by category
+    for sc in SubjectCategory.query.order_by('id'):
+        sc_subject_choices = Subject.query.filter(Subject.category_id == sc.id).order_by('id').all()
+        if not sc_subject_choices:
+            continue
+        group_choices = []
+        for su in sc_subject_choices:
+            group_choices.append({
+                'id': su.id, 
+                'name': su.name,
+                'subtext': su.subtext or '',
+                'keywords': su.keywords or ''
+                })
+        subject_categories.append((sc.name, group_choices))
+
+    filters = {}
+    formatted_clips, _ = format_clips(1, 'views', 'all')
+    return render_template(
+        'main/clip_queue.html',
+        title='Clip Queue',
+        categories=categories,
+        themes=theme_choices,
+        subjects=subject_choices,
+        layouts=layout_choices,
+        subject_categories=subject_categories,
+        clips=formatted_clips,
+        clip_index=0,
+        filters=filters,
+        embed_parent=EMBED_PARENT
+    )
+
+@bp.route('/clip-queue/filter', methods=['POST'])
+def clip_queue_filter():
+    sort = request.form.get('sort', 'views')
+    timeframe = request.form.get('timeframe', 'all')
+    category = request.form.get('category')
+    themes = request.form.getlist('themes')
+    subjects = request.form.getlist('subjects')
+    layout = request.form.get('layout')
+    search = request.form.get('search', '')
+    filters = {
+        'sort': sort,
+        'timeframe': timeframe,
+        'category': category,
+        'themes': themes,
+        'subjects': subjects,
+        'layout': layout,
+        'search': search
+    }
+    formatted_clips, has_next = format_clips(1, sort, timeframe, category, themes, subjects, layout, search)
+    return render_template(
+        'main/clip_viewer.html',
+        clips=formatted_clips,
+        clip_index=0,
+        filters=filters,
+        embed_parent=EMBED_PARENT,
+        page=1,
+        has_next=has_next
+    )
+
+@bp.route('/clip-queue/next', methods=['POST'])
+def clip_queue_next():
+    clip_index = int(request.form.get('clip_index', 0)) + 1
+    page = int(request.form.get('page', 1))
+    filters = request.form.get('filters')
+    filters = json.loads(filters) if filters else {}
+    sort = filters.get('sort', 'views')
+    timeframe = filters.get('timeframe', 'all')
+    category = filters.get('category')
+    themes = filters.get('themes', [])
+    subjects = filters.get('subjects', [])
+    layout = filters.get('layout')
+    search = filters.get('search', '')
+
+    # Load current page
+    formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, layout, search)
+    if clip_index >= len(formatted_clips):
+        if has_next:
+            # Load next page
+            page += 1
+            formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, layout, search)
+            clip_index = 0
+        else:
+            clip_index = len(formatted_clips) - 1 if formatted_clips else 0
+
+    return render_template(
+        'main/clip_viewer.html',
+        clips=formatted_clips,
+        clip_index=clip_index,
+        filters=filters,
+        embed_parent=EMBED_PARENT,
+        page=page,
+        has_next=has_next
+    )
+
+@bp.route('/clip-queue/prev', methods=['POST'])
+def clip_queue_prev():
+    clip_index = int(request.form.get('clip_index', 0)) - 1
+    page = int(request.form.get('page', 1))
+    filters = request.form.get('filters')
+    filters = json.loads(filters) if filters else {}
+    sort = filters.get('sort', 'views')
+    timeframe = filters.get('timeframe', 'all')
+    category = filters.get('category')
+    themes = filters.get('themes', [])
+    subjects = filters.get('subjects', [])
+    layout = filters.get('layout')
+    search = filters.get('search', '')
+
+    if clip_index < 0 and page > 1:
+        # Go to previous page, last clip
+        page -= 1
+        formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, layout, search)
+        clip_index = len(formatted_clips) - 1
+    else:
+        formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, layout, search)
+        if clip_index < 0:
+            clip_index = 0
+
+    return render_template(
+        'main/clip_viewer.html',
+        clips=formatted_clips,
+        clip_index=clip_index,
+        filters=filters,
+        embed_parent=EMBED_PARENT,
+        page=page,
+        has_next=has_next
+    )
