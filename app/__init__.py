@@ -8,6 +8,7 @@ from flask_login import LoginManager
 import logging, os
 from logging.handlers import RotatingFileHandler
 from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import timedelta
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -27,6 +28,9 @@ apscheduler = BackgroundScheduler()
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    app.config['SESSION_PERMANENT'] = True
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
     bootstrap.init_app(app)
     db.init_app(app)
