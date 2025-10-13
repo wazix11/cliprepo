@@ -324,7 +324,7 @@ def clip_queue():
         subject_categories.append((sc.name, group_choices))
 
     filters = {}
-    formatted_clips, _ = format_clips(1, 'views', 'all')
+    formatted_clips, _ = format_clips(1, 'views', '7d')
     return render_template(
         'main/clip_queue.html',
         title='Clip Queue',
