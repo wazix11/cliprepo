@@ -124,7 +124,7 @@ def format_clips(page, sort, timeframe, category=None, themes=[], subjects=[], l
     
     return formatted_clips, has_next
 
-def set_session_filters(route, sort='views', timeframe='all', category='', themes=[], subjects=[], layout='', search=''):
+def set_session_filters(route, sort='views', timeframe='7d', category='', themes=[], subjects=[], layout='', search=''):
     session[route] = {
         'sort': sort,
         'timeframe': timeframe,
@@ -140,7 +140,7 @@ def get_session_filters(route):
         return session[route]
     return {
         'sort': 'views',
-        'timeframe': 'all',
+        'timeframe': '7d',
         'category': None,
         'themes': [],
         'subjects': [],
@@ -216,7 +216,7 @@ def index():
     # Get filters from session
     session_filters = get_session_filters('main')
     sort = get_value(None, session_filters.get('sort'), default='views')
-    timeframe = get_value(None, session_filters.get('timeframe'), 'all')
+    timeframe = get_value(None, session_filters.get('timeframe'), '7d')
     category = get_value(None, session_filters.get('category'), None)
     themes = get_value(None, session_filters.get('themes', []), [])
     subjects = get_value(None, session_filters.get('subjects', []), [])
@@ -251,7 +251,7 @@ def load_clips():
     session_filters = get_session_filters('main')
     page = request.args.get('page', 1, type=int)
     sort = get_value(request.form.get('sort'), session_filters.get('sort'), 'views')
-    timeframe = get_value(request.form.get('timeframe'), session_filters.get('timeframe'), 'all')
+    timeframe = get_value(request.form.get('timeframe'), session_filters.get('timeframe'), '7d')
     category = get_value(request.form.get('category'), session_filters.get('category'), None)
     if category in [None, '', 'null']:
         category = None
