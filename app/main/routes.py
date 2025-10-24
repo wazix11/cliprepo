@@ -43,7 +43,7 @@ def format_upload_date(upload_date_str):
     else:
         return f"{int(seconds)} second{'s' if seconds > 1 else ''} ago"
     
-def format_clips(page, sort, timeframe, category=None, themes=[], subjects=[], layout=None, search=''):
+def format_clips(page, sort, timeframe='7d', category=None, themes=[], subjects=[], layout=None, search=''):
     now = dt.now(timezone.utc)
     per_page = 12
     filters = []
