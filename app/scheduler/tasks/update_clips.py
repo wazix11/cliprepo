@@ -68,19 +68,37 @@ def update_clips(started_at=None, after=None, save_to_file=True):
             if any(c.twitch_id == clip['id'] for c in clips_to_add):
                 continue
             if existing_clip:
+                changed = False
                 # Update existing clip fields
-                existing_clip.url = clip['url']
-                existing_clip.embed_url = clip['embed_url']
-                existing_clip.broadcaster_id = int(clip['broadcaster_id'])
-                existing_clip.broadcaster_name = clip['broadcaster_name']
-                existing_clip.creator_id = int(clip['creator_id'])
-                existing_clip.creator_name = clip['creator_name']
-                existing_clip.title = clip['title']
-                existing_clip.view_count = clip['view_count']
-                existing_clip.created_at = clip['created_at']
-                existing_clip.thumbnail_url = clip['thumbnail_url']
-                existing_clip.duration = clip['duration']
-                existing_clip.is_featured = clip.get('is_featured', False)
+                if existing_clip.url != clip['url']:
+                    existing_clip.url = clip['url']; changed = True
+                if existing_clip.embed_url != clip['embed_url']:
+                    existing_clip.embed_url = clip['embed_url']; changed = True
+                if existing_clip.broadcaster_id != int(clip['broadcaster_id']):
+                    existing_clip.broadcaster_id = int(clip['broadcaster_id']); changed = True
+                if existing_clip.broadcaster_name != clip['broadcaster_name']:
+                    existing_clip.broadcaster_name = clip['broadcaster_name']; changed = True
+                if existing_clip.creator_id != int(clip['creator_id']):
+                    existing_clip.creator_id = int(clip['creator_id']); changed = True
+                if existing_clip.creator_name != clip['creator_name']:
+                    existing_clip.creator_name = clip['creator_name']; changed = True
+                if existing_clip.title != clip['title']:
+                    existing_clip.title = clip['title']; changed = True
+                if existing_clip.view_count != clip['view_count']:
+                    existing_clip.view_count = clip['view_count']; changed = True
+                if existing_clip.created_at != clip['created_at']:
+                    existing_clip.created_at = clip['created_at']; changed = True
+                if existing_clip.vod_offset != clip['vod_offset']:
+                    existing_clip.vod_offset = clip['vod_offset']; changed = True
+                if existing_clip.thumbnail_url != clip['thumbnail_url']:
+                    existing_clip.thumbnail_url = clip['thumbnail_url']; changed = True
+                if existing_clip.duration != clip['duration']:
+                    existing_clip.duration = clip['duration']; changed = True
+                if existing_clip.is_featured != clip.get('is_featured', False):
+                    existing_clip.is_featured = clip.get('is_featured', False); changed = True
+
+                if changed:
+                    existing_clip.updated_at = datetime.now(timezone.utc)
             else:
                 # Create a new clip if it doesn't exist
                 new_clip = Clip(
@@ -101,6 +119,7 @@ def update_clips(started_at=None, after=None, save_to_file=True):
                     duration=clip['duration'],
                     vod_offset=clip['vod_offset'],
                     is_featured=clip.get('is_featured', False),
+                    updated_at=datetime.now(timezone.utc),
                     status_id=1
                 )
             if new_clip:

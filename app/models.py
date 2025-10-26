@@ -45,12 +45,15 @@ class User(UserMixin, db.Model):
     display_name: so.Mapped[str] = so.mapped_column(sa.String(32), index=True, unique=True)
     profile_image_url: so.Mapped[str] = so.mapped_column(sa.String(256))
     contributions: so.Mapped[int] = so.mapped_column(sa.Integer, default=0, nullable=False)
-    last_verified: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc))
+    last_verified: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=lambda: datetime.now(timezone.utc))
     access_token: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=True)
     refresh_token: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=True)
     notes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
     login_enabled: so.Mapped[bool] = so.mapped_column(sa.Boolean, server_default=sa.true(), nullable=False)
-    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
+    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime,
+                                                       default=lambda: datetime.now(timezone.utc),
+                                                       onupdate=lambda: datetime.now(timezone.utc),
+                                                       nullable=True)
 
     rank_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Rank.id), index=True, default=1)
     rank: so.Mapped[Rank] = so.relationship(back_populates='users')
@@ -138,8 +141,11 @@ class Category(db.Model):
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(32), unique=True, nullable=False)
     notes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
-    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
-    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
+    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
+    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime,
+                                                       default=lambda: datetime.now(timezone.utc),
+                                                       onupdate=lambda: datetime.now(timezone.utc),
+                                                       nullable=True)
 
     # Relationship to track which user created a category
     created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
@@ -158,8 +164,11 @@ class Theme(db.Model):
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(32), unique=True, nullable=False)
     notes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
-    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
-    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
+    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
+    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime,
+                                                       default=lambda: datetime.now(timezone.utc),
+                                                       onupdate=lambda: datetime.now(timezone.utc),
+                                                       nullable=True)
 
     # Relationship to track which user created a theme
     created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
@@ -181,8 +190,11 @@ class Status(db.Model):
     type = sa.Column(sa.Enum('Visible', 'Pending', 'Hidden', name='status_types'), nullable=False)
     color: so.Mapped[str] = so.mapped_column(sa.String(7), nullable=False)
     notes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
-    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
-    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
+    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
+    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime,
+                                                       default=lambda: datetime.now(timezone.utc),
+                                                       onupdate=lambda: datetime.now(timezone.utc),
+                                                       nullable=True)
 
     # Relationship to track which user created a status
     created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
@@ -202,8 +214,11 @@ class SubjectCategory(db.Model):
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(32), unique=True, nullable=False)
     notes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
-    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
-    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
+    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
+    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime,
+                                                       default=lambda: datetime.now(timezone.utc),
+                                                       onupdate=lambda: datetime.now(timezone.utc),
+                                                       nullable=True)
 
     # Relationship to track which user created a subject category
     created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
@@ -225,8 +240,11 @@ class Subject(db.Model):
     subtext: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True)
     keywords: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=True)
     notes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
-    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
-    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
+    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
+    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime,
+                                                       default=lambda: datetime.now(timezone.utc),
+                                                       onupdate=lambda: datetime.now(timezone.utc),
+                                                       nullable=True)
     public: so.Mapped[bool] = so.mapped_column(sa.Boolean, nullable=False)
 
     # Relationship to track which user created a subject
@@ -251,8 +269,11 @@ class Layout(db.Model):
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(32), unique=True, nullable=False)
     notes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
-    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
-    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
+    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
+    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime,
+                                                       default=lambda: datetime.now(timezone.utc),
+                                                       onupdate=lambda: datetime.now(timezone.utc),
+                                                       nullable=True)
 
     # Relationship to track which user created a layout
     created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
@@ -288,7 +309,10 @@ class Clip(db.Model):
     vod_offset: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
     is_featured: so.Mapped[bool] = so.mapped_column(sa.Boolean)
     notes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
-    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=True)
+    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime,
+                                                       default=lambda: datetime.now(timezone.utc),
+                                                       onupdate=lambda: datetime.now(timezone.utc),
+                                                       nullable=True)
 
     category_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Category.id), index=True, nullable=True)
     category: so.Mapped['Category'] = so.relationship(back_populates='clips')
@@ -321,7 +345,7 @@ class ActivityLog(db.Model):
     row_id: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=False)
     row_name: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True, default=None)
     row_twitch_id: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=True, default=None)
-    timestamp: so.Mapped[datetime] =  so.mapped_column(sa.DateTime, default=datetime.now(timezone.utc), nullable=False)
+    timestamp: so.Mapped[datetime] =  so.mapped_column(sa.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     action: so.Mapped[str] = so.mapped_column(sa.String(16), nullable=False)
     changes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
     
