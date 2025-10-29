@@ -12,35 +12,16 @@ const timeframeLabels = {
     all: "All Time"
 };
 
-window.addEventListener('DOMContentLoaded', function() {
-    const initialSort = "{{ sort|default('') }}";
-    const initialTimeframe = "{{ timeframe|default('') }}";
-    if (sortLabels[initialSort]) {
-        document.getElementById('sortDropdown').innerText = sortLabels[initialSort];
+function submitFilterForm() {
+    const form = document.getElementById('filter-form');
+    if (!form) return;
+    // prefer requestSubmit when available (fires submit handlers properly)
+    if (typeof form.requestSubmit === 'function') {
+        form.requestSubmit();
+    } else {
+        form.dispatchEvent(new Event('submit', { cancelable: true }));
     }
-    if (timeframeLabels[initialTimeframe]) {
-        document.getElementById('timeframeDropdown').innerText = timeframeLabels[initialTimeframe];
-    }
-});
-
-document.querySelectorAll('.sort-btn').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        const sort = btn.getAttribute('data-sort');
-        document.getElementById('sort-input').value = sort;
-        document.getElementById('sortDropdown').innerText = sortLabels[sort] || "Sort By";
-        document.getElementById('filter-form').dispatchEvent(new Event('submit', { cancelable: true }));
-    });
-});
-document.querySelectorAll('.timeframe-btn').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        const timeframe = btn.getAttribute('data-timeframe');
-        document.getElementById('timeframe-input').value = timeframe;
-        document.getElementById('timeframeDropdown').innerText = timeframeLabels[timeframe] || "Timeframe";
-        document.getElementById('filter-form').dispatchEvent(new Event('submit', { cancelable: true }));
-    });
-});
+}
 
 function initSelectPickers() {
     if (!(window.jQuery && typeof jQuery().selectpicker === 'function')) return;
@@ -53,7 +34,16 @@ function initSelectPickers() {
     });
 }
 
-window.addEventListener('DOMContentLoaded', function () {
+window.addEventListener('DOMContentLoaded', function() {
+    const initialSort = "{{ sort|default('') }}";
+    const initialTimeframe = "{{ timeframe|default('') }}";
+    if (sortLabels[initialSort]) {
+        document.getElementById('sortDropdown').innerText = sortLabels[initialSort];
+    }
+    if (timeframeLabels[initialTimeframe]) {
+        document.getElementById('timeframeDropdown').innerText = timeframeLabels[initialTimeframe];
+    }
+
     initSelectPickers();
 });
 
@@ -61,12 +51,31 @@ document.body.addEventListener('htmx:afterSwap', function (evt) {
     initSelectPickers();
 });
 
+document.querySelectorAll('.sort-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const sort = btn.getAttribute('data-sort');
+        document.getElementById('sort-input').value = sort;
+        document.getElementById('sortDropdown').innerText = sortLabels[sort] || "Sort By";
+        submitFilterForm();
+    });
+});
+document.querySelectorAll('.timeframe-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const timeframe = btn.getAttribute('data-timeframe');
+        document.getElementById('timeframe-input').value = timeframe;
+        document.getElementById('timeframeDropdown').innerText = timeframeLabels[timeframe] || "Timeframe";
+        submitFilterForm();
+    });
+});
+
 document.getElementById('apply-advanced-filters').addEventListener('click', function() {
     document.getElementById('hidden-category-input').value = document.getElementById('category-select').value;
     document.getElementById('hidden-themes-input').value = Array.from(document.getElementById('themes-select').selectedOptions).map(opt => opt.value).join(',');
     document.getElementById('hidden-subjects-input').value = Array.from(document.getElementById('subjects-select').selectedOptions).map(opt => opt.value).join(',');
     document.getElementById('hidden-layout-input').value = document.getElementById('layout-select').value;
-    document.getElementById('filter-form').dispatchEvent(new Event('submit', { cancelable: true }));
+    submitFilterForm();
     var modal = bootstrap.Modal.getInstance(document.getElementById('advancedFilterModal'));
     modal.hide();
 });
@@ -98,5 +107,5 @@ document.getElementById('clear-filters-btn').addEventListener('click', function(
     }
 
     document.querySelector('input[name="search"]').value = '';
-    document.getElementById('filter-form').dispatchEvent(new Event('submit', { cancelable: true }));
+    submitFilterForm();
 });

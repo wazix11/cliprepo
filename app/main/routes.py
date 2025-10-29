@@ -151,7 +151,7 @@ def get_session_filters(route):
 def get_value(request_value, session_value, default):
     if request_value is not None:
         return request_value
-    if session_value is not None:
+    if session_value is not None and session_value != '' and session_value != 'null':
         return session_value
     return default
 
@@ -250,17 +250,17 @@ def index():
 def load_clips():
     session_filters = get_session_filters('main')
     page = request.args.get('page', 1, type=int)
-    sort = get_value(request.form.get('sort'), session_filters.get('sort'), 'views')
-    timeframe = get_value(request.form.get('timeframe'), session_filters.get('timeframe'), '7d')
-    category = get_value(request.form.get('category'), session_filters.get('category'), None)
+    sort = get_value(request.values.get('sort'), session_filters.get('sort'), 'views')
+    timeframe = get_value(request.values.get('timeframe'), session_filters.get('timeframe'), '7d')
+    category = get_value(request.values.get('category'), session_filters.get('category'), None)
     if category in [None, '', 'null']:
         category = None
-    
-    layout = get_value(request.form.get('layout'), session_filters.get('layout'), None)
+
+    layout = get_value(request.values.get('layout'), session_filters.get('layout'), None)
     if layout in [None, '', 'null']:
         layout = None
 
-    themes_raw = get_value(request.form.getlist('themes'), session_filters.get('themes'), [])
+    themes_raw = get_value(request.values.getlist('themes'), session_filters.get('themes'), [])
     if isinstance(themes_raw, str):
         themes = [t for t in themes_raw.split(',') if t]
     elif isinstance(themes_raw, list):
@@ -268,7 +268,7 @@ def load_clips():
     else:
         themes = []
 
-    subjects_raw = get_value(request.form.getlist('subjects'), session_filters.get('subjects'), [])
+    subjects_raw = get_value(request.values.getlist('subjects'), session_filters.get('subjects'), [])
     if isinstance(subjects_raw, str):
         subjects = [s for s in subjects_raw.split(',') if s]
     elif isinstance(subjects_raw, list):
@@ -276,7 +276,7 @@ def load_clips():
     else:
         subjects = []
 
-    search = get_value(request.form.get('search'), session_filters.get('search'), '')
+    search = get_value(request.values.get('search'), session_filters.get('search'), '')
     
     # Set session filters
     set_session_filters('main', sort, timeframe, category, themes, subjects, layout, search)
