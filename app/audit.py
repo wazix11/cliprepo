@@ -28,8 +28,8 @@ def activity_log_listener(mapper, connection, target, action):
         and not set(changes.keys()) & {'notes', 'login_enabled', 'updated_at', 'rank_id', 'updated_by'}
     ):
         return
-    
-    # Only log Clip updates if more than just 'view_count' changed,
+
+    # Only log Clip updates if more than just 'view_count' and 'updated_at' changed,
     # or if 'broadcaster_id'/'creator_id' are actually changed (not just re-set to same value)
     if action == 'update' and target.__tablename__ == 'clip':
         # Remove 'broadcaster_id' and 'creator_id' from changes if not actually changed
@@ -40,8 +40,8 @@ def activity_log_listener(mapper, connection, target, action):
                 # Compare as strings to avoid type mismatch (e.g., int vs str)
                 if str(old) == str(new):
                     del changes[key]
-        # If only 'view_count' remains, skip logging
-        if set(changes.keys()) <= {'view_count'}:
+        # If only 'view_count' and 'updated_at' remains, skip logging
+        if set(changes.keys()) <= {'view_count', 'updated_at'}:
             return
     
     if action == 'update' and not changes:
