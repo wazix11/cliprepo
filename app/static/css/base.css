@@ -95,11 +95,9 @@
     content: "";
     position: absolute;
     inset: 0;
-    z-index: -10;
+    z-index: 0;
     background-image: url('../textures/topography.svg');
-    background-repeat: repeat;
-    background-position: center;
-    background-attachment: fixed;
+    background-size: 32rem;
     opacity: 0.03;
 }
 
@@ -108,11 +106,9 @@
     content: "";
     position: absolute;
     inset: 0;
-    z-index: -10;
-    background-image: url('../textures/dust.svg');
-    background-repeat: repeat;
-    background-position: center;
-    background-attachment: fixed;
+    z-index: 0;
+    background-image: url('../textures/topography.svg');
+    background-size: 32rem;
     opacity: 0.06;
 }
 
