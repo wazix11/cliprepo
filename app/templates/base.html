@@ -62,7 +62,7 @@
                         {% endif %}
                         <li class="nav-item dropdown active">
                             <a class="nav-link dropdown-toggle text-white" href="#" id="accountDropdown" data-bs-toggle="dropdown">
-                                <img src="{{ current_user.profile_image_url }}" class="rounded-circle" style="height: 32px; width: 32px;" alt="Profile Image">
+                                <img src="{{ current_user.profile_image_url }}" class="rounded-circle profile-img" alt="Profile Image">
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="btn w-100 text-start" href="{{ url_for('auth.logout') }}">Log Out</a></li>
@@ -74,7 +74,7 @@
         </nav>
         {% endblock %}
         {% block content %}
-        <div class="section section-dark" style="min-height: calc(100vh - 114.75px);">
+        <div class="section section-dark height-sub-header">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}

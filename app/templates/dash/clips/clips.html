@@ -13,7 +13,7 @@
                             <span></span>
                             <span>
                                 <div class="input-group">
-                                    <input type="search" class="form-control" id="table-search" placeholder="Search" style="max-width: 200px;">
+                                    <input type="search" class="form-control search-bar" id="table-search" placeholder="Search"">
                                     <a href="?page={{ num }}&size={{ size }}&order={{ order }}&sort={{ sort }}&search={{ search }}" class="btn btn-alveus-green" role="button" id="filterButton">
                                         <i class="fa-solid fa-magnifying-glass"></i>
                                     </a>
@@ -65,12 +65,12 @@
                                             {% else %}
                                                 {% if key == sort %}
                                                     {% if order == 'desc' %}
-                                                    <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-down" style="margin-left: 10px;"></i></a></th>
+                                                    <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-down"></i></a></th>
                                                     {% else %}
-                                                    <th><a href="?page={{ num }}&size={{ size }}&order=desc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-up" style="margin-left: 10px;"></i></a></th>
+                                                    <th><a href="?page={{ num }}&size={{ size }}&order=desc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort-up"></i></a></th>
                                                     {% endif %}
                                                 {% else %}
-                                                    <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort" style="margin-left: 10px;"></i></a></th>
+                                                    <th><a href="?page={{ num }}&size={{ size }}&order=asc&sort={{ key }}&search={{ search }}" class="btn" tabindex="-1" role="button">{{val}}<i class="fas fa-sort"></i></a></th>
                                                 {% endif %}
                                             {% endif %}
                                         {% endfor %}
@@ -80,7 +80,7 @@
                                     {% if clips.total > 0 %}
                                         {% for clip in clips %}
                                         <tr>
-                                            <td style="white-space: nowrap;">
+                                            <td class="table-actions">
                                                 <a href="{{ url_for('main.dash_clips_edit', id=clip.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
                                                 {% if current_user.rank_id == 4 %}
                                                     <a href="{{ url_for('main.dash_clips_delete', id=clip.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
@@ -110,7 +110,7 @@
                                             <td>{{ clip.layout.name }}</td>
                                             <td>{{ clip.updated_by_user.display_name }}</td>
                                             <td>{{ clip.updated_at }}</td>
-                                            <td style="max-width: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ clip.twitch_id }}</td>
+                                            <td class="table-clip-twitch-id">{{ clip.twitch_id }}</td>
                                         </tr>
                                         {% endfor %}
                                     {% else %}

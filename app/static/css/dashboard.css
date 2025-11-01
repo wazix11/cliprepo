@@ -13,12 +13,30 @@ li {
     list-style: none;
 }
 
+.fa-sort-down,
+.fa-sort-up,
+.fa-sort {
+    margin-left: 10px;
+}
+
+.table-actions {
+    white-space: nowrap;
+}
+.table-color {
+    white-space: nowrap;
+}
+.table-clip-twitch-id {
+    max-width: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .wrapper {
     display: flex;
 }
 
 .main {
-    min-height: 100vh;
     width: 100%;
     transition: all 0.35s ease-in-out;
 }
@@ -140,23 +158,6 @@ a.sidebar-link:hover {
     border-radius: 50%;
     display: inline-block;
     vertical-align: middle;
-}
-
-.box {
-    background: #FAEEE6;
-    border-radius: 10px;
-    border: 5px solid;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, .1);
-    margin-bottom: 20px;
-    position: relative;
-    width: 100%;
-    color: #000;
-}
-.box.box-light {
-    border-color: rgba(241, 206, 183, .5);
-}
-.box-body {
-    padding: 10px;
 }
 
 .content-header {

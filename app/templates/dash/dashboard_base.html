@@ -3,7 +3,7 @@
 {% block app_content %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 
-    <div class="wrapper">
+    <div class="wrapper height-sub-header">
         <aside id="sidebar">
             <div class="d-flex">
                 <button class="toggle-btn" type="button">
@@ -133,7 +133,7 @@
                 {% endif %}
             </ul>
         </aside>
-        <div class="main min-vh-100">
+        <div class="main height-sub-header">
             {% block dash_content %}{% endblock %}
         </div>
     </div>

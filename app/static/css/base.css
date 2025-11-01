@@ -70,6 +70,14 @@
     padding: 2rem;
 }
 
+.height-sub-header {
+    min-height: calc(100vh - 114.75px);
+}
+
+.search-bar {
+    max-width: 200px;
+}
+
 /* Light theme */
 .section-light {
     color: #000000;
@@ -106,6 +114,33 @@
     background-position: center;
     background-attachment: fixed;
     opacity: 0.06;
+}
+
+a h5:hover {
+    color: #F1CEB7;
+    text-decoration: none;
+}
+
+.box {
+    background: #FAEEE6;
+    border-radius: 10px;
+    border: 5px solid;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .1);
+    margin-bottom: 20px;
+    position: relative;
+    width: 100%;
+    color: #000;
+}
+.box.box-light {
+    border-color: rgba(241, 206, 183, .5);
+}
+.box-body {
+    padding: 10px;
+}
+
+.profile-img {
+    width: 32px;
+    height: 32px;
 }
 
 /* Color Palettes */

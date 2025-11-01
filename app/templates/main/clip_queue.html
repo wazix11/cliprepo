@@ -2,19 +2,19 @@
 
 {% block app_content %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
-    <div class="container-fluid pt-0 d-flex flex-row" style="height: calc(100vh - 114.75px); margin: 0; padding: 0;">
-        <div class="flex-grow-1 d-flex flex-column pt-3 align-items-center justify-content-center" id="clip-viewer" style="min-width: 0; height: 100%;">
+    <div class="container-fluid pt-0 d-flex flex-row height-sub-header" style="margin: 0; padding: 0;">
+        <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center" id="clip-viewer" style="min-width: 0; min-height: 100%;">
             {% include 'main/clip_viewer.html' %}
         </div>
-        <div style="height: 100%; width: 320px; z-index: 1050; flex-shrink: 0;">
+        <div id="sidebar" style="min-height: 100%; width: 320px; z-index: 1050; flex-shrink: 0;">
             <form id="clip-filter-form"
                 hx-post="/clip-queue/filter"
                 hx-target="#clip-viewer"
                 hx-swap="innerHTML"
-                class="card p-3"
-                style="height: 100%; background: #333333; overflow-y: auto;">
+                class="p-3"
+                style="min-height: 100%; background: #333333; overflow-y: auto;">
                 <div class="mb-2">
-                    <label for="sort-select" class="form-label" style="color: white;">Sort By</label>
+                    <label for="sort-select" class="form-label text-white">Sort By</label>
                     <select id="sort-select" name="sort" class="form-control selectpicker mb-2"
                         data-style="btn-alveus-tan"
                         data-width="100%">
@@ -23,7 +23,7 @@
                         <option value="old" {% if sort == 'old' %}selected{% endif %}>Oldest</option>
                         <option value="likes" {% if sort == 'likes' %}selected{% endif %}>Most Liked</option>
                     </select>
-                    <label for="timeframe-select" class="form-label" style="color: white;">Time Frame</label>
+                    <label for="timeframe-select" class="form-label text-white">Time Frame</label>
                     <select id="timeframe-select" name="timeframe" class="form-control selectpicker mb-2"
                         data-style="btn-alveus-tan"
                         data-width="100%">
@@ -34,7 +34,7 @@
                         <option value="1y" {% if timeframe == '1y' %}selected{% endif %}>Last Year</option>
                     </select>
                     {% if categories %}
-                            <label for="category-select" class="form-label" style="color: white;">Category</label>
+                            <label for="category-select text-white" class="form-label">Category</label>
                             <select id="category-select" name="category" class="form-control selectpicker mb-2"
                                 data-style="btn-alveus-tan"
                                 data-width="100%">
@@ -45,7 +45,7 @@
                             </select>
                         {% endif %}
                         {% if themes %}
-                            <label for="themes-select" class="form-label" style="color: white;">Themes</label>
+                            <label for="themes-select" class="form-label text-white">Themes</label>
                             <select id="themes-select" name="themes" class="form-control selectpicker mb-2"
                                 data-style="btn-alveus-tan"
                                 data-width="100%"
@@ -58,7 +58,7 @@
                             </select>
                         {% endif %}
                         {% if subjects %}
-                            <label for="subjects-select" class="form-label" style="color: white;">Subjects</label>
+                            <label for="subjects-select" class="form-label text-white">Subjects</label>
                             <select id="subjects-select" name="subjects" class="form-control selectpicker mb-2"
                                 data-style="btn-alveus-tan"
                                 data-width="100%"
@@ -76,7 +76,7 @@
                             </select>
                         {% endif %}
                         {% if layouts %}
-                            <label for="layout-select" class="form-label" style="color: white;">Layout</label>
+                            <label for="layout-select" class="form-label text-white">Layout</label>
                             <select id="layout-select" name="layout" class="form-control selectpicker mb-2"
                                 data-style="btn-alveus-tan"
                                 data-width="100%">
@@ -88,7 +88,7 @@
                         {% endif %}
                 </div>
                 <div class="mb-2">
-                    <label class="form-label" style="color: white;">Search</label>
+                    <label class="form-label text-white">Search</label>
                     <input type="text" name="search" class="form-control" placeholder="Search clips">
                 </div>
                 <button type="submit" class="btn btn-alveus-tan w-100">Apply Filters</button>
