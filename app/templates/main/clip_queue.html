@@ -3,7 +3,7 @@
 {% block app_content %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
     <div class="container-fluid pt-0 d-flex flex-row height-sub-header" style="margin: 0; padding: 0;">
-        <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center" id="clip-viewer" style="min-width: 0; min-height: 100%;">
+        <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center" id="clip-viewer" style="min-width: 0; min-height: 100%; z-index: 1">
             {% include 'main/clip_viewer.html' %}
         </div>
         <div id="sidebar" style="min-height: 100%; width: 320px; z-index: 1050; flex-shrink: 0;">
