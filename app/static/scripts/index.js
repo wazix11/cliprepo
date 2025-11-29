@@ -109,3 +109,12 @@ document.getElementById('clear-filters-btn').addEventListener('click', function(
     document.querySelector('input[name="search"]').value = '';
     submitFilterForm();
 });
+
+document.body.addEventListener('showLoginMessage', function(evt) {
+    var toastEl = document.getElementById('loginToast');
+    var toast = new bootstrap.Toast(toastEl, {
+        autohide: true,
+        delay: 4000
+    });
+    toast.show();
+});

@@ -1,4 +1,4 @@
-from flask import render_template, render_template_string, send_from_directory, request, session
+from flask import render_template, render_template_string, send_from_directory, request, session, make_response
 from flask_login import current_user
 from datetime import datetime as dt, timedelta, timezone
 from app.main.forms import *
@@ -159,6 +159,22 @@ def get_value(request_value, session_value, default):
 def like_clip(twitch_id):
     clip = Clip.query.filter_by(twitch_id=twitch_id).first_or_404()
     liked = False
+    
+    if not current_user.is_authenticated:
+        response = make_response(render_template_string("""
+            <span id="like-btn-{{ clip.twitch_id }}">
+                <button class="btn clip-like-btn btn-success" 
+                        type="button"
+                        hx-post="/like-clip/{{ clip.twitch_id }}"
+                        hx-target="#like-btn-{{ clip.twitch_id }}"
+                        hx-swap="outerHTML">
+                    <i class="fa-regular fa-heart"></i>
+                </button>
+                <span class="clip-like-count" id="like-count-{{ clip.twitch_id }}">{{ upvotes }}</span>
+            </span>
+        """, clip=clip, upvotes=format_count(len(clip.upvoted_by), 'like')))
+        response.headers['HX-Trigger'] = json.dumps({"showLoginMessage": "Please log in to like clips"})
+        return response
     
     if current_user.is_authenticated and clip:
         if current_user in clip.upvoted_by:
