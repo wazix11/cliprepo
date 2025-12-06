@@ -1,5 +1,5 @@
 import os, secrets, requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from urllib.parse import urlencode
 from dotenv import load_dotenv
 from flask import redirect, url_for, flash, abort, session, request
@@ -7,6 +7,11 @@ from flask_login import login_user, logout_user, current_user
 from app import db
 from app.auth import bp
 from app.models import User
+from app.auth.oauth_utils import (
+    refresh_user_access_token,
+    ExpiredAccessTokenError,
+    require_scopes
+)
 
 load_dotenv(override=True)
 TWITCH_CLIENT_ID = os.environ.get('TWITCH_CLIENT_ID')
@@ -22,59 +27,28 @@ TWITCH_VALIDATE_URL = 'https://id.twitch.tv/oauth2/validate'
 TWITCH_REVOKE_URL = 'https://id.twitch.tv/oauth2/revoke'
 SUPERADMIN_NAMES = os.environ.get('SUPERADMIN_NAMES').lower().split(',')
 
+@bp.before_app_request
+def check_user_token():
+    """Check and refresh users access token before each request."""
+    if request.endpoint and (
+        request.endpoint.startswith('static') or
+        request.endpoint in ['auth.logout', 'auth.oauth2_authorize', 'auth.oauth2_callback']
+    ):
+        return
+    
+    if not current_user.is_anonymous:
+        try:
+            refresh_user_access_token(current_user)
+        except ExpiredAccessTokenError:
+            logout_user()
+            flash('Your session has expired. Please log in again.', 'warning')
+            return redirect(url_for('auth.oauth2_authorize'))
+
 @bp.route('/logout')
 def logout():
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('main.index'))
-
-def validate_access_token(access_token):
-    headers = {
-        'Authorization': f'OAuth {access_token}'
-    }
-    response = requests.get(TWITCH_VALIDATE_URL, headers=headers)
-    print(response.json())
-    return response.json()
-
-def refresh_access_token(refresh_token):
-    params = {
-        'client_id': TWITCH_CLIENT_ID,
-        'client_secret': TWITCH_CLIENT_SECRET,
-        'grant_type': 'refresh_token',
-        'refresh_token': refresh_token
-    }
-    response = requests.post(TWITCH_TOKEN_URL, data=params)
-    return response.json()
-
-def revoke_access_token(access_token):
-    params = {
-        'client_id': TWITCH_CLIENT_ID,
-        'token': access_token
-    } 
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-
-    response = requests.post(TWITCH_REVOKE_URL, headers=headers, data=params)
-    return response.json()
-
-# Function to periodically check and update the access token
-# TODO needs a bunch of work, especially on error responses
-# also just doesn't actually work, this doesn't seem to run within the app context
-def check_access_token():
-    print(current_user)
-    access_token = current_user.access_token
-    if access_token:
-        validation_response = validate_access_token(access_token)
-        if 'status' in validation_response and validation_response['status'] == 401:
-            # Access token is expired, refresh it
-            refresh_token = current_user.refresh_token
-            new_token_response = refresh_access_token(refresh_token)
-            current_user.access_token = new_token_response.get('access_token')
-            current_user.refresh_token = new_token_response.get('refresh_token')
-            # Update the user's access token in the database
-            db.session.commit()
-
-def get_client_access_token():
-    pass
 
 @bp.route('/authorize')
 def oauth2_authorize():
@@ -111,12 +85,10 @@ def oauth2_callback():
     # make sure that the state parameter matches the one we created in the
     # authorization request
     if request.args['state'] != session.get('oauth2_state'):
-        print('State parameter mismatch')
         abort(401)
 
     # make sure that the authorization code is present
     if 'code' not in request.args:
-        print('Authorization code not present')
         abort(401)
 
     # exchange the authorization code for an access token
@@ -127,13 +99,17 @@ def oauth2_callback():
         'grant_type': 'authorization_code',
         'redirect_uri': f'{TWITCH_OAUTH_REDIRECT_URI}/callback',
     }, headers={'Accept': 'application/json'})
+
     if response.status_code != 200:
-        print('Access token request failed')
         abort(401)
-    oauth2_token = response.json().get('access_token')
-    user_refresh_token = response.json().get('refresh_token')
+
+    token_data = response.json()
+    oauth2_token = token_data.get('access_token')
+    user_refresh_token = token_data.get('refresh_token')
+    expires_in = token_data.get('expires_in', 3600)
+    token_scope = token_data.get('scope', '').replace(',', ' ')
+
     if not oauth2_token:
-        print('Access token request failed 2')
         abort(401)
 
     # use the access token to get the user's info
@@ -142,42 +118,51 @@ def oauth2_callback():
         'Accept': 'application/json',
         'Client-Id': TWITCH_CLIENT_ID
     })
+
     if response.status_code != 200:
-        print('Unable to retrieve user info')
         abort(401)
     
-    data = response.json()
-    
-    user_id = data['data'][0]['id']
-    user_login = data['data'][0]['login']
-    user_display_name = data['data'][0]['display_name']
-    user_profile_image_url = data['data'][0]['profile_image_url']
+    data = response.json()['data'][0]
+    user_id = data['id']
+    user_login = data['login']
+    user_display_name = data['display_name']
+    user_profile_image_url = data['profile_image_url']
+
+    now = datetime.now(timezone.utc)
+    token_expires_at = now + timedelta(seconds=expires_in)
     
     # find or create the user in the database
     user = db.session.scalar(db.select(User).where(User.twitch_id == user_id))
+
     if user is None:
         rank_id = 1
         if user_display_name.lower() in SUPERADMIN_NAMES:
             rank_id = 4
-        user = User(twitch_id=user_id, 
-                    login=user_login, 
-                    display_name=user_display_name, 
-                    profile_image_url=user_profile_image_url,
-                    access_token=oauth2_token,
-                    refresh_token=user_refresh_token,
-                    rank_id=rank_id)
+        user = User(
+            twitch_id=user_id, 
+            login=user_login, 
+            display_name=user_display_name, 
+            profile_image_url=user_profile_image_url,
+            access_token=oauth2_token,
+            refresh_token=user_refresh_token,
+            expires_at=token_expires_at,
+            last_verified=now,
+            token_scope=token_scope,
+            rank_id=rank_id
+        )
         db.session.add(user)
-        db.session.commit()
     else:
         user.twitch_id = user_id
         user.login = user_login
         user.display_name = user_display_name
-        user.last_verified = datetime.now(timezone.utc)
         user.profile_image_url = user_profile_image_url
         user.access_token = oauth2_token
         user.refresh_token = user_refresh_token
-        db.session.commit()
-
+        user.expires_at = token_expires_at
+        user.last_verified = now
+        user.token_scope = token_scope
+        
+    db.session.commit()
     # log the user in
     login_user(user)
     return redirect(url_for('main.index'))
