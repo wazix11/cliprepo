@@ -1660,7 +1660,7 @@ def dash_reports_database():
     tables_result = db.session.execute(text("""
         SELECT table_name, table_rows, round((data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)'
         FROM information_schema.tables
-        WHERE table_schema = 'alveusclips'
+        WHERE table_schema = 'cliprepo'
         ORDER BY (data_length + index_length)
         DESC
     """))
