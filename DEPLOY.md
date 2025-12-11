@@ -262,8 +262,8 @@ $ sudo ln -s /etc/nginx/sites-available/cliprepo /etc/nginx/sites-enabled/clipre
 ```
 Update static folder permissions:
 ```
-$ sudo find /home/ubuntu/cliprepo/app/static -type d -exec chmod 755 {}
-$ sudo find /home/ubuntu/cliprepo/app/static -type f -exec chmod 644 {}
+$ sudo find /home/ubuntu/cliprepo/app/static -type d -exec chmod 755 {} +
+$ sudo find /home/ubuntu/cliprepo/app/static -type f -exec chmod 644 {} +
 $ sudo chmod 755 /home
 $ sudo chmod 755 /home/ubuntu
 $ sudo chmod 755 /home/ubuntu/cliprepo

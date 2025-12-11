@@ -3,7 +3,7 @@
 {% block dash_content %}
     <section class="content-header">
         <h3>Subject Categories</h3>
-        <a href="{{ url_for('main.dash_subject_categories_create') }}"><button class="btn btn-alveus-tan">Create</button></a>
+        <a href="{{ url_for('dash.dash_subject_categories_create') }}"><button class="btn btn-alveus-tan">Create</button></a>
     </section>
     <section class="main-content">
         <div class="row">
@@ -86,12 +86,12 @@
                                             <td>{{ subject_category.updated_by_user.display_name }}</td>
                                             <td>{{ subject_category.updated_at }}</td>
                                             <td class="table-actions">
-                                                <a href="{{ url_for('main.dash_subject_categories_edit', id=subject_category.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
+                                                <a href="{{ url_for('dash.dash_subject_categories_edit', id=subject_category.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
                                                 {% if current_user.rank_id >= 3 %}
                                                     {% if subject_category.subjects|length > 0 %}
-                                                        <a href="{{ url_for('main.dash_subject_categories_delete', id=subject_category.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                        <a href="{{ url_for('dash.dash_subject_categories_delete', id=subject_category.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
                                                     {% else %}
-                                                        <a href="{{ url_for('main.dash_subject_categories_delete', id=subject_category.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                        <a href="{{ url_for('dash.dash_subject_categories_delete', id=subject_category.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
                                                     {% endif %}
                                                 {% endif %}
                                             </td>

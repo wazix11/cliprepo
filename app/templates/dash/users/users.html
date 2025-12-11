@@ -88,14 +88,14 @@
                                             <td>{{ user.updated_at }}</td>
                                             <td class="table-actions">
                                                 {% if current_user.rank_id >= 3 and current_user.rank_id > user.rank.id or current_user.rank_id == 4 %}
-                                                    <a href="{{ url_for('main.dash_users_edit', id=user.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
+                                                    <a href="{{ url_for('dash.dash_users_edit', id=user.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
                                                 {% else %}
-                                                    <a href="{{ url_for('main.dash_users_edit', id=user.id) }}" class="btn btn-alveus-green disabled" role="button"><i class="fa-solid fa-pen"></i></a>
+                                                    <a href="{{ url_for('dash.dash_users_edit', id=user.id) }}" class="btn btn-alveus-green disabled" role="button"><i class="fa-solid fa-pen"></i></a>
                                                 {% endif %}
                                                 {% if current_user.rank_id < 4 %}
-                                                    <a href="{{ url_for('main.dash_users_delete', id=user.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                    <a href="{{ url_for('dash.dash_users_delete', id=user.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
                                                 {% else %}
-                                                    <a href="{{ url_for('main.dash_users_delete', id=user.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                    <a href="{{ url_for('dash.dash_users_delete', id=user.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
                                                 {% endif %}
                                             </td>
                                         </tr>

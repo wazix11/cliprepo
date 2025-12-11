@@ -55,7 +55,7 @@
                     {% else %}
                         {% if current_user.rank.name in ['SUPERADMIN', 'ADMIN', 'MODERATOR'] %}
                             <li class="nav-item active">
-                                <a class="nav-link text-white" href="{{ url_for('main.dashboard') }}">
+                                <a class="nav-link text-white" href="{{ url_for('dash.dashboard') }}">
                                     <h5>Dashboard</h5>
                                 </a>
                             </li>

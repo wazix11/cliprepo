@@ -81,9 +81,9 @@
                                         {% for clip in clips %}
                                         <tr>
                                             <td class="table-actions">
-                                                <a href="{{ url_for('main.dash_clips_edit', id=clip.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
+                                                <a href="{{ url_for('dash.dash_clips_edit', id=clip.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
                                                 {% if current_user.rank_id >= 3 %}
-                                                    <a href="{{ url_for('main.dash_clips_delete', id=clip.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                    <a href="{{ url_for('dash.dash_clips_delete', id=clip.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
                                                 {% endif %}
                                             </td>
                                             <td>{{ clip.id }}</td>

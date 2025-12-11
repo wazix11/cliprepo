@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request, session
 import math, os, json
 from datetime import datetime, timezone
 from flask_login import current_user, login_required
-from app.main import bp
+from app.dash import bp
 from dotenv import load_dotenv
 from decorators import rank_required
 from app.models import *
@@ -62,6 +62,11 @@ def load_table():
         'search': search
     }
 
+@bp.context_processor
+def inject_sidebar_labels():
+    sidebar_labels = Status.query.order_by('id')
+    return dict(sidebar=sidebar_labels)
+
 # 
 # 
 # 
@@ -75,9 +80,8 @@ def load_table():
 @login_required
 @rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
 def dashboard():
-    sidebar_labels = Status.query.order_by('id')
     unsorted = Clip.query.filter(or_(Clip.category_id == None, Clip.themes == None, Clip.subjects == None)).count()
-    return render_template('dash/dashboard.html', title='Dashboard', sidebar=sidebar_labels, unsorted=unsorted)
+    return render_template('dash/dashboard.html', title='Dashboard', unsorted=unsorted)
     
 # 
 # 
@@ -167,8 +171,7 @@ def dash_clips():
         page = 1
     clips = db.paginate(query, page=page, per_page=size, error_out=False)
     pages = clips.iter_pages(left_edge=2, left_current=1, right_edge=2, right_current=1)
-    sidebar_labels = Status.query.order_by('id')
-    return render_template('dash/clips/clips.html', title='Dashboard - Clips', sidebar=sidebar_labels, clips=clips, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
+    return render_template('dash/clips/clips.html', title='Dashboard - Clips', clips=clips, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
     
 @bp.route('/dashboard/clips/<id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -214,9 +217,7 @@ def dash_clips_edit(id):
 
             form.subjects.choices.append((sc.name, group_choices))
     else:
-        return redirect(url_for('main.dash_clips'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_clips'))
 
     if request.method == 'GET':
         referrer = request.referrer
@@ -226,7 +227,7 @@ def dash_clips_edit(id):
     if request.method == 'POST':
         if form.cancel.data:
             session.pop('edit_clip_referrer', None)
-            return redirect(url_for('main.dash_clips'))
+            return redirect(url_for('dash.dash_clips'))
     if form.validate_on_submit():
         form_info = [form.title_override.data, 
                      form.notes.data,
@@ -238,7 +239,7 @@ def dash_clips_edit(id):
         # if the form data hasn't changed, just redirect to clips page
         if form_info == current_clip_info:
             session.pop('edit_clip_referrer', None)
-            return redirect(url_for('main.dash_clips'))
+            return redirect(url_for('dash.dash_clips'))
         # otherwise handle changes
         else:
             if current_clip.updated_by != int(current_user.id):
@@ -259,8 +260,8 @@ def dash_clips_edit(id):
             referrer = session.pop('edit_clip_referrer', None)
             if referrer:
                 return redirect(referrer)
-            return redirect(url_for('main.dash_clips'))
-    return render_template('dash/clips/edit_clip.html', title='Dashboard - Edit Clip', sidebar=sidebar_labels, form=form, clip=current_clip, embed_parent=EMBED_PARENT)
+            return redirect(url_for('dash.dash_clips'))
+    return render_template('dash/clips/edit_clip.html', title='Dashboard - Edit Clip', form=form, clip=current_clip, embed_parent=EMBED_PARENT)
 
 @bp.route('/dashboard/clips/<id>/delete', methods=['GET', 'POST'])
 @login_required
@@ -270,13 +271,11 @@ def dash_clips_delete(id):
     if clip != None:
         form = deleteForm()
     else:
-        return redirect(url_for('main.dash_clips'))
+        return redirect(url_for('dash.dash_clips'))
     
-    sidebar_labels = Status.query.order_by('id')
-
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_clips'))
+            return redirect(url_for('dash.dash_clips'))
     if form.validate_on_submit():
         # TODO: add more validation to prevent deletion of clips
         # if the entered name doesn't match the clip id, prompt an error
@@ -286,8 +285,8 @@ def dash_clips_delete(id):
         else:
             db.session.delete(clip)
             db.session.commit()
-            return redirect(url_for('main.dash_clips'))
-    return render_template('dash/clips/delete_clip.html', title='Dashboard - Delete Clip', sidebar=sidebar_labels, form=form, clip=clip)
+            return redirect(url_for('dash.dash_clips'))
+    return render_template('dash/clips/delete_clip.html', title='Dashboard - Delete Clip', form=form, clip=clip)
 
 # 
 # 
@@ -366,8 +365,8 @@ def dash_users():
         page = 1
     users = db.paginate(query, page=page, per_page=size, error_out=False)
     pages = users.iter_pages(left_edge=2, left_current=1, right_edge=2, right_current=1)
-    sidebar_labels = Status.query.order_by('id')
-    return render_template('dash/users/users.html', title='Dashboard - Users', sidebar=sidebar_labels, users=users, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
+    
+    return render_template('dash/users/users.html', title='Dashboard - Users', users=users, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
     
 @bp.route('/dashboard/users/<id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -381,18 +380,16 @@ def dash_users_edit(id):
         form = userForm(rank=curr_user.rank_id, contributions=curr_user.contributions, enabled=curr_user.login_enabled, notes=curr_user.notes)
         form.rank.choices = [(r.id, r.name) for r in Rank.query.order_by('id')]
     else:
-        return redirect(url_for('main.dash_users'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_users'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_users'))
+            return redirect(url_for('dash.dash_users'))
     if form.validate_on_submit():
         form_info = [form.rank.data, form.contributions.data, form.enabled.data, form.notes.data] # list to compare with curr_user_info
         # if the form data hasn't changed, just redirect to users page
         if form_info == curr_user_info:
-            return redirect(url_for('main.dash_users'))
+            return redirect(url_for('dash.dash_users'))
         # otherwise handle changes
         else:
             curr_user.rank_id = form.rank.data
@@ -402,8 +399,8 @@ def dash_users_edit(id):
             curr_user.updated_by = current_user.id
             curr_user.updated_at = datetime.now(timezone.utc)
             db.session.commit()
-            return redirect(url_for('main.dash_users'))
-    return render_template('dash/users/edit_user.html', title='Dashboard - Edit User', sidebar=sidebar_labels, form=form)
+            return redirect(url_for('dash.dash_users'))
+    return render_template('dash/users/edit_user.html', title='Dashboard - Edit User', form=form)
 
 @bp.route('/dashboard/users/<id>/delete', methods=['GET', 'POST'])
 @login_required
@@ -413,13 +410,11 @@ def dash_users_delete(id):
     if user != None:
         form = deleteForm()
     else:
-        return redirect(url_for('main.dash_users'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_users'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_users'))
+            return redirect(url_for('dash.dash_users'))
     if form.validate_on_submit():
         # if the entered name doesn't match the user name, prompt an error
         if form.name.data != user.display_name:
@@ -428,8 +423,8 @@ def dash_users_delete(id):
         else:
             db.session.delete(user)
             db.session.commit()
-            return redirect(url_for('main.dash_users'))
-    return render_template('dash/users/delete_user.html', title='Dashboard - Delete User', sidebar=sidebar_labels, form=form, user=user)
+            return redirect(url_for('dash.dash_users'))
+    return render_template('dash/users/delete_user.html', title='Dashboard - Delete User', form=form, user=user)
 
 # 
 # 
@@ -503,18 +498,18 @@ def dash_categories():
         page = 1
     categories = db.paginate(query, page=page, per_page=size, error_out=False)
     pages = categories.iter_pages(left_edge=2, left_current=1, right_edge=2, right_current=1)
-    sidebar_labels = Status.query.order_by('id')
-    return render_template('dash/categories/categories.html', title='Dashboard - Categories', sidebar=sidebar_labels, categories=categories, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
+    
+    return render_template('dash/categories/categories.html', title='Dashboard - Categories', categories=categories, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
 
 @bp.route('/dashboard/categories/create', methods=['GET', 'POST'])
 @login_required
 @rank_required('SUPERADMIN', 'ADMIN')
 def dash_categories_create():
     form = categoryForm()
-    sidebar_labels = Status.query.order_by('id')
+    
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_categories'))
+            return redirect(url_for('dash.dash_categories'))
     if form.validate_on_submit():
         category = Category.query.filter(Category.name.ilike(form.name.data)).first()
         # category doesn't already exist, create it
@@ -527,11 +522,11 @@ def dash_categories_create():
                                 updated_by=current_user.id)
             db.session.add(category)
             db.session.commit()
-            return redirect(url_for('main.dash_categories'))
+            return redirect(url_for('dash.dash_categories'))
         # category already exists, prompt name change
         else:
             flash('Name must be unique!', 'form-error')
-    return render_template('dash/categories/create_category.html', title='Dashboard - Create Category', sidebar=sidebar_labels, form=form)
+    return render_template('dash/categories/create_category.html', title='Dashboard - Create Category', form=form)
     
 @bp.route('/dashboard/categories/<id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -544,18 +539,16 @@ def dash_categories_edit(id):
         # populate the form with the existing data
         form = categoryForm(name=current_category.name, notes=current_category.notes)
     else:
-        return redirect(url_for('main.dash_categories'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_categories'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_categories'))
+            return redirect(url_for('dash.dash_categories'))
     if form.validate_on_submit():
         form_info = [form.name.data, form.notes.data] # list to compare with current_category_info
         # if the form data hasn't changed, just redirect to categories page
         if form_info == current_category_info:
-            return redirect(url_for('main.dash_categories'))
+            return redirect(url_for('dash.dash_categories'))
         # otherwise handle changes
         else:
             category = Category.query.filter(Category.name.ilike(form.name.data)).first()
@@ -566,11 +559,11 @@ def dash_categories_edit(id):
                 current_category.updated_by = current_user.id
                 current_category.updated_at = datetime.now(timezone.utc)
                 db.session.commit()
-                return redirect(url_for('main.dash_categories'))
+                return redirect(url_for('dash.dash_categories'))
             # category already exists, prompt name change
             else:
                 flash('Name must be unique!', 'form-error')
-    return render_template('dash/categories/edit_category.html', title='Dashboard - Edit Category', sidebar=sidebar_labels, form=form)
+    return render_template('dash/categories/edit_category.html', title='Dashboard - Edit Category', form=form)
 
 @bp.route('/dashboard/categories/<id>/delete', methods=['GET', 'POST'])
 @login_required
@@ -580,16 +573,14 @@ def dash_categories_delete(id):
     if category != None:
         if len(category.clips) > 0:
             # Don't allow deletion of categories with clips assigned
-            return redirect(url_for('main.dash_categories'))
+            return redirect(url_for('dash.dash_categories'))
         form = deleteForm()
     else:
-        return redirect(url_for('main.dash_categories'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_categories'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_categories'))
+            return redirect(url_for('dash.dash_categories'))
     if form.validate_on_submit():
         # if the entered name doesn't match the category name, prompt an error
         if form.name.data != category.name:
@@ -598,8 +589,8 @@ def dash_categories_delete(id):
         else:
             db.session.delete(category)
             db.session.commit()
-            return redirect(url_for('main.dash_categories'))
-    return render_template('dash/categories/delete_category.html', title='Dashboard - Delete Category', sidebar=sidebar_labels, form=form, category=category)
+            return redirect(url_for('dash.dash_categories'))
+    return render_template('dash/categories/delete_category.html', title='Dashboard - Delete Category', form=form, category=category)
 
 # 
 # 
@@ -673,18 +664,18 @@ def dash_themes():
         page = 1
     themes = db.paginate(query, page=page, per_page=size, error_out=False)
     pages = themes.iter_pages(left_edge=2, left_current=1, right_edge=2, right_current=1)
-    sidebar_labels = Status.query.order_by('id')
-    return render_template('dash/themes/themes.html', title='Dashboard - Themes', sidebar=sidebar_labels, themes=themes, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
+    
+    return render_template('dash/themes/themes.html', title='Dashboard - Themes', themes=themes, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
 
 @bp.route('/dashboard/themes/create', methods=['GET', 'POST'])
 @login_required
 @rank_required('SUPERADMIN', 'ADMIN')
 def dash_themes_create():
     form = themeForm()
-    sidebar_labels = Status.query.order_by('id')
+    
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_themes'))
+            return redirect(url_for('dash.dash_themes'))
     if form.validate_on_submit():
         theme = Theme.query.filter(Theme.name.ilike(form.name.data)).first()
         # theme doesn't already exist, create it
@@ -697,11 +688,11 @@ def dash_themes_create():
                                 updated_by=current_user.id)
             db.session.add(theme)
             db.session.commit()
-            return redirect(url_for('main.dash_themes'))
+            return redirect(url_for('dash.dash_themes'))
         # theme already exists, prompt name change
         else:
             flash('Name must be unique!', 'form-error')
-    return render_template('dash/themes/create_theme.html', title='Dashboard - Create Theme', sidebar=sidebar_labels, form=form)
+    return render_template('dash/themes/create_theme.html', title='Dashboard - Create Theme', form=form)
     
 @bp.route('/dashboard/themes/<id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -714,18 +705,16 @@ def dash_themes_edit(id):
         # populate the form with the existing data
         form = themeForm(name=current_theme.name, notes=current_theme.notes)
     else:
-        return redirect(url_for('main.dash_themes'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_themes'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_themes'))
+            return redirect(url_for('dash.dash_themes'))
     if form.validate_on_submit():
         form_info = [form.name.data, form.notes.data] # list to compare with current_theme_info
         # if the form data hasn't changed, just redirect to themes page
         if form_info == current_theme_info:
-            return redirect(url_for('main.dash_themes'))
+            return redirect(url_for('dash.dash_themes'))
         # otherwise handle changes
         else:
             theme = Theme.query.filter(Theme.name.ilike(form.name.data)).first()
@@ -736,11 +725,11 @@ def dash_themes_edit(id):
                 current_theme.updated_at = datetime.now(timezone.utc)
                 current_theme.updated_by = current_user.id
                 db.session.commit()
-                return redirect(url_for('main.dash_themes'))
+                return redirect(url_for('dash.dash_themes'))
             # theme already exists, prompt name change
             else:
                 flash('Name must be unique!', 'form-error')
-    return render_template('dash/themes/edit_theme.html', title='Dashboard - Edit Theme', sidebar=sidebar_labels, form=form)
+    return render_template('dash/themes/edit_theme.html', title='Dashboard - Edit Theme', form=form)
 
 @bp.route('/dashboard/themes/<id>/delete', methods=['GET', 'POST'])
 @login_required
@@ -750,16 +739,14 @@ def dash_themes_delete(id):
     if theme != None:
         if len(theme.clips) > 0:
             # Don't allow deletion of themes with clips assigned
-            return redirect(url_for('main.dash_themes'))
+            return redirect(url_for('dash.dash_themes'))
         form = deleteForm()
     else:
-        return redirect(url_for('main.dash_themes'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_themes'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_themes'))
+            return redirect(url_for('dash.dash_themes'))
     if form.validate_on_submit():
         # if the entered name doesn't match the theme name, prompt an error
         if form.name.data != theme.name:
@@ -768,8 +755,8 @@ def dash_themes_delete(id):
         else:
             db.session.delete(theme)
             db.session.commit()
-            return redirect(url_for('main.dash_themes'))
-    return render_template('dash/themes/delete_theme.html', title='Dashboard - Delete Theme', sidebar=sidebar_labels, form=form, theme=theme)
+            return redirect(url_for('dash.dash_themes'))
+    return render_template('dash/themes/delete_theme.html', title='Dashboard - Delete Theme', form=form, theme=theme)
     
 # 
 # 
@@ -856,8 +843,8 @@ def dash_subjects():
         page = 1
     subjects = db.paginate(query, page=page, per_page=size, error_out=False)
     pages = subjects.iter_pages(left_edge=2, left_current=1, right_edge=2, right_current=1)
-    sidebar_labels = Status.query.order_by('id')
-    return render_template('dash/subjects/subjects.html', title='Dashboard - Subjects', sidebar=sidebar_labels, subjects=subjects, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
+    
+    return render_template('dash/subjects/subjects.html', title='Dashboard - Subjects', subjects=subjects, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
     
 @bp.route('/dashboard/subjects/create', methods=['GET', 'POST'])
 @login_required
@@ -865,10 +852,10 @@ def dash_subjects():
 def dash_subjects_create():
     form = subjectForm()
     form.category.choices = [(c.id, c.name) for c in SubjectCategory.query.order_by('id')]
-    sidebar_labels = Status.query.order_by('id')
+    
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_subjects'))
+            return redirect(url_for('dash.dash_subjects'))
     if form.validate_on_submit():
         subject = Subject.query.filter(Subject.name.ilike(form.name.data)).first()
         # subject doesn't already exist, create it
@@ -885,11 +872,11 @@ def dash_subjects_create():
                             updated_by=current_user.id)
             db.session.add(subject)
             db.session.commit()
-            return redirect(url_for('main.dash_subjects'))
+            return redirect(url_for('dash.dash_subjects'))
         # subject already exists, prompt name change
         else:
             flash('Name must be unique!', 'form-error')
-    return render_template('dash/subjects/create_subject.html', title='Dashboard - Create Subject', sidebar=sidebar_labels, form=form)
+    return render_template('dash/subjects/create_subject.html', title='Dashboard - Create Subject', form=form)
     
 @bp.route('/dashboard/subjects/<id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -908,18 +895,16 @@ def dash_subjects_edit(id):
                             notes=current_subject.notes)
         form.category.choices = [(c.id, c.name) for c in SubjectCategory.query.order_by('id')]
     else:
-        return redirect(url_for('main.dash_subjects'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_subjects'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_subjects'))
+            return redirect(url_for('dash.dash_subjects'))
     if form.validate_on_submit():
         form_info = [form.name.data, form.category.data, form.subtext.data, form.keywords.data, form.public.data, form.notes.data] # list to compare with current_subject_info
         # if the form data hasn't changed, just redirect to subjects page
         if form_info == current_subject_info:
-            return redirect(url_for('main.dash_subjects'))
+            return redirect(url_for('dash.dash_subjects'))
         # otherwise handle changes
         else:
             subject = Subject.query.filter(Subject.name.ilike(form.name.data)).first()
@@ -934,11 +919,11 @@ def dash_subjects_edit(id):
                 current_subject.updated_at = datetime.now(timezone.utc)
                 current_subject.updated_by = current_user.id
                 db.session.commit()
-                return redirect(url_for('main.dash_subjects'))
+                return redirect(url_for('dash.dash_subjects'))
             # subject already exists, prompt name change
             else:
                 flash('Name must be unique!', 'form-error')
-    return render_template('dash/subjects/edit_subject.html', title='Dashboard - Edit Subject', sidebar=sidebar_labels, form=form)
+    return render_template('dash/subjects/edit_subject.html', title='Dashboard - Edit Subject', form=form)
 
 @bp.route('/dashboard/subjects/<id>/delete', methods=['GET', 'POST'])
 @login_required
@@ -948,16 +933,14 @@ def dash_subjects_delete(id):
     if subject != None:
         if len(subject.clips) > 0:
             # Don't allow deletion of subjects with clips assigned
-            return redirect(url_for('main.dash_subjects'))
+            return redirect(url_for('dash.dash_subjects'))
         form = deleteForm()
     else:
-        return redirect(url_for('main.dash_subjects'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_subjects'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_subjects'))
+            return redirect(url_for('dash.dash_subjects'))
     if form.validate_on_submit():
         # if the entered name doesn't match the subject name, prompt an error
         if form.name.data != subject.name:
@@ -966,8 +949,8 @@ def dash_subjects_delete(id):
         else:
             db.session.delete(subject)
             db.session.commit()
-            return redirect(url_for('main.dash_subjects'))
-    return render_template('dash/subjects/delete_subject.html', title='Dashboard - Delete Subject', sidebar=sidebar_labels, form=form, subject=subject)    
+            return redirect(url_for('dash.dash_subjects'))
+    return render_template('dash/subjects/delete_subject.html', title='Dashboard - Delete Subject', form=form, subject=subject)    
 
 # 
 # 
@@ -1041,18 +1024,18 @@ def dash_subject_categories():
         page = 1
     subject_categories = db.paginate(query, page=page, per_page=size, error_out=False)
     pages = subject_categories.iter_pages(left_edge=2, left_current=1, right_edge=2, right_current=1)
-    sidebar_labels = Status.query.order_by('id')
-    return render_template('dash/subject_categories/subject_categories.html', title='Dashboard - Subject Categories', sidebar=sidebar_labels, subject_categories=subject_categories, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
+    
+    return render_template('dash/subject_categories/subject_categories.html', title='Dashboard - Subject Categories', subject_categories=subject_categories, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
    
 @bp.route('/dashboard/subject_categories/create', methods=['GET', 'POST'])
 @login_required
 @rank_required('SUPERADMIN', 'ADMIN')
 def dash_subject_categories_create():
     form = subjectCategoryForm()
-    sidebar_labels = Status.query.order_by('id')
+    
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_subject_categories'))
+            return redirect(url_for('dash.dash_subject_categories'))
     if form.validate_on_submit():
         subject_category = SubjectCategory.query.filter(SubjectCategory.name.ilike(form.name.data)).first()
         # subject category doesn't already exist, create it
@@ -1065,11 +1048,11 @@ def dash_subject_categories_create():
                                                 updated_by=current_user.id)
             db.session.add(subject_category)
             db.session.commit()
-            return redirect(url_for('main.dash_subject_categories'))
+            return redirect(url_for('dash.dash_subject_categories'))
         # subject category already exists, prompt name change
         else:
             flash('Name must be unique!', 'form-error')
-    return render_template('dash/subject_categories/create_subject_category.html', title='Dashboard - Create Subject Category', sidebar=sidebar_labels, form=form)
+    return render_template('dash/subject_categories/create_subject_category.html', title='Dashboard - Create Subject Category', form=form)
     
 @bp.route('/dashboard/subject_categories/<id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -1083,18 +1066,16 @@ def dash_subject_categories_edit(id):
         form = subjectCategoryForm(name=current_subject_category.name,
                                     notes=current_subject_category.notes)
     else:
-        return redirect(url_for('main.dash_subject_categories'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_subject_categories'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_subject_categories'))
+            return redirect(url_for('dash.dash_subject_categories'))
     if form.validate_on_submit():
         form_info = [form.name.data, form.notes.data] # list to compare with current_subject_category_info
         # if the form data hasn't changed, just redirect to subject categories page
         if form_info == current_subject_category_info:
-            return redirect(url_for('main.dash_subject_categories'))
+            return redirect(url_for('dash.dash_subject_categories'))
         # otherwise handle changes
         else:
             subject_category = SubjectCategory.query.filter(SubjectCategory.name.ilike(form.name.data)).first()
@@ -1105,11 +1086,11 @@ def dash_subject_categories_edit(id):
                 current_subject_category.updated_at = datetime.now(timezone.utc)
                 current_subject_category.updated_by = current_user.id
                 db.session.commit()
-                return redirect(url_for('main.dash_subject_categories'))
+                return redirect(url_for('dash.dash_subject_categories'))
             # subject category already exists, prompt name change
             else:
                 flash('Name must be unique!', 'form-error')
-    return render_template('dash/subject_categories/edit_subject_category.html', title='Dashboard - Edit Subject Category', sidebar=sidebar_labels, form=form)
+    return render_template('dash/subject_categories/edit_subject_category.html', title='Dashboard - Edit Subject Category', form=form)
 
 @bp.route('/dashboard/subject_categories/<id>/delete', methods=['GET', 'POST'])
 @login_required
@@ -1119,16 +1100,14 @@ def dash_subject_categories_delete(id):
     if subject_category != None:
         if len(subject_category.subjects) > 0:
             # Don't allow deletion of subject categories with subjects assigned
-            return redirect(url_for('main.dash_subject_categories'))
+            return redirect(url_for('dash.dash_subject_categories'))
         form = deleteForm()
     else:
-        return redirect(url_for('main.dash_subject_categories'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_subject_categories'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_subject_categories'))
+            return redirect(url_for('dash.dash_subject_categories'))
     if form.validate_on_submit():
         # if the entered name doesn't match the subject_category name, prompt an error
         if form.name.data != subject_category.name:
@@ -1137,8 +1116,8 @@ def dash_subject_categories_delete(id):
         else:
             db.session.delete(subject_category)
             db.session.commit()
-            return redirect(url_for('main.dash_subject_categories'))
-    return render_template('dash/subject_categories/delete_subject_category.html', title='Dashboard - Delete Subject Category', sidebar=sidebar_labels, form=form, subject_category=subject_category)    
+            return redirect(url_for('dash.dash_subject_categories'))
+    return render_template('dash/subject_categories/delete_subject_category.html', title='Dashboard - Delete Subject Category', form=form, subject_category=subject_category)    
 
 
 # 
@@ -1221,18 +1200,18 @@ def dash_statuslabels():
         page = 1
     status_labels = db.paginate(query, page=page, per_page=size, error_out=False)
     pages = status_labels.iter_pages(left_edge=2, left_current=1, right_edge=2, right_current=1)
-    sidebar_labels = Status.query.order_by('id')
-    return render_template('dash/statuslabels/statuslabels.html', title='Dashboard - Status Labels', sidebar=sidebar_labels, status_labels=status_labels, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
+    
+    return render_template('dash/statuslabels/statuslabels.html', title='Dashboard - Status Labels', status_labels=status_labels, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
     
 @bp.route('/dashboard/statuslabels/create', methods=['GET', 'POST'])
 @login_required
 @rank_required('SUPERADMIN', 'ADMIN')
 def dash_statuslabels_create():
     form = statusLabelForm()
-    sidebar_labels = Status.query.order_by('id')
+    
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_statuslabels'))
+            return redirect(url_for('dash.dash_statuslabels'))
     if form.validate_on_submit():
         status = Status.query.filter(Status.name.ilike(form.name.data)).first()
         # status doesn't already exist, create it
@@ -1247,11 +1226,11 @@ def dash_statuslabels_create():
                             updated_by=current_user.id)
             db.session.add(status)
             db.session.commit()
-            return redirect(url_for('main.dash_statuslabels'))
+            return redirect(url_for('dash.dash_statuslabels'))
         # status already exists, prompt name change
         else:
             flash('Name must be unique!', 'form-error')
-    return render_template('dash/statuslabels/create_statuslabel.html', title='Dashboard - Create Status Label', sidebar=sidebar_labels, form=form)
+    return render_template('dash/statuslabels/create_statuslabel.html', title='Dashboard - Create Status Label', form=form)
     
 @bp.route('/dashboard/statuslabels/<id>', methods=['GET', 'POST'])
 @login_required
@@ -1321,8 +1300,8 @@ def dash_statuslabels_clips(id):
         page = 1
     clips = db.paginate(query, page=page, per_page=size, error_out=False)
     pages = clips.iter_pages(left_edge=2, left_current=1, right_edge=2, right_current=1)
-    sidebar_labels = Status.query.order_by('id')
-    return render_template('dash/statuslabels/statuslabel_clips.html', title=f'Dashboard - {statuslabel.name}', header=statuslabel.name, sidebar=sidebar_labels, clips=clips, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
+    
+    return render_template('dash/statuslabels/statuslabel_clips.html', title=f'Dashboard - {statuslabel.name}', header=statuslabel.name, clips=clips, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
 
 @bp.route('/dashboard/statuslabels/<id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -1338,18 +1317,16 @@ def dash_statuslabels_edit(id):
                                 color=current_status.color,
                                 notes=current_status.notes)
     else:
-        return redirect(url_for('main.dash_statuslabels'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_statuslabels'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_statuslabels'))
+            return redirect(url_for('dash.dash_statuslabels'))
     if form.validate_on_submit():
         form_info = [form.name.data, form.status_type.data, form.color.data, form.notes.data] # list to compare with current_status_info
         # if the form data hasn't changed, just redirect to statuslabels page
         if form_info == current_status_info:
-            return redirect(url_for('main.dash_statuslabels'))
+            return redirect(url_for('dash.dash_statuslabels'))
         # otherwise handle changes
         else:
             status = Status.query.filter(Status.name.ilike(form.name.data)).first()
@@ -1362,11 +1339,11 @@ def dash_statuslabels_edit(id):
                 current_status.updated_at = datetime.now(timezone.utc)
                 current_status.updated_by = current_user.id
                 db.session.commit()
-                return redirect(url_for('main.dash_statuslabels'))
+                return redirect(url_for('dash.dash_statuslabels'))
             # status already exists, prompt name change
             else:
                 flash('Name must be unique!', 'form-error')
-    return render_template('dash/statuslabels/edit_statuslabel.html', title='Dashboard - Edit Status Label', sidebar=sidebar_labels, form=form)
+    return render_template('dash/statuslabels/edit_statuslabel.html', title='Dashboard - Edit Status Label', form=form)
 
 @bp.route('/dashboard/statuslabels/<id>/delete', methods=['GET', 'POST'])
 @login_required
@@ -1376,19 +1353,17 @@ def dash_statuslabels_delete(id):
     if status != None:
         if len(status.clips) > 0:
             # Don't allow deletion of statuses with clips assigned
-            return redirect(url_for('main.dash_statuslabels'))
+            return redirect(url_for('dash.dash_statuslabels'))
         if status.id == 1:
             # Don't allow deletion of ID 1 since it is the default
-            return redirect(url_for('main.dash_statuslabels'))
+            return redirect(url_for('dash.dash_statuslabels'))
         form = deleteForm()
     else:
-        return redirect(url_for('main.dash_statuslabels'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_statuslabels'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_statuslabels'))
+            return redirect(url_for('dash.dash_statuslabels'))
     if form.validate_on_submit():
         # if the entered name doesn't match the status name, prompt an error
         if form.name.data != status.name:
@@ -1397,8 +1372,8 @@ def dash_statuslabels_delete(id):
         else:
             db.session.delete(status)
             db.session.commit()
-            return redirect(url_for('main.dash_statuslabels'))
-    return render_template('dash/statuslabels/delete_statuslabel.html', title='Dashboard - Delete Status Label', sidebar=sidebar_labels, form=form, status=status)
+            return redirect(url_for('dash.dash_statuslabels'))
+    return render_template('dash/statuslabels/delete_statuslabel.html', title='Dashboard - Delete Status Label', form=form, status=status)
 
 # 
 # 
@@ -1472,18 +1447,18 @@ def dash_layouts():
         page = 1
     layouts = db.paginate(query, page=page, per_page=size, error_out=False)
     pages = layouts.iter_pages(left_edge=2, left_current=1, right_edge=2, right_current=1)
-    sidebar_labels = Status.query.order_by('id')
-    return render_template('dash/layouts/layouts.html', title='Dashboard - Layouts', sidebar=sidebar_labels, layouts=layouts, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
+    
+    return render_template('dash/layouts/layouts.html', title='Dashboard - Layouts', layouts=layouts, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
 
 @bp.route('/dashboard/layouts/create', methods=['GET', 'POST'])
 @login_required
 @rank_required('SUPERADMIN', 'ADMIN')
 def dash_layouts_create():
     form = layoutForm()
-    sidebar_labels = Status.query.order_by('id')
+    
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_layouts'))
+            return redirect(url_for('dash.dash_layouts'))
     if form.validate_on_submit():
         layout = Layout.query.filter(Layout.name.ilike(form.name.data)).first()
         # layout doesn't already exist, create it
@@ -1496,11 +1471,11 @@ def dash_layouts_create():
                                 updated_by=current_user.id)
             db.session.add(layout)
             db.session.commit()
-            return redirect(url_for('main.dash_layouts'))
+            return redirect(url_for('dash.dash_layouts'))
         # layout already exists, prompt name change
         else:
             flash('Name must be unique!', 'form-error')
-    return render_template('dash/layouts/create_layout.html', title='Dashboard - Create Layout', sidebar=sidebar_labels, form=form)
+    return render_template('dash/layouts/create_layout.html', title='Dashboard - Create Layout', form=form)
 
 @bp.route('/dashboard/layouts/<id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -1513,18 +1488,16 @@ def dash_layouts_edit(id):
         # populate the form with the existing data
         form = layoutForm(name=current_layout.name, notes=current_layout.notes)
     else:
-        return redirect(url_for('main.dash_layouts'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_layouts'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_layouts'))
+            return redirect(url_for('dash.dash_layouts'))
     if form.validate_on_submit():
         form_info = [form.name.data, form.notes.data] # list to compare with current_layout_info
         # if the form data hasn't changed, just redirect to layouts page
         if form_info == current_layout_info:
-            return redirect(url_for('main.dash_layouts'))
+            return redirect(url_for('dash.dash_layouts'))
         # otherwise handle changes
         else:
             layout = Layout.query.filter(Layout.name.ilike(form.name.data)).first()
@@ -1535,11 +1508,11 @@ def dash_layouts_edit(id):
                 current_layout.updated_by = current_user.id
                 current_layout.updated_at = datetime.now(timezone.utc)
                 db.session.commit()
-                return redirect(url_for('main.dash_layouts'))
+                return redirect(url_for('dash.dash_layouts'))
             # layout already exists, prompt name change
             else:
                 flash('Name must be unique!', 'form-error')
-    return render_template('dash/layouts/edit_layout.html', title='Dashboard - Edit Layout', sidebar=sidebar_labels, form=form)
+    return render_template('dash/layouts/edit_layout.html', title='Dashboard - Edit Layout', form=form)
 
 @bp.route('/dashboard/layouts/<id>/delete', methods=['GET', 'POST'])
 @login_required
@@ -1549,16 +1522,14 @@ def dash_layouts_delete(id):
     if layout != None:
         if len(layout.clips) > 0:
             # Don't allow deletion of layouts with clips assigned
-            return redirect(url_for('main.dash_layouts'))
+            return redirect(url_for('dash.dash_layouts'))
         form = deleteForm()
     else:
-        return redirect(url_for('main.dash_layouts'))
-    
-    sidebar_labels = Status.query.order_by('id')
+        return redirect(url_for('dash.dash_layouts'))
 
     if request.method == 'POST':
         if form.cancel.data:
-            return redirect(url_for('main.dash_layouts'))
+            return redirect(url_for('dash.dash_layouts'))
     if form.validate_on_submit():
         # if the entered name doesn't match the layout name, prompt an error
         if form.name.data != layout.name:
@@ -1567,8 +1538,8 @@ def dash_layouts_delete(id):
         else:
             db.session.delete(layout)
             db.session.commit()
-            return redirect(url_for('main.dash_layouts'))
-    return render_template('dash/layouts/delete_layout.html', title='Dashboard - Delete Layout', sidebar=sidebar_labels, form=form, layout=layout)
+            return redirect(url_for('dash.dash_layouts'))
+    return render_template('dash/layouts/delete_layout.html', title='Dashboard - Delete Layout', form=form, layout=layout)
 
 # 
 #
@@ -1637,18 +1608,17 @@ def dash_reports_activity():
             activity.changes_json = json.loads(activity.changes)
 
     pages = activities.iter_pages(left_edge=2, left_current=1, right_edge=2, right_current=1)
-    sidebar_labels = Status.query.order_by('id')
-    return render_template('dash/reports/activity.html', title='Dashboard - Activity Report', sidebar=sidebar_labels, activities=activities, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
+    
+    return render_template('dash/reports/activity.html', title='Dashboard - Activity Report', activities=activities, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)
 
 @bp.route('/dashboard/reports/goaccess', methods=['GET'])
 @login_required
 @rank_required('SUPERADMIN')
 def dash_reports_goaccess():
-    sidebar_labels = Status.query.order_by('id')
+    
     return render_template(
         'dash/reports/goaccess.html',
         title='Dashboard - GoAccess Reports',
-        sidebar=sidebar_labels,
         now=int(datetime.now(timezone.utc).timestamp())
     )
 
@@ -1656,7 +1626,7 @@ def dash_reports_goaccess():
 @login_required
 @rank_required('SUPERADMIN')
 def dash_reports_database():
-    sidebar_labels = Status.query.order_by('id')
+    
     tables_result = db.session.execute(text("""
         SELECT table_name, table_rows, round((data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)'
         FROM information_schema.tables
@@ -1709,7 +1679,6 @@ def dash_reports_database():
     return render_template(
         'dash/reports/database.html',
         title='Dashboard - Database Reports',
-        sidebar=sidebar_labels,
         tables_rows=tables_rows,
         bytes_rows=bytes_rows,
         status_com_rows=status_com_rows,

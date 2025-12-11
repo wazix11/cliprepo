@@ -12,7 +12,7 @@
             </div>
             <ul class="sidebar-nav">
                 <li class="sidebar-item">
-                    <a href="{{ url_for('main.dashboard') }}" class="sidebar-link">
+                    <a href="{{ url_for('dash.dashboard') }}" class="sidebar-link">
                         <i class="fa-solid fa-house"></i>
                         <span>Dashboard Home</span>
                     </a>
@@ -25,14 +25,14 @@
                     </a>
                     <ul id="clips" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
                         <li class="sidebar-item">
-                            <a href="{{ url_for('main.dash_clips') }}" class="sidebar-link">
+                            <a href="{{ url_for('dash.dash_clips') }}" class="sidebar-link">
                                 <span class="dot"></span>
                                 List All
                             </a>
                         </li>
                         {% for label in sidebar %}
                         <li class="sidebar-item">
-                            <a href="{{ url_for('main.dash_statuslabels_clips', id=label.id) }}" class="sidebar-link">
+                            <a href="{{ url_for('dash.dash_statuslabels_clips', id=label.id) }}" class="sidebar-link">
                                 <span class="dot" style="background-color: {{ label.color }};"></span>
                                 {{ label.name }}
                             </a>
@@ -45,20 +45,20 @@
                 </li>
                 {% if current_user.rank.name in ['SUPERADMIN', 'ADMIN'] %}
                 <li class="sidebar-item">
-                    <a href="{{ url_for('main.dash_users') }}" class="sidebar-link">
+                    <a href="{{ url_for('dash.dash_users') }}" class="sidebar-link">
                         <i class="fa-solid fa-user"></i>
                         <span>Users</span>
                     </a>
                 </li>
                 {% endif %}
                 <li class="sidebar-item">
-                    <a href="{{ url_for('main.dash_categories') }}" class="sidebar-link">
+                    <a href="{{ url_for('dash.dash_categories') }}" class="sidebar-link">
                         <i class="fa-solid fa-table-list"></i>
                         <span>Categories</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="{{ url_for('main.dash_themes') }}" class="sidebar-link">
+                    <a href="{{ url_for('dash.dash_themes') }}" class="sidebar-link">
                         <i class="fa-solid fa-palette"></i>
                         <span>Themes</span>
                     </a>
@@ -71,23 +71,23 @@
                     </a>
                     <ul id="subjects" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
                         <li class="sidebar-item">
-                            <a href="{{ url_for('main.dash_subjects') }}" class="sidebar-link">Subjects</a>
+                            <a href="{{ url_for('dash.dash_subjects') }}" class="sidebar-link">Subjects</a>
                         </li>
                     </ul>
                     <ul id="subjects" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
                         <li class="sidebar-item">
-                            <a href="{{ url_for('main.dash_subject_categories') }}" class="sidebar-link">Subject Categories</a>
+                            <a href="{{ url_for('dash.dash_subject_categories') }}" class="sidebar-link">Subject Categories</a>
                         </li>
                     </ul>
                 </li>
                 <li class="sidebar-item">
-                    <a href="{{ url_for('main.dash_statuslabels') }}" class="sidebar-link">
+                    <a href="{{ url_for('dash.dash_statuslabels') }}" class="sidebar-link">
                         <i class="fa-solid fa-tag"></i>
                         <span>Status Labels</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="{{ url_for('main.dash_layouts') }}" class="sidebar-link">
+                    <a href="{{ url_for('dash.dash_layouts') }}" class="sidebar-link">
                         <i class="fa-solid fa-camera"></i>
                         <span>Layouts</span>
                     </a>
@@ -115,17 +115,17 @@
                     </a>
                     <ul id="reports" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
                         <li class="sidebar-item">
-                            <a href="{{ url_for('main.dash_reports_activity') }}" class="sidebar-link">Activity Report</a>
+                            <a href="{{ url_for('dash.dash_reports_activity') }}" class="sidebar-link">Activity Report</a>
                         </li>
                         <li class="sidebar-item">
                             <a href="#" class="sidebar-link">Clip Report</a>
                         </li>
                         {% if current_user.rank.name == 'SUPERADMIN' %}
                         <li class="sidebar-item">
-                            <a href="{{ url_for('main.dash_reports_goaccess') }}" class="sidebar-link">GoAccess Report</a>
+                            <a href="{{ url_for('dash.dash_reports_goaccess') }}" class="sidebar-link">GoAccess Report</a>
                         </li>
                         <li class="sidebar-item">
-                            <a href="{{ url_for('main.dash_reports_database') }}" class="sidebar-link">Database Reports</a>
+                            <a href="{{ url_for('dash.dash_reports_database') }}" class="sidebar-link">Database Reports</a>
                         </li>
                         {% endif %}
                     </ul>

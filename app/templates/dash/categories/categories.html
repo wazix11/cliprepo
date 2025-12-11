@@ -3,7 +3,7 @@
 {% block dash_content %}
     <section class="content-header">
         <h3>Categories</h3>
-        <a href="{{ url_for('main.dash_categories_create') }}"><button class="btn btn-alveus-tan">Create</button></a>
+        <a href="{{ url_for('dash.dash_categories_create') }}"><button class="btn btn-alveus-tan">Create</button></a>
     </section>
     <section class="main-content">
         <div class="row">
@@ -86,12 +86,12 @@
                                             <td>{{ category.updated_by_user.display_name }}</td>
                                             <td>{{ category.updated_at }}</td>
                                             <td class="table-actions">
-                                                <a href="{{ url_for('main.dash_categories_edit', id=category.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
+                                                <a href="{{ url_for('dash.dash_categories_edit', id=category.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
                                                 {% if current_user.rank_id >= 3 %}
                                                     {% if category.clips|length > 0 %}
-                                                        <a href="{{ url_for('main.dash_categories_delete', id=category.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                        <a href="{{ url_for('dash.dash_categories_delete', id=category.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
                                                     {% else %}
-                                                        <a href="{{ url_for('main.dash_categories_delete', id=category.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
+                                                        <a href="{{ url_for('dash.dash_categories_delete', id=category.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
                                                     {% endif %}
                                                 {% endif %}
                                             </td>
