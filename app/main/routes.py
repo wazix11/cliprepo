@@ -328,27 +328,27 @@ def about():
             'stream_url': 'https://www.twitch.tv/alveussanctuary',
             'image': 'alveus_logo.png'
         },
-        # {
-        #     'cliprepo_url': 'https://wbs.cliprepo.com',
-        #     'name': 'World Bird Sanctuary',
-        #     'website_url': 'https://www.worldbirdsanctuary.org/',
-        #     'stream_url': 'https://www.twitch.tv/theworldbirdsanctuary',
-        #     'image': 'wbs_logo.png'
-        # },
-        # {
-        #     'cliprepo_url': 'https://wcc.cliprepo.com',
-        #     'name': 'Wolf Conservation Center',
-        #     'website_url': 'https://nywolf.org/',
-        #     'stream_url': 'https://www.twitch.tv/wolfconservationcenter',
-        #     'image': 'wcc_logo2.png'
-        # },
-        # {
-        #     'cliprepo_url': 'https://wtw.cliprepo.com',
-        #     'name': 'Window to Wildlife',
-        #     'website_url': 'https://www.windowtowildlife.org/',
-        #     'stream_url': 'https://www.twitch.tv/windowtowildlife',
-        #     'image': 'wtw_logo.png'
-        # }
+        {
+            'cliprepo_url': 'https://wbs.cliprepo.com',
+            'name': 'World Bird Sanctuary',
+            'website_url': 'https://www.worldbirdsanctuary.org/',
+            'stream_url': 'https://www.twitch.tv/theworldbirdsanctuary',
+            'image': 'wbs_logo.png'
+        },
+        {
+            'cliprepo_url': 'https://wcc.cliprepo.com',
+            'name': 'Wolf Conservation Center',
+            'website_url': 'https://nywolf.org/',
+            'stream_url': 'https://www.twitch.tv/wolfconservationcenter',
+            'image': 'wcc_logo2.png'
+        },
+        {
+            'cliprepo_url': 'https://wtw.cliprepo.com',
+            'name': 'Window to Wildlife',
+            'website_url': 'https://www.windowtowildlife.org/',
+            'stream_url': 'https://www.twitch.tv/windowtowildlife',
+            'image': 'wtw_logo.png'
+        }
     ]
     return render_template('main/about.html', title='About', domains=domains)
 
