@@ -1563,7 +1563,7 @@ def dash_layouts_delete(id):
 #
 @bp.route('/dashboard/reports/activity')
 @login_required
-@rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
+@rank_required('SUPERADMIN', 'ADMIN')
 def dash_reports_activity():
     filters = get_session_filters('activity')
     page = get_value(request.args.get('page', type=int), filters.get('page') if filters else None, 1)
