@@ -1,5 +1,5 @@
-from flask import render_template, flash, redirect, url_for, request, session
-import math, os, json
+from flask import current_app, render_template, flash, redirect, url_for, request, session
+import math, os, json, subprocess
 from datetime import datetime, timezone
 from flask_login import current_user, login_required
 from app.dash import bp
@@ -67,13 +67,15 @@ def inject_sidebar_labels():
     sidebar_labels = Status.query.order_by('id')
     return dict(sidebar=sidebar_labels)
 
+def get_git_revision_hash():
+    try:
+        return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], cwd=current_app.root_path).strip().decode('ascii')
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return 'Unknown'
+
 @bp.context_processor
 def inject_commit_version():
-    commit_file = os.path.join(os.path.dirname(__file__), '..', '..', '.git', 'ORIG_HEAD')
-    commit_version = None
-    if os.path.exists(commit_file):
-        with open(commit_file, 'r') as f:
-            commit_version = f.read().strip()[:7]
+    commit_version = get_git_revision_hash()
     return dict(commit_version=commit_version)
 
 # 
