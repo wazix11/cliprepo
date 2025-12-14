@@ -5,13 +5,15 @@ from app import db
 from app.models import Clip
 from datetime import datetime, timedelta, timezone
 
-load_dotenv()
+load_dotenv(override=True)
 TWITCH_CLIENT_ID = os.environ.get('TWITCH_CLIENT_ID')
 TWITCH_CLIENT_SECRET = os.environ.get('TWITCH_CLIENT_SECRET')
 TWITCH_CLIENT_ACCESS_TOKEN = ''
 TWITCH_TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
 TWITCH_CLIP_URL = 'https://api.twitch.tv/helix/clips'
 BROADCASTER_ID = os.environ.get('BROADCASTER_ID')
+GAME_ID = os.environ.get('GAME_ID')
+CLIPS_START_DATE = os.environ.get("CLIPS_START_DATE")
 
 def update_client_credentials():
     params = {
@@ -32,11 +34,18 @@ def get_clips(started_at, after=None):
         'Authorization': f'Bearer {TWITCH_CLIENT_ACCESS_TOKEN}',
         'Client-Id': TWITCH_CLIENT_ID
     }
-    qs = urlencode({
-        'broadcaster_id': BROADCASTER_ID,
-        'first': 100,
-        'started_at': started_at,
-    })
+    if BROADCASTER_ID != "" and BROADCASTER_ID is not None:
+        qs = urlencode({
+            'broadcaster_id': BROADCASTER_ID,
+            'first': 100,
+            'started_at': started_at,
+        })
+    elif GAME_ID != "" and GAME_ID is not None:
+        qs = urlencode({
+            'game_id': GAME_ID,
+            'first': 100,
+            'started_at': started_at,
+        })
     if after:
         qs += f'&after={after}'
     response = requests.get(TWITCH_CLIP_URL + '?' + qs, headers=headers)
@@ -50,7 +59,7 @@ def get_clips(started_at, after=None):
 def update_clips(started_at=None, after=None, save_to_file=True):
     latest_clip_file = './app/scheduler/latest_clip_created_at.txt'
     if started_at is None:
-        started_at = '2021-07-21T00:00:00Z'
+        started_at = CLIPS_START_DATE
         if os.path.exists(latest_clip_file):
             with open(latest_clip_file, 'r') as f:
                 started_at = f.read().strip()

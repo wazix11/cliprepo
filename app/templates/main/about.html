@@ -6,19 +6,41 @@
         <div class="row">
             <div class="col-md-9">
                 <h4>About ClipRepo</h4>
-                <p>ClipRepo (also called Alveus Clips) is a personal project of mine (Wazix) to improve the searchability of Twitch clips.</p><br>
-                <p>This is currently exclusive to AlveusSanctuary clips, but I have hopes to expand it out in the future.</p><br>
-                <p>The site is not an official Alveus site and all development and sorting is being done by volunteers. If you are interested in contributing, please join the Discord!</p><br>
+                <p>ClipRepo is a personal project of mine (Wazix) to improve the searchability of Twitch clips.</p><br>
+                <p>The site is not an official site of any of the organizations represented and all development and sorting is being done by volunteers. If you are interested in contributing, please join the Discord! (Linked below)</p><br>
                 <p>I will likely make the code open source at some point, for now you can report issues and suggest features on the ClipRepo Discord.</p>
             </div>
-            <div class="col-md-3">
-                <h4>Links</h4>
-                <ul>
-                    <li><a href="https://discord.gg/WQepmKFYcv" target="_blank">ClipRepo Discord</a></li>
-                    <li><a href="https://twitch.tv/AlveusSanctuary" target="_blank">Alveus Sanctuary Twitch</a></li>
-                    <li><a href="https://www.alveussanctuary.org/" target="_blank">Alveus Sanctuary Website</a></li>
-                </ul>
-            </div>
+        </div>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mt-0">
+            {% for domain in domains %}
+                <div class="col">
+                    <div class="domain">
+                        <div class="domain-img">
+                            <a href="{{ domain.cliprepo_url }}" class="d-flex align-items-center">
+                                <img src="{{ url_for('static', filename=domain.image) }}" alt="{{ domain.name }}">
+                                {% if domain.name == 'ClipRepo' or domain.name == 'Alveus Sanctuary' %}
+                                    <span class="align-self-center"><h3>&nbsp;{{ domain.name }}</h3></span>
+                                {% endif %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-1">
+                    <div class="row">
+                        {% if domain.website_url %}
+                            <a href="{{ domain.website_url }}" target="_blank" style="font-size: 1.5rem;"><i class="fa-solid fa-globe"></i></a>
+                        {% endif %}
+                        {% if domain.name == 'ClipRepo' %}
+                            <a href="https://discord.gg/WQepmKFYcv" target="_blank" style="font-size: 1.5rem;"><i class="fa-brands fa-discord"></i></a>
+                        {% endif %}
+                    </div>
+                    <div class="row">
+                        {% if domain.stream_url %}
+                            <a href="{{ domain.stream_url }}" target="_blank" style="font-size: 1.5rem;"><i class="fa-brands fa-twitch"></i></a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     </div>
 {% endblock %}

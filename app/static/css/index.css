@@ -68,6 +68,29 @@ button.btn.clip-theme-btn {
     color: #000;
 }
 
+.domain {
+    max-width: 100%;
+    padding: 1px;
+    margin-bottom: 10px;
+    position: relative;
+    display: inline-block;
+}
+.domain-img {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+.domain-img a {
+    display: block;
+    text-align: center;
+}
+.domain-img img {
+    max-width: 100%;
+    height: auto;
+    max-height: 80px;
+}
+
 .clip {
     max-width: 100%;
     border-radius: 5px;

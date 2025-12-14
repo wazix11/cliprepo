@@ -1,4 +1,4 @@
-from flask import render_template, render_template_string, send_from_directory, request, session, make_response
+from flask import render_template, render_template_string, send_from_directory, request, session, make_response, current_app
 from flask_login import current_user
 from datetime import datetime as dt, timedelta, timezone
 from app.main.forms import *
@@ -6,7 +6,7 @@ from app.main import bp
 from dotenv import load_dotenv
 from app.models import *
 from sqlalchemy import func
-import os, json
+import os, json, random
 
 load_dotenv(override=True)
 EMBED_PARENT = os.environ.get('EMBED_PARENT')
@@ -310,7 +310,47 @@ def load_clips():
 
 @bp.route('/about')
 def about():
-    return render_template('main/about.html', title='About')
+    static_path = os.path.join(current_app.root_path, 'static')
+    clip_png_files = [f for f in os.listdir(static_path) if f.lower().endswith('.png') and 'clip' in f.lower()] if os.path.exists(static_path) else []
+    cliprepo_image = random.choice(clip_png_files) if clip_png_files else None
+    domains = [
+        {
+            'cliprepo_url': 'https://cliprepo.com',
+            'name': 'ClipRepo',
+            'website_url': '',
+            'stream_url': '',
+            'image': cliprepo_image
+        },
+        {
+            'cliprepo_url': 'https://alv.cliprepo.com',
+            'name': 'Alveus Sanctuary',
+            'website_url': 'https://www.alveussanctuary.org/',
+            'stream_url': 'https://www.twitch.tv/alveussanctuary',
+            'image': 'alveus_logo.png'
+        },
+        # {
+        #     'cliprepo_url': 'https://wbs.cliprepo.com',
+        #     'name': 'World Bird Sanctuary',
+        #     'website_url': 'https://www.worldbirdsanctuary.org/',
+        #     'stream_url': 'https://www.twitch.tv/theworldbirdsanctuary',
+        #     'image': 'wbs_logo.png'
+        # },
+        # {
+        #     'cliprepo_url': 'https://wcc.cliprepo.com',
+        #     'name': 'Wolf Conservation Center',
+        #     'website_url': 'https://nywolf.org/',
+        #     'stream_url': 'https://www.twitch.tv/wolfconservationcenter',
+        #     'image': 'wcc_logo2.png'
+        # },
+        # {
+        #     'cliprepo_url': 'https://wtw.cliprepo.com',
+        #     'name': 'Window to Wildlife',
+        #     'website_url': 'https://www.windowtowildlife.org/',
+        #     'stream_url': 'https://www.twitch.tv/windowtowildlife',
+        #     'image': 'wtw_logo.png'
+        # }
+    ]
+    return render_template('main/about.html', title='About', domains=domains)
 
 @bp.route('/leaderboard')
 def leaderboard():
