@@ -67,6 +67,15 @@ def inject_sidebar_labels():
     sidebar_labels = Status.query.order_by('id')
     return dict(sidebar=sidebar_labels)
 
+@bp.context_processor
+def inject_commit_version():
+    commit_file = os.path.join(os.path.dirname(__file__), '..', '..', '.git', 'ORIG_HEAD')
+    commit_version = None
+    if os.path.exists(commit_file):
+        with open(commit_file, 'r') as f:
+            commit_version = f.read().strip()[:7]
+    return dict(commit_version=commit_version)
+
 # 
 # 
 # 
