@@ -1,3 +1,4 @@
+import random
 from flask import Flask, request, current_app
 from config import Config
 from sqlalchemy import MetaData
@@ -9,6 +10,7 @@ import logging, os
 from logging.handlers import RotatingFileHandler
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import timedelta
+from dotenv import load_dotenv
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -51,6 +53,19 @@ def create_app(config_class=Config):
 
     from app import audit
     audit.register_audit_listeners()
+
+    @app.context_processor
+    def inject_logo():
+        static_path = os.path.join(app.root_path, 'static')
+        clip_png_files = [f for f in os.listdir(static_path) if f.lower().endswith('.png') and 'clip' in f.lower()] if os.path.exists(static_path) else []
+
+        load_dotenv(override=True)
+        LOGO_FILENAME = os.environ.get('LOGO_FILENAME', 'random')
+
+        if (LOGO_FILENAME == 'random' or LOGO_FILENAME == '') and clip_png_files:
+            LOGO_FILENAME = random.choice(clip_png_files)
+
+        return dict(LOGO_FILENAME=LOGO_FILENAME)
 
     if not app.debug and not app.testing:
         if not os.path.exists('logs'):

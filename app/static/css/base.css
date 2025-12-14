@@ -1,3 +1,18 @@
+:root {
+    --navbar-height: 114.75px; /* fallback */
+}
+
+/* Navbar responsive layout */
+@media (max-width: 400px) {
+    .navbar-brand {
+        flex-direction: column !important;
+    }
+    
+    .navbar-brand span {
+        margin-top: 0.5rem;
+    }
+}
+
 /* Buttons */
 /* Alveus Green */
 .btn-alveus-green {
@@ -71,7 +86,7 @@
 }
 
 .height-sub-header {
-    min-height: calc(100vh - 114.75px);
+    min-height: calc(100vh - var(--navbar-height));
 }
 
 .search-bar {
