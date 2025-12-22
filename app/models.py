@@ -346,7 +346,7 @@ class ActivityLog(db.Model):
     table_name: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=False)
     row_id: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=False)
     row_name: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True, default=None)
-    row_twitch_id: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=True, default=None)
+    row_twitch_id: so.Mapped[str] = so.mapped_column(sa.String(128), nullable=True, default=None)
     timestamp: so.Mapped[datetime] =  so.mapped_column(sa.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     action: so.Mapped[str] = so.mapped_column(sa.String(16), nullable=False)
     changes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
