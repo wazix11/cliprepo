@@ -7,8 +7,7 @@
             <div class="col-md-9">
                 <h4>About ClipRepo</h4>
                 <p>ClipRepo is a personal project of mine (Wazix) to improve the searchability of Twitch clips.</p><br>
-                <p>The site is not an official site of any of the organizations represented and all development and sorting is being done by volunteers. If you are interested in contributing, please join the Discord! (Linked below)</p><br>
-                <p>I will likely make the code open source at some point, for now you can report issues and suggest features on the ClipRepo Discord.</p>
+                <p>The site is not an official site of any of the organizations represented and all development and sorting is being done by volunteers. If you are interested in contributing, please join the Discord and check out the GitHub repository! (Linked below)</p><br>
             </div>
         </div>
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mt-0">
@@ -37,6 +36,9 @@
                     <div class="row">
                         {% if domain.stream_url %}
                             <a href="{{ domain.stream_url }}" target="_blank" style="font-size: 1.5rem;"><i class="fa-brands fa-twitch"></i></a>
+                        {% endif %}
+                        {% if domain.name == 'ClipRepo' %}
+                            <a href="https://github.com/wazix11/cliprepo" target="_blank" style="font-size: 1.5rem;"><i class="fa-brands fa-github"></i></a>
                         {% endif %}
                     </div>
                 </div>
