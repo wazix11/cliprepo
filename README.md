@@ -7,6 +7,7 @@ Check out [DEPLOY.md](DEPLOY.md) for instructions on deploying on an Ubuntu serv
 ### Deploying Application Updates
 The typical process for deploying application updates:
 ```
+$ source venv/bin/activate
 (venv) $ git pull
 (venv) $ sudo supervisorctl stop all
 (venv) $ flask db upgrade
