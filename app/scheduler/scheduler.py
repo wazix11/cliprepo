@@ -1,5 +1,6 @@
 from app import create_app, apscheduler
 from app.scheduler.tasks.update_clips import update_clips
+from app.scheduler.tasks import daily_stats
 from datetime import datetime, timezone, timedelta
 import os, subprocess
 from dotenv import load_dotenv
@@ -9,6 +10,7 @@ CLIPS_START_DATE = os.environ.get("CLIPS_START_DATE")
 
 app = create_app()
 
+@apscheduler.scheduled_job('interval', minutes=5, misfire_grace_time=30)
 def update_clips_job():
     with app.app_context():
         latest_clip_file = './app/scheduler/latest_clip_created_at.txt'
@@ -23,11 +25,13 @@ def update_clips_job():
                         f.write(CLIPS_START_DATE)
         update_clips()
 
+@apscheduler.scheduled_job('interval', minutes=1, misfire_grace_time=15)
 def update_recent_clips_job():
     with app.app_context():
         six_days_ago = (datetime.now(timezone.utc) - timedelta(days=6)).isoformat(timespec='seconds').replace('+00:00', 'Z')
         update_clips(started_at=six_days_ago, save_to_file=False)
 
+@apscheduler.scheduled_job('interval', minutes=5, misfire_grace_time=30)
 def update_goaccess_report():
     try:
         subprocess.run([
@@ -39,9 +43,10 @@ def update_goaccess_report():
     except Exception as e:
         print(f"Error updating GoAccess report: {e}", 'error')
 
-apscheduler.add_job(update_clips_job, 'interval', minutes=5, misfire_grace_time=30)
-apscheduler.add_job(update_recent_clips_job, 'interval', minutes=1, misfire_grace_time=15)
-apscheduler.add_job(update_goaccess_report, 'interval', minutes=5, misfire_grace_time=30)
+@apscheduler.scheduled_job('cron', hour=23, minute=59)
+def update_daily_stats():
+    with app.app_context():
+        daily_stats.update_daily_stats()
 
 apscheduler.start()
 print("Scheduler started. Press Ctrl+C to exit.")

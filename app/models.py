@@ -341,6 +341,24 @@ class Clip(db.Model):
     def __repr__(self):
         return f"<Clip id='{self.id}' title='{self.title}' creator_name='{self.creator_name}'>"
     
+class Statistics(db.Model):
+    id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True)
+    date: so.Mapped[datetime] = so.mapped_column(sa.Date, nullable=False)
+    total_clips: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    unsorted_clips: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    clips_without_subjects: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    clips_without_themes: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    clips_without_category: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    clips_without_layout: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    total_views: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    total_upvotes: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    total_verified_users: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    unique_broadcasters: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    unique_clippers: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
+    
+    def __repr__(self):
+        return f"<Statistics id='{self.id}' date='{self.date}'>"
+    
 class ActivityLog(db.Model):
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True)
     table_name: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=False)

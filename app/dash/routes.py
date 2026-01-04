@@ -91,8 +91,29 @@ def inject_commit_version():
 @login_required
 @rank_required('SUPERADMIN', 'ADMIN', 'MODERATOR')
 def dashboard():
-    unsorted = Clip.query.filter(or_(Clip.category_id == None, Clip.themes == None, Clip.subjects == None)).count()
-    return render_template('dash/dashboard.html', title='Dashboard', unsorted=unsorted)
+    total_clips = Clip.query.count()
+    unsorted_clips = Clip.query.filter(Clip.status_id == 1).count()
+    clips_without_subjects = Clip.query.join(Status, Clip.status_id == Status.id).filter(Status.type != 'Hidden', Clip.subjects == None).count()
+    clips_without_themes = Clip.query.join(Status, Clip.status_id == Status.id).filter(Status.type != 'Hidden', Clip.themes == None).count()
+    clips_without_category = Clip.query.join(Status, Clip.status_id == Status.id).filter(Status.type != 'Hidden', Clip.category_id == None).count()
+    clips_without_layout = Clip.query.join(Status, Clip.status_id == Status.id).filter(Status.type != 'Hidden', Clip.layout_id == None).count()
+    total_views = db.session.query(db.func.sum(Clip.view_count)).scalar() or 0
+    total_upvotes = db.session.query(upvotes).count()
+    unique_clippers = db.session.query(Clip.creator_id).distinct().count()
+
+    stats = {
+        'total_clips': total_clips,
+        'unsorted_clips': unsorted_clips,
+        'clips_without_subjects': clips_without_subjects,
+        'clips_without_themes': clips_without_themes,
+        'clips_without_category': clips_without_category,
+        'clips_without_layout': clips_without_layout,
+        'total_views': total_views,
+        'total_upvotes': total_upvotes,
+        'unique_clippers': unique_clippers
+    }
+
+    return render_template('dash/dashboard.html', title='Dashboard', stats=stats)
     
 # 
 # 

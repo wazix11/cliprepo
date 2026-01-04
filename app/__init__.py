@@ -25,7 +25,7 @@ metadata = MetaData(naming_convention=convention)
 db = SQLAlchemy(metadata=metadata)
 migrate = Migrate()
 login = LoginManager()
-apscheduler = BackgroundScheduler()
+apscheduler = BackgroundScheduler(timezone="UTC")
 
 def create_app(config_class=Config):
     app = Flask(__name__)
