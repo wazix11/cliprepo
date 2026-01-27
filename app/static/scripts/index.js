@@ -35,8 +35,8 @@ function initSelectPickers() {
 }
 
 window.addEventListener('DOMContentLoaded', function() {
-    const initialSort = "{{ sort|default('') }}";
-    const initialTimeframe = "{{ timeframe|default('') }}";
+    const initialSort = document.getElementById('sort-input')?.value || 'views';
+    const initialTimeframe = document.getElementById('timeframe-input')?.value || '7d';
     if (sortLabels[initialSort]) {
         document.getElementById('sortDropdown').innerText = sortLabels[initialSort];
     }

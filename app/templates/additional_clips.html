@@ -1,3 +1,4 @@
+{% if clips|length > 0 %}
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mt-0">
     {% for clip in clips %}
     <div class="col">
@@ -68,6 +69,9 @@
         </div>
     </div>
     {% endfor %}
+{% else %}
+    <h5 class="text-center p-3">No clips found, try adjusting your filters.</h5>
+{% endif %}
 </div>
 {% if has_next %}
 <div class="col" id="load-more"

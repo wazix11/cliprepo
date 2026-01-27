@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=20251101">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=20260126">
     
     
     <div class="container pt-3">
@@ -39,8 +39,8 @@
                                 hx-post="/load-clips" 
                                 hx-target="#load-clips" 
                                 hx-swap="innerHTML">
-                                <input type="hidden" name="sort" id="sort-input" value="">
-                                <input type="hidden" name="timeframe" id="timeframe-input" value="">
+                                <input type="hidden" name="sort" id="sort-input" value="{{ sort }}">
+                                <input type="hidden" name="timeframe" id="timeframe-input" value="{{ timeframe }}">
                                 <input type="hidden" name="category" id="hidden-category-input" value="">
                                 <input type="hidden" name="themes" id="hidden-themes-input" value="">
                                 <input type="hidden" name="subjects" id="hidden-subjects-input" value="">
