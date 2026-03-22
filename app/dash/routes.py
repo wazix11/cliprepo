@@ -358,20 +358,23 @@ def dash_clips_delete(id):
 def dash_users_fill():
     unique_creators = db.session.query(Clip.creator_id, Clip.creator_name).distinct().all()
 
+    existing_ids = {user.twitch_id for user in User.query.with_entities(User.twitch_id).all()}
+
     users_to_add = []
+    seen_ids = set()
+
     for creator_id, creator_name in unique_creators:
-        existing_user = User.query.filter_by(twitch_id=creator_id).first()
-        if any(u.twitch_id == creator_id for u in users_to_add):
+        if creator_id in existing_ids or creator_id in seen_ids:
             continue
-        if not existing_user:
-            new_user = User(
-                twitch_id=creator_id,
-                display_name=creator_name if creator_name else f'User {creator_id}'
-            )
-            users_to_add.append(new_user)
+        seen_ids.add(creator_id)
+        new_user = User(
+            twitch_id=creator_id,
+            display_name=creator_name if creator_name else f'User {creator_id}'
+        )
+        users_to_add.append(new_user)
 
     if users_to_add:
-        db.session.add_all(users_to_add)
+        db.session.bulk_save_objects(users_to_add)
         db.session.commit()
 
     return render_template('dash/users/users_fill.html', title='Dashboard - Fill Users', unique_creators=unique_creators, users_added=len(users_to_add))
