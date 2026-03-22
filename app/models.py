@@ -41,9 +41,9 @@ class Rank(UserMixin, db.Model):
 class User(UserMixin, db.Model):
     id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True)
     twitch_id: so.Mapped[int] = so.mapped_column(sa.Integer, index=True, unique=True)
-    login: so.Mapped[str] = so.mapped_column(sa.String(32), index=True, unique=True)
+    login: so.Mapped[str] = so.mapped_column(sa.String(32), nullable=True)
     display_name: so.Mapped[str] = so.mapped_column(sa.String(32), index=True, unique=True)
-    profile_image_url: so.Mapped[str] = so.mapped_column(sa.String(256))
+    profile_image_url: so.Mapped[str] = so.mapped_column(sa.String(256), nullable=True)
     contributions: so.Mapped[int] = so.mapped_column(sa.Integer, default=0, nullable=False)
     last_verified: so.Mapped[datetime] = so.mapped_column(sa.DateTime, nullable=True)
     expires_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, nullable=True)

@@ -2,7 +2,7 @@ import os, requests
 from urllib.parse import urlencode
 from dotenv import load_dotenv
 from app import db
-from app.models import Clip
+from app.models import Clip, User
 from datetime import datetime, timedelta, timezone
 
 load_dotenv(override=True)
@@ -63,6 +63,7 @@ def update_clips(started_at=None, after=None, save_to_file=True):
         if os.path.exists(latest_clip_file):
             with open(latest_clip_file, 'r') as f:
                 started_at = f.read().strip()
+    users_to_add = []
     clips_to_add = []
     while True:
         clips_data = get_clips(started_at, after)
@@ -71,6 +72,23 @@ def update_clips(started_at=None, after=None, save_to_file=True):
             # Track the latest created_at
             if latest_created_at is None or clip['created_at'] > latest_created_at:
                 latest_created_at = clip['created_at']
+
+            existing_user = User.query.filter_by(twitch_id=clip['creator_id']).first()
+            if any(u.twitch_id == clip['creator_id'] for u in users_to_add):
+                continue
+            if existing_user:
+                changed = False
+                if existing_user.display_name != clip['creator_name'] and clip['creator_name']:
+                    existing_user.display_name = clip['creator_name']; changed = True
+                
+                if changed:
+                    existing_user.updated_at = datetime.now(timezone.utc)
+            else:
+                new_user = User(
+                    twitch_id=clip['creator_id'],
+                    display_name=clip['creator_name'] if clip['creator_name'] else f'User {clip['creator_id']}'
+                )
+                users_to_add.append(new_user)
 
             existing_clip = Clip.query.filter_by(twitch_id=clip['id']).first()
             new_clip = None
@@ -185,4 +203,6 @@ def update_clips(started_at=None, after=None, save_to_file=True):
 
     if clips_to_add:
         db.session.add_all(clips_to_add)
+    if users_to_add:
+        db.session.add_all(users_to_add)
     db.session.commit()

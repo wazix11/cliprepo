@@ -81,4 +81,22 @@
             </div>
         </div>
     </div>
+    <div class="row p-3">
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-xs-6">
+            <div class="box box-light">
+                <div class="box-body">
+                    <h4>{{ stats.average_duration | round(2) }} sec</h4>
+                    <p>Average Clip Duration</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-xs-6">
+            <div class="box box-light">
+                <div class="box-body">
+                    <h4>{{ stats.total_duration }}</h4>
+                    <p>Total Clip Duration</p>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

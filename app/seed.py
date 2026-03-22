@@ -14,7 +14,7 @@ def seed_database():
 
     if db.session.query(Status).count() == 0:
         default_status = Status(name='Unsorted',
-                                type='Pending',
+                                type='Visible',
                                 color='#ff8040',
                                 created_at=datetime.now(timezone.utc)
                                 )

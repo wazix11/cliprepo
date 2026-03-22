@@ -78,6 +78,22 @@ def inject_commit_version():
     commit_version = get_git_revision_hash()
     return dict(commit_version=commit_version)
 
+def format_duration(seconds):
+    seconds = int(seconds)
+    days = seconds // 86400
+    hours = (seconds % 86400) // 3600
+    minutes = (seconds % 3600) // 60
+    secs = seconds % 60
+    
+    if days > 0:
+        return f"{days}d {hours}h {minutes}m {secs}s"
+    elif hours > 0:
+        return f"{hours}h {minutes}m {secs}s"
+    elif minutes > 0:
+        return f"{minutes}m {secs}s"
+    else:
+        return f"{secs}s"
+
 # 
 # 
 # 
@@ -100,6 +116,9 @@ def dashboard():
     total_views = db.session.query(db.func.sum(Clip.view_count)).scalar() or 0
     total_upvotes = db.session.query(upvotes).count()
     unique_clippers = db.session.query(Clip.creator_id).distinct().count()
+    average_duration = db.session.query(db.func.avg(Clip.duration)).scalar() or 0
+    total_duration = db.session.query(db.func.sum(Clip.duration)).scalar() or 0
+    total_duration_formatted = format_duration(total_duration)
 
     stats = {
         'total_clips': total_clips,
@@ -110,7 +129,9 @@ def dashboard():
         'clips_without_layout': clips_without_layout,
         'total_views': total_views,
         'total_upvotes': total_upvotes,
-        'unique_clippers': unique_clippers
+        'unique_clippers': unique_clippers,
+        'average_duration': average_duration,
+        'total_duration': total_duration_formatted
     }
 
     return render_template('dash/dashboard.html', title='Dashboard', stats=stats)
@@ -278,15 +299,17 @@ def dash_clips_edit(id):
                 curr_user = User.query.filter(User.id == current_user.id).first()
                 curr_user.contributions += 1
                 db.session.commit()
-            current_clip.title_override = form.title_override.data
-            current_clip.notes = form.notes.data
-            current_clip.category_id = form.category.data if form.category.data else None
-            current_clip.status_id = form.status.data
-            current_clip.themes = [Theme.query.get(theme_id) for theme_id in form.themes.data]
-            current_clip.subjects = [Subject.query.get(subject_id) for subject_id in form.subjects.data]
-            current_clip.layout_id = form.layout.data if form.layout.data else None
-            current_clip.updated_by = current_user.id
-            current_clip.updated_at = datetime.now(timezone.utc)
+            # keep all clip mutations in one flush so audit logging creates a single update row.
+            with db.session.no_autoflush:
+                current_clip.title_override = form.title_override.data
+                current_clip.notes = form.notes.data
+                current_clip.category_id = form.category.data if form.category.data else None
+                current_clip.status_id = form.status.data
+                current_clip.themes = [Theme.query.get(theme_id) for theme_id in form.themes.data]
+                current_clip.subjects = [Subject.query.get(subject_id) for subject_id in form.subjects.data]
+                current_clip.layout_id = form.layout.data if form.layout.data else None
+                current_clip.updated_by = current_user.id
+                current_clip.updated_at = datetime.now(timezone.utc)
             db.session.commit()
 
             referrer = session.pop('edit_clip_referrer', None)
@@ -329,6 +352,30 @@ def dash_clips_delete(id):
 # 
 # 
 #
+@bp.route('/dashboard/users/fill')
+@login_required
+@rank_required('SUPERADMIN')
+def dash_users_fill():
+    unique_creators = db.session.query(Clip.creator_id, Clip.creator_name).distinct().all()
+
+    users_to_add = []
+    for creator_id, creator_name in unique_creators:
+        existing_user = User.query.filter_by(twitch_id=creator_id).first()
+        if any(u.twitch_id == creator_id for u in users_to_add):
+            continue
+        if not existing_user:
+            new_user = User(
+                twitch_id=creator_id,
+                display_name=creator_name if creator_name else f'User {creator_id}'
+            )
+            users_to_add.append(new_user)
+
+    if users_to_add:
+        db.session.add_all(users_to_add)
+        db.session.commit()
+
+    return render_template('dash/users/users_fill.html', title='Dashboard - Fill Users', unique_creators=unique_creators, users_added=len(users_to_add))
+
 @bp.route('/dashboard/users')
 @login_required
 @rank_required('SUPERADMIN', 'ADMIN')
@@ -349,6 +396,7 @@ def dash_users():
         'notes': 'Notes',
         'rank': 'Rank',
         'login_enabled': 'Login Enabled',
+        'last_verified': 'Last Login',
         'updated_by': 'Updated By',
         'updated_at': 'Updated At'
     }
@@ -1589,7 +1637,7 @@ def dash_reports_activity():
     filters = get_session_filters('activity')
     page = get_value(request.args.get('page', type=int), filters.get('page') if filters else None, 1)
     size = get_value(request.args.get('size', type=int), filters.get('size') if filters else None, 20)
-    order = get_value(request.args.get('order', type=str), filters.get('order') if filters else None, 'asc')
+    order = get_value(request.args.get('order', type=str), filters.get('order') if filters else None, 'desc')
     sort = get_value(request.args.get('sort', type=str), filters.get('sort') if filters else None, 'id')
     search = get_value(request.args.get('search', type=str), filters.get('search') if filters else None, '')
     set_session_filters('activity', page, size, order, sort, search)
@@ -1628,7 +1676,7 @@ def dash_reports_activity():
                 ActivityLog.action.ilike(f'%{search}%'),
                 ActivityLog.changes.ilike(f'%{search}%')
             )
-        ).order_by(ActivityLog.id.desc() if order == 'desc' else ActivityLog.id.asc())
+        ).order_by(ActivityLog.id.asc() if order == 'asc' else ActivityLog.id.desc())
     # Default to page 1 if page number isn't valid
     if page > math.ceil(query.count()/size) or page < 1:
         page = 1
