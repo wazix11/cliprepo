@@ -6,10 +6,10 @@ from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_debugtoolbar import DebugToolbarExtension
 import logging, os
 from logging.handlers import RotatingFileHandler
 from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import timedelta
 from dotenv import load_dotenv
 
 convention = {
@@ -25,19 +25,18 @@ metadata = MetaData(naming_convention=convention)
 db = SQLAlchemy(metadata=metadata)
 migrate = Migrate()
 login = LoginManager()
+toolbar = DebugToolbarExtension()
 apscheduler = BackgroundScheduler(timezone="UTC")
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    app.config['SESSION_PERMANENT'] = True
-    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
-
     bootstrap.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db, render_as_batch=True)
     login.init_app(app)
+    toolbar.init_app(app)
 
     from app.errors import bp as errors_bp
     app.register_blueprint(errors_bp)
