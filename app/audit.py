@@ -21,6 +21,34 @@ def activity_log_listener(mapper, connection, target, action):
                 'new': hist.added[0] if hist.added else None
             }
 
+    # For Clip updates, also capture theme and subject relationship changes
+    if action == 'update' and target.__tablename__ == 'clip':
+        themes_hist = get_history(target, 'themes')
+        if themes_hist.has_changes():
+            new_themes = [t.id for t in target.themes]
+            
+            old_themes = [t.id for t in themes_hist.deleted] + \
+                         [t.id for t in target.themes if t not in themes_hist.added]
+            old_themes = sorted(set(old_themes))
+            new_themes = sorted(new_themes)
+            changes['themes'] = {
+                'old': old_themes,
+                'new': new_themes
+            }
+        
+        subjects_hist = get_history(target, 'subjects')
+        if subjects_hist.has_changes():
+            new_subjects = [s.id for s in target.subjects]
+            
+            old_subjects = [s.id for s in subjects_hist.deleted] + \
+                           [s.id for s in target.subjects if s not in subjects_hist.added]
+            old_subjects = sorted(set(old_subjects))
+            new_subjects = sorted(new_subjects)
+            changes['subjects'] = {
+                'old': old_subjects,
+                'new': new_subjects
+            }
+
     # Only log User updates if certain fields changed
     if (
         action == 'update'
