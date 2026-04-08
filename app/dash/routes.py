@@ -6,8 +6,10 @@ from app.dash import bp
 from dotenv import load_dotenv
 from decorators import rank_required
 from app.models import *
-from sqlalchemy import or_, text
+from sqlalchemy import or_, text, func
 from app.dash.forms import *
+from app.utils.get_twitch_clips import get_clips_by_broadcaster_id
+from app.utils.get_twitch_users import get_user_by_login
 
 load_dotenv(override=True)
 EMBED_PARENT = os.environ.get('EMBED_PARENT')
@@ -113,11 +115,11 @@ def dashboard():
     clips_without_themes = Clip.query.join(Status, Clip.status_id == Status.id).filter(Status.type != 'Hidden', Clip.themes == None).count()
     clips_without_category = Clip.query.join(Status, Clip.status_id == Status.id).filter(Status.type != 'Hidden', Clip.category_id == None).count()
     clips_without_layout = Clip.query.join(Status, Clip.status_id == Status.id).filter(Status.type != 'Hidden', Clip.layout_id == None).count()
-    total_views = db.session.query(db.func.sum(Clip.view_count)).scalar() or 0
+    total_views = db.session.query(func.sum(Clip.view_count)).scalar() or 0
     total_upvotes = db.session.query(upvotes).count()
     unique_clippers = db.session.query(Clip.creator_id).distinct().count()
-    average_duration = db.session.query(db.func.avg(Clip.duration)).scalar() or 0
-    total_duration = db.session.query(db.func.sum(Clip.duration)).scalar() or 0
+    average_duration = db.session.query(func.avg(Clip.duration)).scalar() or 0
+    total_duration = db.session.query(func.sum(Clip.duration)).scalar() or 0
     total_duration_formatted = format_duration(total_duration)
 
     stats = {
@@ -342,6 +344,184 @@ def dash_clips_delete(id):
             db.session.commit()
             return redirect(url_for('dash.dash_clips'))
     return render_template('dash/clips/delete_clip.html', title='Dashboard - Delete Clip', form=form, clip=clip)
+
+@bp.route('/dashboard/clips/import', methods=['GET', 'POST'])
+@login_required
+@rank_required('SUPERADMIN')
+def dash_clips_import():
+    broadcasters = db.session.query(Clip.broadcaster_id, Clip.broadcaster_name).distinct().all()
+    return render_template('dash/clips/import_clips.html', title='Dashboard - Import Clips', broadcasters=broadcasters)
+
+@bp.route('/dashboard/clips/import/fetch', methods=['POST'])
+@login_required
+@rank_required('SUPERADMIN')
+def dash_clips_import_fetch():
+    """HTMX endpoint to fetch clips from Twitch API."""
+    try:
+        broadcaster_id = request.form.get('broadcaster_id')
+        broadcaster_name = request.form.get('broadcaster_name')
+        started_at = request.form.get('started_at')
+        ended_at = request.form.get('ended_at')
+
+        if broadcaster_name and not broadcaster_id:
+            user_response = get_user_by_login(broadcaster_name)
+            if 'error' in user_response:
+                return render_template('dash/clips/import_clips_table.html', clips=[], error=user_response['error'])
+            user_data = user_response.get('data', [])
+            if not user_data:
+                return render_template('dash/clips/import_clips_table.html', clips=[], error='No Twitch user found with that name')
+            broadcaster_id = user_data[0]['id']
+        
+        if not broadcaster_id or not started_at:
+            return render_template('dash/clips/import_clips_table.html', clips=[], error='Broadcaster ID and Start Date are required')
+        
+        # Parse RFC3339 format strings to datetime
+        def parse_rfc3339(rfc3339_str):
+            """Parse RFC3339 format string to datetime object."""
+            if not rfc3339_str:
+                return None
+            try:
+                # Replace Z with +00:00 for compatibility with fromisoformat
+                normalized = rfc3339_str.replace('Z', '+00:00')
+                return datetime.fromisoformat(normalized)
+            except ValueError as e:
+                raise ValueError(f'Invalid RFC3339 format: {rfc3339_str}')
+        
+        try:
+            started_at = parse_rfc3339(started_at)
+            if ended_at:
+                ended_at = parse_rfc3339(ended_at)
+        except ValueError as e:
+            return render_template('dash/clips/import_clips_table.html', clips=[], error=str(e))
+        
+        # Fetch clips from Twitch API
+        response = get_clips_by_broadcaster_id(broadcaster_id, started_at, ended_at)
+        
+        if 'error' in response:
+            return render_template('dash/clips/import_clips_table.html', clips=[], error=response['error'])
+        
+        clips = response.get('data', [])
+        
+        # Filter out clips that already exist in the database
+        existing_twitch_ids = {clip.twitch_id for clip in Clip.query.with_entities(Clip.twitch_id).all()}
+        clips = [clip for clip in clips if clip['id'] not in existing_twitch_ids]
+        
+        # Convert datetime objects back to RFC3339 format for form data
+        def to_rfc3339(dt):
+            """Convert datetime to RFC3339 format string."""
+            if not dt:
+                return ''
+            iso_str = dt.isoformat()
+            # Replace +00:00 with Z for UTC times
+            if iso_str.endswith('+00:00'):
+                iso_str = iso_str[:-6] + 'Z'
+            return iso_str
+        
+        return render_template('dash/clips/import_clips_table.html', clips=clips, form_data={
+            'broadcaster_id': broadcaster_id,
+            'started_at': to_rfc3339(started_at),
+            'ended_at': to_rfc3339(ended_at)
+        })
+    except Exception as e:
+        return render_template('dash/clips/import_clips_table.html', clips=[], error=str(e))
+
+@bp.route('/dashboard/clips/import/submit', methods=['POST'])
+@login_required
+@rank_required('SUPERADMIN')
+def dash_clips_import_submit():
+    """Bulk import selected clips into the database."""
+    def parse_rfc3339(rfc3339_str):
+        """Parse RFC3339 format string to datetime object."""
+        if not rfc3339_str:
+            return None
+        try:
+            # Replace Z with +00:00 for compatibility with fromisoformat
+            normalized = rfc3339_str.replace('Z', '+00:00')
+            return datetime.fromisoformat(normalized)
+        except ValueError as e:
+            raise ValueError(f'Invalid RFC3339 format: {rfc3339_str}')
+    
+    try:
+        selected_clip_ids = request.form.getlist('selected_clips')
+        
+        if not selected_clip_ids:
+            flash('No clips selected for import', 'form-error')
+            return redirect(url_for('dash.dash_clips_import'))
+        
+        # Fetch full clip data for the selected IDs
+        broadcaster_id = request.form.get('broadcaster_id')
+        started_at = request.form.get('started_at')
+        ended_at = request.form.get('ended_at')
+        
+        try:
+            started_at = parse_rfc3339(started_at)
+            if ended_at:
+                ended_at = parse_rfc3339(ended_at)
+        except ValueError as e:
+            flash(f'Invalid date format: {str(e)}', 'form-error')
+            return redirect(url_for('dash.dash_clips_import'))
+        
+        response = get_clips_by_broadcaster_id(broadcaster_id, started_at, ended_at)
+        all_clips = response.get('data', [])
+        
+        # Filter to only selected clips
+        selected_clips = [clip for clip in all_clips if clip['id'] in selected_clip_ids]
+        
+        users_to_add = []
+        clips_to_add = []
+        
+        for clip in selected_clips:
+            # Create user if doesn't exist
+            existing_user = User.query.filter_by(twitch_id=clip['creator_id']).first()
+            if not existing_user and not any(u.twitch_id == clip['creator_id'] for u in users_to_add):
+                new_user = User(
+                    twitch_id=clip['creator_id'],
+                    display_name=clip['creator_name'] if clip['creator_name'] else f'User {clip["creator_id"]}'
+                )
+                users_to_add.append(new_user)
+            
+            # Create clip if doesn't already exist
+            existing_clip = Clip.query.filter_by(twitch_id=clip['id']).first()
+            if not existing_clip:
+                new_clip = Clip(
+                    twitch_id=clip['id'],
+                    url=clip['url'],
+                    embed_url=clip['embed_url'],
+                    broadcaster_id=int(clip['broadcaster_id']),
+                    broadcaster_name=clip['broadcaster_name'],
+                    creator_id=int(clip['creator_id']),
+                    creator_name=clip['creator_name'],
+                    video_id=clip.get('video_id'),
+                    game_id=clip.get('game_id'),
+                    language=clip.get('language'),
+                    title=clip['title'],
+                    view_count=clip['view_count'],
+                    created_at=clip['created_at'],
+                    thumbnail_url=clip['thumbnail_url'],
+                    duration=clip['duration'],
+                    vod_offset=clip.get('vod_offset'),
+                    is_featured=clip.get('is_featured', False),
+                    status_id=1  # Default to "Unsorted" status
+                )
+                clips_to_add.append(new_clip)
+        
+        # Add users to database
+        if users_to_add:
+            db.session.add_all(users_to_add)
+            db.session.flush()
+        
+        # Add clips to database
+        if clips_to_add:
+            db.session.add_all(clips_to_add)
+            db.session.commit()
+            flash(f'Successfully imported {len(clips_to_add)} clip(s)', 'success')
+        else:
+            flash('No new clips to import', 'info')
+        
+        return redirect(url_for('dash.dash_clips_import'))
+    except Exception as e:
+        flash(f'Error importing clips: {str(e)}', 'error')
+        return redirect(url_for('dash.dash_clips_import'))
 
 # 
 # 
@@ -1250,7 +1430,7 @@ def dash_statuslabels():
                     Status.created_at.ilike(f'%{search}%'),
                     Status.updated_at.ilike(f'%{search}%')
                 )
-            ).order_by(db.func.count(Clip.id).desc() if order == 'desc' else db.func.count(Clip.id).asc())
+            ).order_by(func.count(Clip.id).desc() if order == 'desc' else func.count(Clip.id).asc())
         else:
             query = Status.query.filter(
                 or_(
@@ -1278,10 +1458,15 @@ def dash_statuslabels():
                 Status.updated_at.ilike(f'%{search}%')
             )
         ).order_by(Status.id.desc() if order == 'desc' else Status.id.asc())
+
+    # compute clip counts in one query to avoid lazy reload for each status label
+    clip_counts = dict(db.session.query(Clip.status_id, func.count(Clip.id)).group_by(Clip.status_id).all())
     # Default to page 1 if page number isn't valid
     if page > math.ceil(query.count()/size) or page < 1:
         page = 1
     status_labels = db.paginate(query, page=page, per_page=size, error_out=False)
+    for status in status_labels.items:
+        status.clip_count = clip_counts.get(status.id, 0)
     pages = status_labels.iter_pages(left_edge=2, left_current=1, right_edge=2, right_current=1)
     
     return render_template('dash/statuslabels/statuslabels.html', title='Dashboard - Status Labels', status_labels=status_labels, page=page, pages=pages, size=size, order=order, sort=sort, search=search, columns=columns)

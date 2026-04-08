@@ -1,5 +1,5 @@
 from app import create_app, apscheduler
-from app.scheduler.tasks.update_clips import update_clips
+from app.scheduler.tasks.update_clips import update_clips, update_manual_import_clips
 from app.scheduler.tasks import daily_stats
 from datetime import datetime, timezone, timedelta
 import os, subprocess
@@ -30,6 +30,17 @@ def update_recent_clips_job():
     with app.app_context():
         six_days_ago = (datetime.now(timezone.utc) - timedelta(days=6)).isoformat(timespec='seconds').replace('+00:00', 'Z')
         update_clips(started_at=six_days_ago, save_to_file=False)
+
+@apscheduler.scheduled_job('interval', minutes=1, misfire_grace_time=30)
+def update_manual_import_clips_job():
+    with app.app_context():
+        clip_offset_file = './app/scheduler/manual_import_clip_offset.txt'
+        if os.path.exists(clip_offset_file):
+            with open(clip_offset_file, 'r') as f:
+                offset = int(f.read().strip())
+        else:
+            offset = 0
+        update_manual_import_clips(offset)
 
 @apscheduler.scheduled_job('interval', minutes=5, misfire_grace_time=30)
 def update_goaccess_report():

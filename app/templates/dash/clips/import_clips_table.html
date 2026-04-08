@@ -1,0 +1,73 @@
+{% if error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Error:</strong> {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+{% elif clips %}
+    <form method="POST" action="{{ url_for('dash.dash_clips_import_submit') }}">
+        <input type="hidden" name="broadcaster_id" value="{{ form_data.broadcaster_id }}">
+        <input type="hidden" name="started_at" value="{{ form_data.started_at }}">
+        <input type="hidden" name="ended_at" value="{{ form_data.ended_at }}">
+        
+        <div class="table-container">
+            <table class="table table-striped dashboard-table" id="importTable">
+                <thead>
+                    <tr>
+                        <th style="width: 3rem"><input class="form-check-input" type="checkbox" id="select-all-clips" style="height: 2rem; width: 2rem"></th>
+                        <th style="width: 15rem;"></th>
+                        <th>Title</th>
+                        <th>Creator</th>
+                        <th>Created At</th>
+                        <th>Views</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for clip in clips %}
+                    <tr>
+                        <td><input class="form-check-input clip-checkbox" type="checkbox" name="selected_clips" value="{{ clip.id }}" style="height: 2rem; width: 2rem"></td>
+                        <td>
+                            <img src="{{ clip.thumbnail_url }}" alt="Thumbnail" class="clip-thumbnail" style="width: 13.5rem; height: 7.9rem;">
+                        </td>
+                        <td style="max-width: 300px;">
+                            <a href="{{ clip.url }}" target="_blank">{{ clip.title }}</a>
+                        </td>
+                        <td>{{ clip.creator_name }}</td>
+                        <td>{{ clip.created_at }}</td>
+                        <td>{{ clip.view_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-3">
+            <button type="submit" class="btn btn-alveus-green">Import Selected Clips</button>
+        </div>
+    </form>
+    
+    <script>
+        document.getElementById('select-all-clips').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.clip-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        document.querySelector('table').addEventListener('click', (e) => {
+            const row = e.target.closest('tbody tr');
+            const link = e.target.closest('a');
+            if (!row || link) return;
+
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            if (!checkbox) return;
+
+            if (e.target !== checkbox) {
+                checkbox.checked = !checkbox.checked;
+            }
+        })
+    </script>
+{% else %}
+    <div class="alert alert-info" role="alert">
+        No new clips found. Please adjust your search criteria.
+    </div>
+{% endif %}

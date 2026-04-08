@@ -80,7 +80,7 @@
                                             <td>{{ label.id }}</td>
                                             <td><a href="{{ url_for('dash.dash_statuslabels_clips', id=label.id) }}">{{ label.name }}</a></td>
                                             <td>{{ label.type }}</td>
-                                            <td>{{ label.clips|length }}</td>
+                                            <td>{{ label.clip_count }}</td>
                                             <td class="table-color">
                                                 <span class="dot" style="background-color: {{ label.color }};"></span>
                                                 {{ label.color }}
@@ -93,7 +93,7 @@
                                             <td class="table-actions">
                                                 <a href="{{ url_for('dash.dash_statuslabels_edit', id=label.id) }}" class="btn btn-alveus-green" role="button"><i class="fa-solid fa-pen"></i></a>
                                                 {% if current_user.rank_id >= 3 %}
-                                                    {% if label.clips|length > 0 %}
+                                                    {% if label.clip_count > 0 %}
                                                         <a href="{{ url_for('dash.dash_statuslabels_delete', id=label.id) }}" class="btn btn-danger disabled" role="button"><i class="fa-solid fa-trash"></i></a>
                                                     {% else %}
                                                         <a href="{{ url_for('dash.dash_statuslabels_delete', id=label.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>

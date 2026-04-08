@@ -161,5 +161,6 @@ cython_debug/
 
 app.db
 latest_clip_created_at.txt
+manual_import_clip_offset.txt
 app/static/report.html
 .flaskenv

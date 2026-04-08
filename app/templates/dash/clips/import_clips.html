@@ -1,0 +1,166 @@
+{% extends "dash/dashboard_base.html" %}
+
+{% block dash_content %}
+    <section class="content-header">
+        <h3>Import Clips</h3>
+    </section>
+    <section class="main-content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-light">
+                    <div class="box-header with-border">
+                        <h4 class="box-title">Import Menu</h4>
+                    </div>
+                    <div class="box-body">
+                        <form id="import-menu-form"
+                              hx-post="{{ url_for('dash.dash_clips_import_fetch') }}" 
+                              hx-target="#clips-results" 
+                              hx-indicator="#loading-spinner"
+                              class="mb-4">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="broadcaster_select">Select Existing Broadcaster</label>
+                                        <select class="form-control" id="broadcaster_select">
+                                            <option value="">-- Select a broadcaster --</option>
+                                            {% for broadcaster_id, broadcaster_name in broadcasters %}
+                                            <option value="{{ broadcaster_id }}" data-name="{{ broadcaster_name }}">{{ broadcaster_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="form-text text-muted">Select a broadcaster to fill the ID field or manually enter below</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="broadcaster_name">Broadcaster Name</label>
+                                        <input type="text" class="form-control" id="broadcaster_name" name="broadcaster_name" placeholder="Enter broadcaster Name" required>
+                                        <small class="form-text text-muted">The Twitch name of the broadcaster</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="broadcaster_id">Broadcaster ID</label>
+                                        <input type="number" class="form-control" id="broadcaster_id" name="broadcaster_id" placeholder="Enter broadcaster ID" required>
+                                        <small class="form-text text-muted">The Twitch user ID of the broadcaster</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="started_at">Started At</label>
+                                        <input type="datetime-local" class="form-control" id="started_at_local" name="started_at_local" required>
+                                        <small class="form-text text-muted">Start of clip retrieval period (your local time)</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="ended_at">Ended At (Optional)</label>
+                                        <input type="datetime-local" class="form-control" id="ended_at_local" name="ended_at_local">
+                                        <small class="form-text text-muted">End of clip retrieval period (your local time)</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label></label><br>
+                                        <button type="submit" class="btn btn-alveus-green" hx-indicator="#loading-spinner">
+                                            <span id="loading-spinner" class="spinner-border spinner-border-sm me-2" style="display:none;" role="status" aria-hidden="true"></span>
+                                            Search for Clips
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-light">
+                    <div class="box-header with-border">
+                        <h4 class="box-title">Available Clips</h4>
+                    </div>
+                    <div class="box-body" id="clips-results">
+                        <div class="alert alert-info" role="alert">
+                            Use the import menu above to search for clips from a broadcaster
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Handle broadcaster selection and copying
+        const broadcasterSelect = document.getElementById('broadcaster_select');
+        const broadcasterIdInput = document.getElementById('broadcaster_id');
+        const broadcasterNameInput = document.getElementById('broadcaster_name');
+        
+        // Auto-fill when broadcaster is selected
+        broadcasterSelect.addEventListener('change', function() {
+            if (this.value) {
+                broadcasterIdInput.value = this.value;
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.dataset.name) {
+                    broadcasterNameInput.value = selectedOption.dataset.name;
+                }
+            }
+        });
+
+        const updateRequired = () => {
+            if (broadcasterNameInput.value || broadcasterIdInput.value) {
+                broadcasterNameInput.required = false;
+                broadcasterIdInput.required = false;
+            } else {
+                broadcasterNameInput.required = true;
+                broadcasterIdInput.required = true;
+            }
+        }
+        broadcasterNameInput.addEventListener('input', updateRequired);
+        broadcasterIdInput.addEventListener('input', updateRequired);
+
+        // Convert local datetime-local values to RFC3339 format before form submission
+        function localToRFC3339(localDatetimeStr) {
+            if (!localDatetimeStr) return null;
+            
+            // Parse the datetime-local string (format: YYYY-MM-DDTHH:mm)
+            const date = new Date(localDatetimeStr);
+            
+            // Calculate timezone offset
+            const tzOffset = -date.getTimezoneOffset();
+            const sign = tzOffset >= 0 ? '+' : '-';
+            const absOffset = Math.abs(tzOffset);
+            const hours = String(Math.floor(absOffset / 60)).padStart(2, '0');
+            const minutes = String(absOffset % 60).padStart(2, '0');
+            
+            // Format: YYYY-MM-DDTHH:mm:ss±HH:mm
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours24 = String(date.getHours()).padStart(2, '0');
+            const mins = String(date.getMinutes()).padStart(2, '0');
+            const secs = String(date.getSeconds()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}T${hours24}:${mins}:${secs}${sign}${hours}:${minutes}`;
+        }
+        
+        document.getElementById('import-menu-form').addEventListener('htmx:configRequest', function(event) {
+            // Convert local datetime values to RFC3339 before HTMX sends the request
+            const startedAtLocal = document.getElementById('started_at_local').value;
+            const endedAtLocal = document.getElementById('ended_at_local').value;
+            
+            const startedAtRFC3339 = localToRFC3339(startedAtLocal);
+            const endedAtRFC3339 = endedAtLocal ? localToRFC3339(endedAtLocal) : '';
+            
+            // Modify the form data in the event
+            event.detail.parameters['started_at'] = startedAtRFC3339;
+            event.detail.parameters['ended_at'] = endedAtRFC3339;
+            
+            // Remove the local datetime fields from submission
+            delete event.detail.parameters['started_at_local'];
+            delete event.detail.parameters['ended_at_local'];
+        });
+    </script>
+{% endblock %}

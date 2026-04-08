@@ -1,60 +1,14 @@
-import os, requests
-from urllib.parse import urlencode
+import os
 from dotenv import load_dotenv
 from app import db
 from app.models import Clip, User
+from app.utils.get_twitch_clips import get_clips_by_broadcaster_id, get_clips_by_game_id, get_clips_by_id
 from datetime import datetime, timedelta, timezone
 
 load_dotenv(override=True)
-TWITCH_CLIENT_ID = os.environ.get('TWITCH_CLIENT_ID')
-TWITCH_CLIENT_SECRET = os.environ.get('TWITCH_CLIENT_SECRET')
-TWITCH_CLIENT_ACCESS_TOKEN = ''
-TWITCH_TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
-TWITCH_CLIP_URL = 'https://api.twitch.tv/helix/clips'
 BROADCASTER_ID = os.environ.get('BROADCASTER_ID')
 GAME_ID = os.environ.get('GAME_ID')
 CLIPS_START_DATE = os.environ.get("CLIPS_START_DATE")
-
-def update_client_credentials():
-    params = {
-        'client_id': TWITCH_CLIENT_ID,
-        'client_secret': TWITCH_CLIENT_SECRET,
-        'grant_type': 'client_credentials'
-    }
-    response = requests.post(TWITCH_TOKEN_URL, data=params)
-    data = response.json()
-    global TWITCH_CLIENT_ACCESS_TOKEN
-    TWITCH_CLIENT_ACCESS_TOKEN = data['access_token']
-
-def get_clips(started_at, after=None):
-    if TWITCH_CLIENT_ACCESS_TOKEN == '':
-        update_client_credentials()
-
-    headers = {
-        'Authorization': f'Bearer {TWITCH_CLIENT_ACCESS_TOKEN}',
-        'Client-Id': TWITCH_CLIENT_ID
-    }
-    if BROADCASTER_ID != "" and BROADCASTER_ID is not None:
-        qs = urlencode({
-            'broadcaster_id': BROADCASTER_ID,
-            'first': 100,
-            'started_at': started_at,
-        })
-    elif GAME_ID != "" and GAME_ID is not None:
-        qs = urlencode({
-            'game_id': GAME_ID,
-            'first': 100,
-            'started_at': started_at,
-        })
-    if after:
-        qs += f'&after={after}'
-    response = requests.get(TWITCH_CLIP_URL + '?' + qs, headers=headers)
-    if response.status_code == 401:
-        print("Access token expired, updating credentials...")
-        update_client_credentials()
-        return get_clips(started_at, after)
-    data = response.json()
-    return data
 
 def update_clips(started_at=None, after=None, save_to_file=True):
     latest_clip_file = './app/scheduler/latest_clip_created_at.txt'
@@ -66,7 +20,14 @@ def update_clips(started_at=None, after=None, save_to_file=True):
     users_to_add = []
     clips_to_add = []
     while True:
-        clips_data = get_clips(started_at, after)
+        if BROADCASTER_ID != "" and BROADCASTER_ID is not None:
+            clips_data = get_clips_by_broadcaster_id(BROADCASTER_ID, started_at, after)
+            if 'error' in clips_data:
+                break
+        elif GAME_ID != "" and GAME_ID is not None:
+            clips_data = get_clips_by_game_id(GAME_ID, started_at, after)
+            if 'error' in clips_data:
+                break
         latest_created_at = None
         for clip in clips_data['data']:
             # Track the latest created_at
@@ -203,6 +164,91 @@ def update_clips(started_at=None, after=None, save_to_file=True):
 
     if clips_to_add:
         db.session.add_all(clips_to_add)
+    if users_to_add:
+        db.session.add_all(users_to_add)
+    db.session.commit()
+
+def update_manual_import_clips(offset):
+    # no need to manually import clips if going based on GAME_ID
+    if GAME_ID and not BROADCASTER_ID:
+        return
+    
+    manual_clips = db.session.query(Clip.twitch_id)\
+        .filter(Clip.broadcaster_id != BROADCASTER_ID)\
+        .order_by(Clip.created_at.desc())\
+        .offset(offset)\
+        .limit(100)\
+        .all()
+    manual_clip_ids = [c.twitch_id for c in manual_clips]
+
+    clip_offset_file = './app/scheduler/manual_import_clip_offset.txt'
+    if len(manual_clip_ids) == 0:
+        # if no clips returned, end of list has been reached, reset offset to 0 to start over
+        with open(clip_offset_file, 'w') as f:
+            f.write('0')
+    elif len(manual_clip_ids) <= 100:
+        with open(clip_offset_file, 'w') as f:
+            f.write(str(offset + len(manual_clip_ids)))
+    else:
+        with open(clip_offset_file, 'w') as f:
+            f.write(str(offset + 100))
+
+    clips_data = get_clips_by_id(manual_clip_ids)
+    if 'error' in clips_data:
+        return
+
+    users_to_add = []
+    for clip in clips_data['data']:
+        existing_user = User.query.filter_by(twitch_id=clip['creator_id']).first()
+        if any(u.twitch_id == clip['creator_id'] for u in users_to_add):
+            continue
+        if existing_user:
+            changed = False
+            if existing_user.display_name != clip['creator_name'] and clip['creator_name']:
+                existing_user.display_name = clip['creator_name']; changed = True
+            
+            if changed:
+                existing_user.updated_at = datetime.now(timezone.utc)
+        else:
+            new_user = User(
+                twitch_id=clip['creator_id'],
+                display_name=clip['creator_name'] if clip['creator_name'] else f'User {clip['creator_id']}'
+            )
+            users_to_add.append(new_user)
+
+        existing_clip = Clip.query.filter_by(twitch_id=clip['id']).first()
+        changed = False
+        # Update existing clip fields
+        if existing_clip.url != clip['url']:
+            existing_clip.url = clip['url']; changed = True
+        if existing_clip.embed_url != clip['embed_url']:
+            existing_clip.embed_url = clip['embed_url']; changed = True
+        if existing_clip.broadcaster_id != int(clip['broadcaster_id']):
+            existing_clip.broadcaster_id = int(clip['broadcaster_id']); changed = True
+        if existing_clip.broadcaster_name != clip['broadcaster_name']:
+            existing_clip.broadcaster_name = clip['broadcaster_name']; changed = True
+        if existing_clip.creator_id != int(clip['creator_id']):
+            existing_clip.creator_id = int(clip['creator_id']); changed = True
+        if existing_clip.creator_name != clip['creator_name']:
+            existing_clip.creator_name = clip['creator_name']; changed = True
+        if existing_clip.title != clip['title']:
+            existing_clip.title = clip['title']; changed = True
+        if existing_clip.view_count != clip['view_count']:
+            existing_clip.view_count = clip['view_count']; changed = True
+        if existing_clip.created_at != clip['created_at']:
+            existing_clip.created_at = clip['created_at']; changed = True
+        if existing_clip.vod_offset != clip['vod_offset']:
+            existing_clip.vod_offset = clip['vod_offset']; changed = True
+        if existing_clip.thumbnail_url != clip['thumbnail_url']:
+            existing_clip.thumbnail_url = clip['thumbnail_url']; changed = True
+        if existing_clip.duration != clip['duration']:
+            existing_clip.duration = clip['duration']; changed = True
+        if existing_clip.is_featured != clip.get('is_featured', False):
+            existing_clip.is_featured = clip.get('is_featured', False); changed = True
+
+        if changed:
+            existing_clip.updated_at = datetime.now(timezone.utc)
+
     if users_to_add:
         db.session.add_all(users_to_add)
     db.session.commit()
