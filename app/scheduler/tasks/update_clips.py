@@ -21,11 +21,11 @@ def update_clips(started_at=None, after=None, save_to_file=True):
     clips_to_add = []
     while True:
         if BROADCASTER_ID != "" and BROADCASTER_ID is not None:
-            clips_data = get_clips_by_broadcaster_id(BROADCASTER_ID, started_at, after)
+            clips_data = get_clips_by_broadcaster_id(BROADCASTER_ID, started_at, after=after)
             if 'error' in clips_data:
                 break
         elif GAME_ID != "" and GAME_ID is not None:
-            clips_data = get_clips_by_game_id(GAME_ID, started_at, after)
+            clips_data = get_clips_by_game_id(GAME_ID, started_at, after=after)
             if 'error' in clips_data:
                 break
         latest_created_at = None

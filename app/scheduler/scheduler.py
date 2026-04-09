@@ -31,7 +31,7 @@ def update_recent_clips_job():
         six_days_ago = (datetime.now(timezone.utc) - timedelta(days=6)).isoformat(timespec='seconds').replace('+00:00', 'Z')
         update_clips(started_at=six_days_ago, save_to_file=False)
 
-@apscheduler.scheduled_job('interval', minutes=1, misfire_grace_time=30)
+@apscheduler.scheduled_job('interval', minutes=7, misfire_grace_time=30)
 def update_manual_import_clips_job():
     with app.app_context():
         clip_offset_file = './app/scheduler/manual_import_clip_offset.txt'
