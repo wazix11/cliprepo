@@ -71,6 +71,79 @@
                                 </div>
                             </div>
                         </form>
+
+                        <hr>
+                        <h5>Default Values for Import</h5>
+                        <p class="text-muted">These values will be applied to all imported clips. Leave blank to use defaults.</p>
+                        
+                        <form id="import-options-form">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="category_id">Category (Optional)</label>
+                                        <select class="form-control" id="category_id" name="category_id">
+                                            <option value="">-- No Category --</option>
+                                            {% for category in categories %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="status_id">Status (Optional)</label>
+                                        <select class="form-control" id="status_id" name="status_id">
+                                            <option value="">-- Use Default (Unsorted) --</option>
+                                            {% for status in statuses %}
+                                            <option value="{{ status.id }}">{{ status.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="layout_id">Layout (Optional)</label>
+                                        <select class="form-control" id="layout_id" name="layout_id">
+                                            <option value="">-- No Layout --</option>
+                                            {% for layout in layouts %}
+                                            <option value="{{ layout.id }}">{{ layout.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="theme_ids">Themes (Optional)</label>
+                                        <select class="form-control" id="theme_ids" name="theme_ids" multiple>
+                                            {% for theme in themes %}
+                                            <option value="{{ theme.id }}">{{ theme.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple themes</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="subject_ids">Subjects (Optional)</label>
+                                        <select class="form-control" id="subject_ids" name="subject_ids" multiple>
+                                            {% for subject in subjects %}
+                                            <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple subjects</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>

@@ -8,6 +8,11 @@
         <input type="hidden" name="broadcaster_id" value="{{ form_data.broadcaster_id }}">
         <input type="hidden" name="started_at" value="{{ form_data.started_at }}">
         <input type="hidden" name="ended_at" value="{{ form_data.ended_at }}">
+        <input type="hidden" name="category_id" value="">
+        <input type="hidden" name="status_id" value="">
+        <input type="hidden" name="layout_id" value="">
+        <input type="hidden" name="theme_ids" value="">
+        <input type="hidden" name="subject_ids" value="">
         
         <div class="table-container">
             <table class="table table-striped dashboard-table" id="importTable">
@@ -64,7 +69,27 @@
             if (e.target !== checkbox) {
                 checkbox.checked = !checkbox.checked;
             }
-        })
+        });
+
+        // Sync form values from the import options form to the hidden inputs before submit
+        document.querySelector('form[method="POST"]').addEventListener('submit', function(e) {
+            const categoryId = document.getElementById('category_id').value;
+            const statusId = document.getElementById('status_id').value;
+            const layoutId = document.getElementById('layout_id').value;
+            const themeSelect = document.getElementById('theme_ids');
+            const subjectSelect = document.getElementById('subject_ids');
+            
+            // Get selected theme and subject values
+            const themeIds = Array.from(themeSelect.selectedOptions).map(o => o.value).join(',');
+            const subjectIds = Array.from(subjectSelect.selectedOptions).map(o => o.value).join(',');
+            
+            // Set hidden input values
+            this.querySelector('input[name="category_id"]').value = categoryId;
+            this.querySelector('input[name="status_id"]').value = statusId;
+            this.querySelector('input[name="layout_id"]').value = layoutId;
+            this.querySelector('input[name="theme_ids"]').value = themeIds;
+            this.querySelector('input[name="subject_ids"]').value = subjectIds;
+        });
     </script>
 {% else %}
     <div class="alert alert-info" role="alert">

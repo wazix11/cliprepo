@@ -350,7 +350,19 @@ def dash_clips_delete(id):
 @rank_required('SUPERADMIN')
 def dash_clips_import():
     broadcasters = db.session.query(Clip.broadcaster_id, Clip.broadcaster_name).distinct().all()
-    return render_template('dash/clips/import_clips.html', title='Dashboard - Import Clips', broadcasters=broadcasters)
+    categories = Category.query.order_by('name').all()
+    statuses = Status.query.order_by('name').all()
+    themes = Theme.query.order_by('name').all()
+    subjects = Subject.query.order_by('name').all()
+    layouts = Layout.query.order_by('name').all()
+    return render_template('dash/clips/import_clips.html', 
+                         title='Dashboard - Import Clips', 
+                         broadcasters=broadcasters,
+                         categories=categories,
+                         statuses=statuses,
+                         themes=themes,
+                         subjects=subjects,
+                         layouts=layouts)
 
 @bp.route('/dashboard/clips/import/fetch', methods=['POST'])
 @login_required
@@ -448,6 +460,22 @@ def dash_clips_import_submit():
             flash('No clips selected for import', 'form-error')
             return redirect(url_for('dash.dash_clips_import'))
         
+        # Get import options
+        category_id = request.form.get('category_id')
+        status_id = request.form.get('status_id')
+        layout_id = request.form.get('layout_id')
+        theme_ids_str = request.form.get('theme_ids', '')
+        subject_ids_str = request.form.get('subject_ids', '')
+        
+        # Parse theme and subject IDs
+        theme_ids = [int(id) for id in theme_ids_str.split(',') if id]
+        subject_ids = [int(id) for id in subject_ids_str.split(',') if id]
+        
+        # Convert to None if empty strings
+        category_id = int(category_id) if category_id else None
+        status_id = int(status_id) if status_id else 1  # Default to "Unsorted" status
+        layout_id = int(layout_id) if layout_id else None
+        
         # Fetch full clip data for the selected IDs
         broadcaster_id = request.form.get('broadcaster_id')
         started_at = request.form.get('started_at')
@@ -501,8 +529,11 @@ def dash_clips_import_submit():
                     duration=clip['duration'],
                     vod_offset=clip.get('vod_offset'),
                     is_featured=clip.get('is_featured', False),
-                    status_id=1  # Default to "Unsorted" status
+                    status_id=status_id,
+                    category_id=category_id,
+                    layout_id=layout_id
                 )
+                
                 clips_to_add.append(new_clip)
         
         # Add users to database
@@ -513,6 +544,18 @@ def dash_clips_import_submit():
         # Add clips to database
         if clips_to_add:
             db.session.add_all(clips_to_add)
+            db.session.flush()
+            
+            # Apply themes and subjects to all added clips
+            if theme_ids or subject_ids:
+                for new_clip in clips_to_add:
+                    if theme_ids:
+                        themes = Theme.query.filter(Theme.id.in_(theme_ids)).all()
+                        new_clip.themes = themes
+                    if subject_ids:
+                        subjects = Subject.query.filter(Subject.id.in_(subject_ids)).all()
+                        new_clip.subjects = subjects
+            
             db.session.commit()
             flash(f'Successfully imported {len(clips_to_add)} clip(s)', 'success')
         else:
