@@ -33,6 +33,21 @@
                                     <li><a class="dropdown-item timeframe-btn" href="#" data-timeframe="all">All Time</a></li>
                                 </ul>
                             </div>
+                            {% if broadcaster_choices|length > 1 %}
+                            <div class="dropdown mx-1">
+                                <select id="broadcasters-select" name="broadcaster" class="form-control selectpicker mb-2"
+                                    data-style="btn-alveus-green"
+                                    data-width="100%"
+                                    multiple
+                                    data-live-search="true"
+                                    title="Select broadcaster(s)"
+                                    data-selected-text-format="count > 3">
+                                    {% for broadcaster in broadcaster_choices %}
+                                        <option value="{{ broadcaster[0] }}" {% if broadcaster[0] in selected_broadcaster %}selected{% endif %}>{{ broadcaster[1] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
                         </ul>
                         <ul class="nav navbar-nav mr-auto">
                             <form id="filter-form" class="d-flex align-items-center flex-wrap" 
@@ -41,10 +56,21 @@
                                 hx-swap="innerHTML">
                                 <input type="hidden" name="sort" id="sort-input" value="{{ sort }}">
                                 <input type="hidden" name="timeframe" id="timeframe-input" value="{{ timeframe }}">
+                                <input type="hidden" name="broadcasters" id="broadcasters-input" value="{{ selected_broadcaster|join(',') }}">
                                 <input type="hidden" name="category" id="hidden-category-input" value="">
                                 <input type="hidden" name="themes" id="hidden-themes-input" value="">
                                 <input type="hidden" name="subjects" id="hidden-subjects-input" value="">
                                 <input type="hidden" name="layout" id="hidden-layout-input" value="">
+                                <input type="hidden" name="liked" id="hidden-liked-input" value="0">
+                                {% if current_user.is_authenticated %}
+                                <button type="button" class="btn btn-alveus-green mx-1" title="Show liked clips only" id="liked-clips-toggle">
+                                    {% if liked %}
+                                        <i class="fa-solid fa-heart"></i>
+                                    {% else %}
+                                        <i class="fa-regular fa-heart"></i>
+                                    {% endif %}
+                                </button>
+                                {% endif %}
                                 <button type="button" class="btn btn-alveus-green mx-1" title="Advanced Filters" data-bs-toggle="modal" data-bs-target="#advancedFilterModal">
                                     <i class="fa-solid fa-filter"></i>
                                 </button>
@@ -134,5 +160,5 @@
             {% include "additional_clips.html" %}
         </div>
     </div>
-    <script src="{{ url_for('static', filename='scripts/index.js') }}?v=20260126"></script>
+    <script src="{{ url_for('static', filename='scripts/index.js') }}?v=20260519"></script>
 {% endblock %}

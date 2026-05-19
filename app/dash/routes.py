@@ -154,7 +154,7 @@ def dash_clips():
     filters = get_session_filters('clips')
     page = get_value(request.args.get('page', type=int), filters.get('page') if filters else None, 1)
     size = get_value(request.args.get('size', type=int), filters.get('size') if filters else None, 20)
-    order = get_value(request.args.get('order', type=str), filters.get('order') if filters else None, 'asc')
+    order = get_value(request.args.get('order', type=str), filters.get('order') if filters else None, 'desc')
     sort = get_value(request.args.get('sort', type=str), filters.get('sort') if filters else None, 'id')
     search = get_value(request.args.get('search', type=str), filters.get('search') if filters else None, '')
     set_session_filters('clips', page, size, order, sort, search)
@@ -219,7 +219,7 @@ def dash_clips():
                     # Clip.subjects.ilike(f'%{search}%')
                 )
             )
-            .order_by(Clip.id.desc() if order == 'desc' else Clip.id.asc())
+            .order_by(Clip.id.desc() if order == 'desc' else Clip.id.desc())
         )
     # Default to page 1 if page number isn't valid
     if page > math.ceil(query.count()/size) or page < 1:
@@ -1550,7 +1550,7 @@ def dash_statuslabels_clips(id):
     filters = get_session_filters('clips')
     page = get_value(request.args.get('page', type=int), filters.get('page') if filters else None, 1)
     size = get_value(request.args.get('size', type=int), filters.get('size') if filters else None, 20)
-    order = get_value(request.args.get('order', type=str), filters.get('order') if filters else None, 'asc')
+    order = get_value(request.args.get('order', type=str), filters.get('order') if filters else None, 'desc')
     sort = get_value(request.args.get('sort', type=str), filters.get('sort') if filters else None, 'id')
     search = get_value(request.args.get('search', type=str), filters.get('search') if filters else None, '')
     set_session_filters('clips', page, size, order, sort, search)

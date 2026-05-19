@@ -33,6 +33,19 @@
                         <option value="30d" {% if timeframe == '30d' %}selected{% endif %}>Last Month</option>
                         <option value="1y" {% if timeframe == '1y' %}selected{% endif %}>Last Year</option>
                     </select>
+                    {% if broadcaster_choices|length > 1 %}
+                        <label for="broadcasters-select" class="form-label text-white">Broadcaster</label>
+                        <select id="broadcasters-select" name="broadcaster" class="form-control selectpicker mb-2"
+                            data-style="btn-alveus-tan"
+                            data-width="100%"
+                            multiple
+                            title="Select broadcaster(s)"
+                            data-selected-text-format="count > 3">
+                            {% for broadcaster in broadcaster_choices %}
+                                <option value="{{ broadcaster[0] }}" {% if broadcaster[0] in selected_broadcaster %}selected{% endif %}>{{ broadcaster[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
                     {% if categories %}
                             <label for="category-select text-white" class="form-label">Category</label>
                             <select id="category-select" name="category" class="form-control selectpicker mb-2"
@@ -65,7 +78,8 @@
                                 multiple
                                 data-live-search="true"
                                 title="Select subject(s)"
-                                data-selected-text-format="count > 3">
+                                data-selected-text-format="count > 3"
+                                data-container="body">
                                 {% for subject_category in subject_categories %}
                                     <optgroup label="{{ subject_category[0] }}">
                                         {% for subject in subject_category[1] %}
@@ -91,8 +105,26 @@
                     <label class="form-label text-white">Search</label>
                     <input type="text" name="search" class="form-control" placeholder="Search clips">
                 </div>
+                <input type="hidden" name="liked" id="clip-queue-liked-input" value="0">
+                {% if current_user.is_authenticated %}
+                <div class="mb-2">
+                    <button type="button" class="btn btn-alveus-tan w-100" title="Show liked clips only" id="clip-queue-liked-toggle">
+                        <i class="fa-regular fa-heart"></i> Liked Only
+                    </button>
+                </div>
+                {% endif %}
                 <button type="submit" class="btn btn-alveus-tan w-100">Apply Filters</button>
             </form>
         </div>
     </div>
+    <script>
+        document.getElementById('clip-queue-liked-toggle')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('clip-queue-liked-input');
+            const icon = this.querySelector('i');
+            input.value = input.value === '1' ? '0' : '1';
+            icon.classList.toggle('fa-regular');
+            icon.classList.toggle('fa-solid');
+        });
+    </script>
 {% endblock %}

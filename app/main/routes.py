@@ -5,7 +5,7 @@ from app.main.forms import *
 from app.main import bp
 from dotenv import load_dotenv
 from app.models import *
-from sqlalchemy import func
+from sqlalchemy import func, or_
 import os, json, random
 
 load_dotenv(override=True)
@@ -43,12 +43,14 @@ def format_upload_date(upload_date_str):
     else:
         return f"{int(seconds)} second{'s' if seconds > 1 else ''} ago"
     
-def format_clips(page, sort, timeframe='7d', category=None, themes=[], subjects=[], layout=None, search=''):
+def format_clips(page, sort, timeframe='7d', category=None, broadcasters=[], themes=[], subjects=[], layout=None, search='', liked=False):
     now = dt.now(timezone.utc)
     per_page = 12
     filters = []
     if category:
         filters.append(Clip.category_id == category)
+    if broadcasters:
+        filters.append(or_(*[Clip.broadcaster_id == bid for bid in broadcasters]))
     if themes:
         for theme_id in themes:
             filters.append(Clip.themes.any(Theme.id == theme_id))
@@ -57,6 +59,8 @@ def format_clips(page, sort, timeframe='7d', category=None, themes=[], subjects=
             filters.append(Clip.subjects.any(Subject.id == subject_id))
     if layout:
         filters.append(Clip.layout_id == layout)
+    if liked and current_user.is_authenticated:
+        filters.append(Clip.upvoted_by.any(User.id == current_user.id))
     if search:
         search_pattern = f"%{search.strip()}%"
         filters.append(Clip.title.ilike(search_pattern) | 
@@ -124,15 +128,17 @@ def format_clips(page, sort, timeframe='7d', category=None, themes=[], subjects=
     
     return formatted_clips, has_next
 
-def set_session_filters(route, sort='views', timeframe='7d', category='', themes=[], subjects=[], layout='', search=''):
+def set_session_filters(route, sort='views', timeframe='7d', category='', broadcasters=[], themes=[], subjects=[], layout='', search='', liked=False):
     session[route] = {
         'sort': sort,
         'timeframe': timeframe,
         'category': category,
+        'broadcasters': broadcasters,
         'themes': themes,
         'subjects': subjects,
         'layout': layout,
-        'search': search
+        'search': search,
+        'liked': liked
     }
 
 def get_session_filters(route):
@@ -142,10 +148,12 @@ def get_session_filters(route):
         'sort': 'views',
         'timeframe': '7d',
         'category': None,
+        'broadcasters': [],
         'themes': [],
         'subjects': [],
         'layout': None,
-        'search': ''
+        'search': '',
+        'liked': False
     }
     
 def get_value(request_value, session_value, default):
@@ -208,6 +216,7 @@ def favicon():
 # Home page
 @bp.route('/', methods=['GET', 'POST'])
 def index():
+    broadcaster_choices = db.session.query(Clip.broadcaster_id, Clip.broadcaster_name).distinct().all()
     categories = Category.query.order_by('id').all()
     theme_choices = Theme.query.order_by('id').all()
     subject_choices = Subject.query.order_by('id').all()
@@ -234,16 +243,30 @@ def index():
     sort = get_value(None, session_filters.get('sort'), default='views')
     timeframe = get_value(None, session_filters.get('timeframe'), '7d')
     category = get_value(None, session_filters.get('category'), None)
+    broadcasters = get_value(None, session_filters.get('broadcasters'), None)
     themes = get_value(None, session_filters.get('themes', []), [])
     subjects = get_value(None, session_filters.get('subjects', []), [])
     layout = get_value(None, session_filters.get('layout'), None)
     search = get_value(None, session_filters.get('search'), '')
+    liked = session_filters.get('liked', False)
     page = 1
     
-    formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, layout, search)
+    formatted_clips, has_next = format_clips(
+        page=page,
+        sort=sort,
+        timeframe=timeframe,
+        category=category,
+        broadcasters=broadcasters,
+        themes=themes,
+        subjects=subjects,
+        layout=layout,
+        search=search,
+        liked=liked
+    )
     return render_template(
         'index.html',
         title='Home',
+        broadcaster_choices=broadcaster_choices,
         categories=categories,
         themes=theme_choices,
         subjects=subject_choices,
@@ -255,10 +278,12 @@ def index():
         sort=sort,
         timeframe=timeframe,
         selected_category=category,
+        selected_broadcasters=broadcasters,
         selected_themes=themes,
         selected_subjects=subjects,
         selected_layout=layout,
-        search=search
+        search=search,
+        liked=liked
     )
 
 # Loads more clips and adds them to the main page as you scroll down
@@ -275,6 +300,18 @@ def load_clips():
     layout = get_value(request.values.get('layout'), session_filters.get('layout'), None)
     if layout in [None, '', 'null']:
         layout = None
+
+    broadcasters_raw = get_value(request.values.getlist('broadcasters'), session_filters.get('broadcasters'), [])
+    if isinstance(broadcasters_raw, str):
+        broadcasters = [b for b in broadcasters_raw.split(',') if b]
+    elif isinstance(broadcasters_raw, list):
+        # Handle case where list contains a single comma-separated string
+        if len(broadcasters_raw) == 1 and ',' in broadcasters_raw[0]:
+            broadcasters = [b for b in broadcasters_raw[0].split(',') if b]
+        else:
+            broadcasters = [b for b in broadcasters_raw if b]
+    else:
+        broadcasters = []
 
     themes_raw = get_value(request.values.getlist('themes'), session_filters.get('themes'), [])
     if isinstance(themes_raw, str):
@@ -293,19 +330,32 @@ def load_clips():
         subjects = []
 
     search = get_value(request.values.get('search'), session_filters.get('search'), '')
+    liked = request.values.get('liked', '0') == '1'
     
     # Set session filters
-    set_session_filters('main', sort, timeframe, category, themes, subjects, layout, search)
+    set_session_filters('main', sort, timeframe, category, broadcasters, themes, subjects, layout, search, liked)
 
     # Sort and paginate
-    formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, layout, search)
+    formatted_clips, has_next = format_clips(
+        page=page,
+        sort=sort,
+        timeframe=timeframe,
+        category=category,
+        broadcasters=broadcasters,
+        themes=themes,
+        subjects=subjects,
+        layout=layout,
+        search=search,
+        liked=liked
+    )
     return render_template(
         'additional_clips.html', 
         currentPage=page+1, 
         sort=sort, 
         timeframe=timeframe, 
         clips=formatted_clips, 
-        has_next=has_next
+        has_next=has_next,
+        liked=liked
     )
 
 @bp.route('/about')
@@ -358,6 +408,7 @@ def leaderboard():
 
 @bp.route('/clip-queue', methods=['GET'])
 def clip_queue():
+    broadcaster_choices = db.session.query(Clip.broadcaster_id, Clip.broadcaster_name).distinct().all()
     categories = Category.query.order_by('id').all()
     theme_choices = Theme.query.order_by('id').all()
     subject_choices = Subject.query.order_by('id').all()
@@ -382,11 +433,16 @@ def clip_queue():
     filters = {}
     default_sort = 'views'
     default_timeframe = '7d'
-    formatted_clips, _ = format_clips(1, default_sort, default_timeframe)
+    formatted_clips, _ = format_clips(
+        page=1,
+        sort=default_sort,
+        timeframe=default_timeframe
+    )
     return render_template(
         'main/clip_queue.html',
         title='Clip Queue',
         categories=categories,
+        broadcaster_choices=broadcaster_choices,
         themes=theme_choices,
         subjects=subject_choices,
         layouts=layout_choices,
@@ -404,10 +460,12 @@ def clip_queue_filter():
     sort = request.form.get('sort', 'views')
     timeframe = request.form.get('timeframe', '7d')
     category = request.form.get('category')
+    broadcasters = request.form.getlist('broadcasters')
     themes = request.form.getlist('themes')
     subjects = request.form.getlist('subjects')
     layout = request.form.get('layout')
     search = request.form.get('search', '')
+    liked = request.form.get('liked', '0') == '1'
     filters = {
         'sort': sort,
         'timeframe': timeframe,
@@ -415,9 +473,21 @@ def clip_queue_filter():
         'themes': themes,
         'subjects': subjects,
         'layout': layout,
-        'search': search
+        'search': search,
+        'liked': liked
     }
-    formatted_clips, has_next = format_clips(1, sort, timeframe, category, themes, subjects, layout, search)
+    formatted_clips, has_next = format_clips(
+        page=1,
+        sort=sort,
+        timeframe=timeframe,
+        category=category,
+        broadcasters=broadcasters,
+        themes=themes,
+        subjects=subjects,
+        layout=layout,
+        search=search,
+        liked=liked
+    )
     return render_template(
         'main/clip_viewer.html',
         clips=formatted_clips,
@@ -437,18 +507,42 @@ def clip_queue_next():
     sort = filters.get('sort', 'views')
     timeframe = filters.get('timeframe', '7d')
     category = filters.get('category')
+    broadcasters = filters.get('broadcasters', [])
     themes = filters.get('themes', [])
     subjects = filters.get('subjects', [])
     layout = filters.get('layout')
     search = filters.get('search', '')
+    liked = filters.get('liked', False)
 
     # Load current page
-    formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, layout, search)
+    formatted_clips, has_next = format_clips(
+        page=page,
+        sort=sort,
+        timeframe=timeframe,
+        category=category,
+        broadcasters=broadcasters,
+        themes=themes,
+        subjects=subjects,
+        layout=layout,
+        search=search,
+        liked=liked
+    )
     if clip_index >= len(formatted_clips):
         if has_next:
             # Load next page
             page += 1
-            formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, layout, search)
+            formatted_clips, has_next = format_clips(
+                page=page,
+                sort=sort,
+                timeframe=timeframe,
+                category=category,
+                broadcasters=broadcasters,
+                themes=themes,
+                subjects=subjects,
+                layout=layout,
+                search=search,
+                liked=liked
+            )
             clip_index = 0
         else:
             clip_index = len(formatted_clips) - 1 if formatted_clips else 0
@@ -472,18 +566,42 @@ def clip_queue_prev():
     sort = filters.get('sort', 'views')
     timeframe = filters.get('timeframe', '7d')
     category = filters.get('category')
+    broadcasters = filters.get('broadcasters', [])
     themes = filters.get('themes', [])
     subjects = filters.get('subjects', [])
     layout = filters.get('layout')
     search = filters.get('search', '')
+    liked = filters.get('liked', False)
 
     if clip_index < 0 and page > 1:
         # Go to previous page, last clip
         page -= 1
-        formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, layout, search)
+        formatted_clips, has_next = format_clips(
+            page=page,
+            sort=sort,
+            timeframe=timeframe,
+            category=category,
+            broadcasters=broadcasters,
+            themes=themes,
+            subjects=subjects,
+            layout=layout,
+            search=search,
+            liked=liked
+        )
         clip_index = len(formatted_clips) - 1
     else:
-        formatted_clips, has_next = format_clips(page, sort, timeframe, category, themes, subjects, layout, search)
+        formatted_clips, has_next = format_clips(
+            page=page,
+            sort=sort,
+            timeframe=timeframe,
+            category=category,
+            broadcasters=broadcasters,
+            themes=themes,
+            subjects=subjects,
+            layout=layout,
+            search=search,
+            liked=liked
+        )
         if clip_index < 0:
             clip_index = 0
 
