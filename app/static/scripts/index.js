@@ -77,11 +77,14 @@ document.querySelectorAll('.timeframe-btn').forEach(function(btn) {
         submitFilterForm();
     });
 });
-document.getElementById('broadcasters-select').addEventListener('change', function() {
-    const selected = Array.from(this.selectedOptions).map(opt => opt.value).join(',');
-    document.getElementById('broadcasters-input').value = selected;
-    submitFilterForm();
-});
+const broadcastersSelect = document.getElementById('broadcasters-select');
+if (broadcastersSelect) {
+    broadcastersSelect.addEventListener('change', function() {
+        const selected = Array.from(this.selectedOptions).map(opt => opt.value).join(',');
+        document.getElementById('broadcasters-input').value = selected;
+        submitFilterForm();
+    });
+}
 
 const likedToggleBtn = document.getElementById('liked-clips-toggle');
 if (likedToggleBtn) {
