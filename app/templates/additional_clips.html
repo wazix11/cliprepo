@@ -75,7 +75,7 @@
 </div>
 {% if has_next %}
 <div class="col" id="load-more"
-     hx-post="/load-clips?page={{ currentPage }}&sort={{ sort }}&timeframe={{ timeframe }}"
+     hx-post="/load-clips?page={{ currentPage }}"
      hx-trigger="revealed"
      hx-target="#load-more"
      hx-swap="outerHTML"

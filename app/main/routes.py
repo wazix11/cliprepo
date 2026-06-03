@@ -128,41 +128,6 @@ def format_clips(page, sort, timeframe='7d', category=None, broadcasters=[], the
     
     return formatted_clips, has_next
 
-def set_session_filters(route, sort='views', timeframe='7d', category='', broadcasters=[], themes=[], subjects=[], layout='', search='', liked=False):
-    session[route] = {
-        'sort': sort,
-        'timeframe': timeframe,
-        'category': category,
-        'broadcasters': broadcasters,
-        'themes': themes,
-        'subjects': subjects,
-        'layout': layout,
-        'search': search,
-        'liked': liked
-    }
-
-def get_session_filters(route):
-    if route in session:
-        return session[route]
-    return {
-        'sort': 'views',
-        'timeframe': '7d',
-        'category': None,
-        'broadcasters': [],
-        'themes': [],
-        'subjects': [],
-        'layout': None,
-        'search': '',
-        'liked': False
-    }
-    
-def get_value(request_value, session_value, default):
-    if request_value is not None:
-        return request_value
-    if session_value is not None and session_value != '' and session_value != 'null':
-        return session_value
-    return default
-
 @bp.route('/like-clip/<twitch_id>', methods=['POST'])
 def like_clip(twitch_id):
     clip = Clip.query.filter_by(twitch_id=twitch_id).first_or_404()
@@ -213,6 +178,9 @@ def like_clip(twitch_id):
 def favicon():
     return send_from_directory('static', 'favicon.ico')
 
+VALID_SORTS = {'views', 'new', 'old', 'likes'}
+VALID_TIMEFRAMES = {'24h', '7d', '30d', '1y', 'all'}
+
 # Home page
 @bp.route('/', methods=['GET', 'POST'])
 def index():
@@ -238,19 +206,62 @@ def index():
                 })
         subject_categories.append((sc.name, group_choices))
     
-    # Get filters from session
-    session_filters = get_session_filters('main')
-    sort = get_value(None, session_filters.get('sort'), default='views')
-    timeframe = get_value(None, session_filters.get('timeframe'), '7d')
-    category = get_value(None, session_filters.get('category'), None)
-    broadcasters = get_value(None, session_filters.get('broadcasters'), None)
-    themes = get_value(None, session_filters.get('themes', []), [])
-    subjects = get_value(None, session_filters.get('subjects', []), [])
-    layout = get_value(None, session_filters.get('layout'), None)
-    search = get_value(None, session_filters.get('search'), '')
-    liked = session_filters.get('liked', False)
     page = 1
-    
+    sort = request.args.get('sort', 'views')
+    if sort not in VALID_SORTS:
+        sort = 'views'
+    timeframe = request.args.get('timeframe', '7d')
+    if timeframe not in VALID_TIMEFRAMES:
+        timeframe = '7d'
+    category = request.args.get('category', None)
+    if category:
+        if not category.isdigit() or not Category.query.get(int(category)):
+            category = None
+    if category in [None, '', 'null']: category = None
+    layout = request.args.get('layout', None)
+    if layout:
+        if not layout.isdigit() or not Layout.query.get(int(layout)):
+            layout = None
+    if layout in [None, '', 'null']: layout = None
+    search = request.args.get('search', '')
+    if len(search) > 50:
+        search = search[:50]
+    liked = request.args.get('liked', '0') == '1'    
+
+    broadcasters_raw = request.args.getlist('broadcasters') or []
+    if isinstance(broadcasters_raw, str):
+        broadcasters = [b for b in broadcasters_raw.split(',') if b]
+    elif isinstance(broadcasters_raw, list):
+        # Handle case where list contains a single comma-separated string
+        if len(broadcasters_raw) == 1 and ',' in broadcasters_raw[0]:
+            broadcasters = [b for b in broadcasters_raw[0].split(',') if b]
+        else:
+            broadcasters = [b for b in broadcasters_raw if b]
+    else:
+        broadcasters = []
+
+    themes_raw = request.args.getlist('themes') or []
+    if isinstance(themes_raw, str):
+        themes = [t for t in themes_raw.split(',') if t]
+    elif isinstance(themes_raw, list):
+        if len(themes_raw) == 1 and ',' in themes_raw[0]:
+            themes = [t for t in themes_raw[0].split(',') if t]
+        else:
+            themes = [t for t in themes_raw if t]
+    else:
+        themes = []
+
+    subjects_raw = request.args.getlist('subjects') or []
+    if isinstance(subjects_raw, str):
+        subjects = [s for s in subjects_raw.split(',') if s]
+    elif isinstance(subjects_raw, list):
+        if len(subjects_raw) == 1 and ',' in subjects_raw[0]:
+            subjects = [s for s in subjects_raw[0].split(',') if s]
+        else:
+            subjects = [s for s in subjects_raw if s]
+    else:
+        subjects = []
+
     formatted_clips, has_next = format_clips(
         page=page,
         sort=sort,
@@ -268,9 +279,9 @@ def index():
         title='Home',
         broadcaster_choices=broadcaster_choices,
         categories=categories,
-        themes=theme_choices,
-        subjects=subject_choices,
-        layouts=layout_choices,
+        theme_choices=theme_choices,
+        subject_choices=subject_choices,
+        layout_choices=layout_choices,
         subject_categories=subject_categories,
         clips=formatted_clips,
         has_next=has_next,
@@ -289,19 +300,17 @@ def index():
 # Loads more clips and adds them to the main page as you scroll down
 @bp.route('/load-clips', methods=['POST'])
 def load_clips():
-    session_filters = get_session_filters('main')
     page = request.args.get('page', 1, type=int)
-    sort = get_value(request.values.get('sort'), session_filters.get('sort'), 'views')
-    timeframe = get_value(request.values.get('timeframe'), session_filters.get('timeframe'), '7d')
-    category = get_value(request.values.get('category'), session_filters.get('category'), None)
+    sort = request.values.get('sort', 'views')
+    timeframe = request.values.get('timeframe', '7d')
+    category = request.values.get('category', None)
     if category in [None, '', 'null']:
         category = None
-
-    layout = get_value(request.values.get('layout'), session_filters.get('layout'), None)
+    layout = request.values.get('layout', None)
     if layout in [None, '', 'null']:
         layout = None
 
-    broadcasters_raw = get_value(request.values.getlist('broadcasters'), session_filters.get('broadcasters'), [])
+    broadcasters_raw = request.values.getlist('broadcasters')
     if isinstance(broadcasters_raw, str):
         broadcasters = [b for b in broadcasters_raw.split(',') if b]
     elif isinstance(broadcasters_raw, list):
@@ -313,7 +322,7 @@ def load_clips():
     else:
         broadcasters = []
 
-    themes_raw = get_value(request.values.getlist('themes'), session_filters.get('themes'), [])
+    themes_raw = request.values.getlist('themes')
     if isinstance(themes_raw, str):
         themes = [t for t in themes_raw.split(',') if t]
     elif isinstance(themes_raw, list):
@@ -321,7 +330,7 @@ def load_clips():
     else:
         themes = []
 
-    subjects_raw = get_value(request.values.getlist('subjects'), session_filters.get('subjects'), [])
+    subjects_raw = request.values.getlist('subjects')
     if isinstance(subjects_raw, str):
         subjects = [s for s in subjects_raw.split(',') if s]
     elif isinstance(subjects_raw, list):
@@ -329,11 +338,8 @@ def load_clips():
     else:
         subjects = []
 
-    search = get_value(request.values.get('search'), session_filters.get('search'), '')
+    search = request.values.get('search', '')
     liked = request.values.get('liked', '0') == '1'
-    
-    # Set session filters
-    set_session_filters('main', sort, timeframe, category, broadcasters, themes, subjects, layout, search, liked)
 
     # Sort and paginate
     formatted_clips, has_next = format_clips(
@@ -352,10 +358,16 @@ def load_clips():
         'additional_clips.html', 
         currentPage=page+1, 
         sort=sort, 
-        timeframe=timeframe, 
+        timeframe=timeframe,
+        category=category,
+        broadcasters=broadcasters,
+        themes=themes,
+        subjects=subjects,
+        layout=layout,
+        search=search,
+        liked=liked,
         clips=formatted_clips, 
-        has_next=has_next,
-        liked=liked
+        has_next=has_next
     )
 
 @bp.route('/about')
@@ -430,28 +442,97 @@ def clip_queue():
                 })
         subject_categories.append((sc.name, group_choices))
 
-    filters = {}
-    default_sort = 'views'
-    default_timeframe = '7d'
+    page = 1
+    sort = request.args.get('sort', 'views')
+    if sort not in VALID_SORTS:
+        sort = 'views'
+    timeframe = request.args.get('timeframe', '7d')
+    if timeframe not in VALID_TIMEFRAMES:
+        timeframe = '7d'
+    category = request.args.get('category', None)
+    if category:
+        if not category.isdigit() or not Category.query.get(int(category)):
+             category = None
+    if category in [None, '', 'null']: category = None
+    layout = request.args.get('layout', None)
+    if layout:
+        if not layout.isdigit() or not Layout.query.get(int(layout)):
+            layout = None
+    if layout in [None, '', 'null']: layout = None
+    search = request.args.get('search', '')
+    if len(search) > 50:
+        search = search[:50]
+    liked = request.args.get('liked', '0') == '1'    
+
+    broadcasters_raw = request.args.getlist('broadcasters') or []
+    if isinstance(broadcasters_raw, str):
+        broadcasters = [b for b in broadcasters_raw.split(',') if b]
+    elif isinstance(broadcasters_raw, list):
+        # Handle case where list contains a single comma-separated string
+        if len(broadcasters_raw) == 1 and ',' in broadcasters_raw[0]:
+            broadcasters = [b for b in broadcasters_raw[0].split(',') if b]
+        else:
+            broadcasters = [b for b in broadcasters_raw if b]
+    else:
+        broadcasters = []
+
+    themes_raw = request.args.getlist('themes') or []
+    if isinstance(themes_raw, str):
+        themes = [t for t in themes_raw.split(',') if t]
+    elif isinstance(themes_raw, list):
+        if len(themes_raw) == 1 and ',' in themes_raw[0]:
+            themes = [t for t in themes_raw[0].split(',') if t]
+        else:
+            themes = [t for t in themes_raw if t]
+    else:
+        themes = []
+
+    subjects_raw = request.args.getlist('subjects') or []
+    if isinstance(subjects_raw, str):
+        subjects = [s for s in subjects_raw.split(',') if s]
+    elif isinstance(subjects_raw, list):
+        if len(subjects_raw) == 1 and ',' in subjects_raw[0]:
+            subjects = [s for s in subjects_raw[0].split(',') if s]
+        else:
+            subjects = [s for s in subjects_raw if s]
+    else:
+        subjects = []
+
+    filters = {
+        'sort': sort,
+        'timeframe': timeframe,
+        'category': category,
+        'broadcasters': broadcasters,
+        'themes': themes,
+        'subjects': subjects,
+        'layout': layout,
+        'search': search,
+        'liked': liked
+    }
     formatted_clips, _ = format_clips(
-        page=1,
-        sort=default_sort,
-        timeframe=default_timeframe
+        page=page,
+        sort=sort,
+        timeframe=timeframe,
+        category=category,
+        broadcasters=broadcasters,
+        themes=themes,
+        subjects=subjects,
+        layout=layout,
+        search=search,
+        liked=liked
     )
     return render_template(
         'main/clip_queue.html',
         title='Clip Queue',
         categories=categories,
         broadcaster_choices=broadcaster_choices,
-        themes=theme_choices,
-        subjects=subject_choices,
-        layouts=layout_choices,
+        theme_choices=theme_choices,
+        subject_choices=subject_choices,
+        layout_choices=layout_choices,
         subject_categories=subject_categories,
         clips=formatted_clips,
         clip_index=0,
         filters=filters,
-        sort=default_sort,
-        timeframe=default_timeframe,
         embed_parent=EMBED_PARENT
     )
 
@@ -470,6 +551,7 @@ def clip_queue_filter():
         'sort': sort,
         'timeframe': timeframe,
         'category': category,
+        'broadcasters': broadcasters,
         'themes': themes,
         'subjects': subjects,
         'layout': layout,

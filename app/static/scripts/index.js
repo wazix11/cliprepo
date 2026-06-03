@@ -34,6 +34,14 @@ function initSelectPickers() {
     });
 }
 
+function updateUrlParam(key, value) {
+    const url = new URL(window.location.href);
+
+    url.searchParams.set(key, value);
+
+    window.history.pushState(null, '', url.toString());
+}
+
 window.addEventListener('DOMContentLoaded', function() {
     const likedInput = document.getElementById('hidden-liked-input');
     const likedToggleBtn = document.getElementById('liked-clips-toggle');
@@ -65,6 +73,7 @@ document.querySelectorAll('.sort-btn').forEach(function(btn) {
         const sort = btn.getAttribute('data-sort');
         document.getElementById('sort-input').value = sort;
         document.getElementById('sortDropdown').innerText = sortLabels[sort] || "Sort By";
+        updateUrlParam('sort', sort);
         submitFilterForm();
     });
 });
@@ -74,6 +83,7 @@ document.querySelectorAll('.timeframe-btn').forEach(function(btn) {
         const timeframe = btn.getAttribute('data-timeframe');
         document.getElementById('timeframe-input').value = timeframe;
         document.getElementById('timeframeDropdown').innerText = timeframeLabels[timeframe] || "Timeframe";
+        updateUrlParam('timeframe', timeframe);
         submitFilterForm();
     });
 });
@@ -82,6 +92,7 @@ if (broadcastersSelect) {
     broadcastersSelect.addEventListener('change', function() {
         const selected = Array.from(this.selectedOptions).map(opt => opt.value).join(',');
         document.getElementById('broadcasters-input').value = selected;
+        updateUrlParam('broadcasters', selected);
         submitFilterForm();
     });
 }
@@ -104,20 +115,32 @@ if (likedToggleBtn) {
             icon.classList.add('fa-regular');
         }
         
+        updateUrlParam('liked', newValue);
         submitFilterForm();
     });
 }
 
 document.getElementById('apply-advanced-filters').addEventListener('click', function() {
+    const selectedCategory = document.getElementById('category-select').value;
     const selectedThemes = Array.from(document.getElementById('themes-select').selectedOptions).map(opt => opt.value).join(',');
     const selectedSubjects = Array.from(document.getElementById('subjects-select').selectedOptions).map(opt => opt.value).join(',');
-    document.getElementById('hidden-category-input').value = document.getElementById('category-select').value;
+    const selectedLayout = document.getElementById('layout-select').value;
+    document.getElementById('hidden-category-input').value = selectedCategory;
     document.getElementById('hidden-themes-input').value = selectedThemes;
     document.getElementById('hidden-subjects-input').value = selectedSubjects;
-    document.getElementById('hidden-layout-input').value = document.getElementById('layout-select').value;
+    document.getElementById('hidden-layout-input').value = selectedLayout;
+    updateUrlParam('category', selectedCategory);
+    updateUrlParam('themes', selectedThemes);
+    updateUrlParam('subjects', selectedSubjects);
+    updateUrlParam('layout', selectedLayout);
     submitFilterForm();
     var modal = bootstrap.Modal.getInstance(document.getElementById('advancedFilterModal'));
     modal.hide();
+});
+
+document.getElementById('filter-btn').addEventListener('click', function() {
+    const searchValue = document.querySelector('input[name="search"]').value;
+    updateUrlParam('search', searchValue);
 });
 
 document.getElementById('clear-filters-btn').addEventListener('click', function() {
@@ -162,6 +185,10 @@ document.getElementById('clear-filters-btn').addEventListener('click', function(
     }
 
     document.querySelector('input[name="search"]').value = '';
+
+    window.history.replaceState(null, '', window.location.pathname);
+    updateUrlParam('sort', 'views');
+    updateUrlParam('timeframe', '7d');
     submitFilterForm();
 });
 

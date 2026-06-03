@@ -77,7 +77,7 @@
                                 <input type="text" name="search" class="form-control mx-1 search-bar"
                                     placeholder="Filter..."
                                     value="{{ search }}">
-                                <button type="submit" class="btn btn-alveus-green mx-1">Filter</button>
+                                <button type="submit" class="btn btn-alveus-green mx-1" id="filter-btn">Filter</button>
                                 <button type="button" class="btn btn-alveus-green mx-1" title="Clear Filters" id="clear-filters-btn">
                                     <i class="fa-solid fa-ban"></i>
                                 </button>
@@ -106,7 +106,7 @@
                                 {% endfor %}
                             </select>
                         {% endif %}
-                        {% if themes %}
+                        {% if theme_choices %}
                             <label for="themes-select" class="form-label">Themes</label>
                             <select id="themes-select" name="themes" class="form-control selectpicker mb-2"
                                 data-style="btn-alveus-green"
@@ -114,12 +114,12 @@
                                 multiple
                                 title="Select theme(s)"
                                 data-selected-text-format="count > 3">
-                                {% for theme in themes %}
+                                {% for theme in theme_choices %}
                                     <option value="{{ theme.id }}" {% if theme.id in selected_themes %}selected{% endif %}>{{ theme.name }}</option>
                                 {% endfor %}
                             </select>
                         {% endif %}
-                        {% if subjects %}
+                        {% if subject_choices %}
                             <label for="subjects-select" class="form-label">Subjects</label>
                             <select id="subjects-select" name="subjects" class="form-control selectpicker mb-2"
                                 data-style="btn-alveus-green"
@@ -137,13 +137,13 @@
                                 {% endfor %}
                             </select>
                         {% endif %}
-                        {% if layouts %}
+                        {% if layout_choices %}
                             <label for="layout-select" class="form-label">Layout</label>
                             <select id="layout-select" name="layout" class="form-control selectpicker mb-2"
                                 data-style="btn-alveus-green"
                                 data-width="100%">
                                 <option value="">Select a layout</option>
-                                {% for layout in layouts %}
+                                {% for layout in layout_choices %}
                                     <option value="{{ layout.id }}" {% if selected_layout and layout.id == selected_layout %}selected{% endif %}>{{ layout.name }}</option>
                                 {% endfor %}
                             </select>
@@ -160,5 +160,5 @@
             {% include "additional_clips.html" %}
         </div>
     </div>
-    <script src="{{ url_for('static', filename='scripts/index.js') }}?v=20260520"></script>
+    <script src="{{ url_for('static', filename='scripts/index.js') }}?v=20260601"></script>
 {% endblock %}
