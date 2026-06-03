@@ -121,18 +121,30 @@ if (likedToggleBtn) {
 }
 
 document.getElementById('apply-advanced-filters').addEventListener('click', function() {
-    const selectedCategory = document.getElementById('category-select').value;
-    const selectedThemes = Array.from(document.getElementById('themes-select').selectedOptions).map(opt => opt.value).join(',');
-    const selectedSubjects = Array.from(document.getElementById('subjects-select').selectedOptions).map(opt => opt.value).join(',');
-    const selectedLayout = document.getElementById('layout-select').value;
-    document.getElementById('hidden-category-input').value = selectedCategory;
-    document.getElementById('hidden-themes-input').value = selectedThemes;
-    document.getElementById('hidden-subjects-input').value = selectedSubjects;
-    document.getElementById('hidden-layout-input').value = selectedLayout;
-    updateUrlParam('category', selectedCategory);
-    updateUrlParam('themes', selectedThemes);
-    updateUrlParam('subjects', selectedSubjects);
-    updateUrlParam('layout', selectedLayout);
+    const categorySelect = document.getElementById('category-select');
+    if (categorySelect) {
+        const selectedCategory = categorySelect.value;
+        document.getElementById('hidden-category-input').value = selectedCategory;
+        updateUrlParam('category', selectedCategory);
+    }
+    const themesSelect = document.getElementById('themes-select');
+    if (themesSelect) {
+        const selectedThemes = Array.from(themesSelect.selectedOptions).map(opt => opt.value).join(',');
+        document.getElementById('hidden-themes-input').value = selectedThemes;
+        updateUrlParam('themes', selectedThemes);
+    }
+    const subjectsSelect = document.getElementById('subjects-select');
+    if (subjectsSelect) {
+        const selectedSubjects = Array.from(subjectsSelect.selectedOptions).map(opt => opt.value).join(',');
+        document.getElementById('hidden-subjects-input').value = selectedSubjects;
+        updateUrlParam('subjects', selectedSubjects);
+    }
+    const layoutSelect = document.getElementById('layout-select');
+    if (layoutSelect) {
+        const selectedLayout = layoutSelect.value;
+        document.getElementById('hidden-layout-input').value = selectedLayout;
+        updateUrlParam('layout', selectedLayout);
+    }
     submitFilterForm();
     var modal = bootstrap.Modal.getInstance(document.getElementById('advancedFilterModal'));
     modal.hide();
