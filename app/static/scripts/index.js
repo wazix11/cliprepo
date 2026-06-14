@@ -179,8 +179,13 @@ function initDaterangepicker() {
         submitFilterForm();
     });
     
-    // Restore state when cancel is clicked
+    // Restore state when cancel is clicked or when the picker is hidden without applying
     daterangeInput.on('cancel.daterangepicker', function(ev, picker) {
+        picker.setStartDate(lastAppliedStartDate);
+        picker.setEndDate(lastAppliedEndDate);
+        daterangeInput.val(lastAppliedDisplayText);
+    });
+    daterangeInput.on('hide.daterangepicker', function(ev, picker) {
         picker.setStartDate(lastAppliedStartDate);
         picker.setEndDate(lastAppliedEndDate);
         daterangeInput.val(lastAppliedDisplayText);
