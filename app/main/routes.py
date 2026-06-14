@@ -93,6 +93,17 @@ def format_clips(page, sort, timeframe='7d', category=None, broadcasters=[], the
     elif timeframe == '1y':
         last_1_year = now - timedelta(days=365)
         filters.append(Clip.created_at >= last_1_year)
+    elif timeframe.startswith('custom:'):
+        # Handle custom date range: custom:YYYY-MM-DD|YYYY-MM-DD
+        try:
+            date_range = timeframe.split(':', 1)[1]
+            start_str, end_str = date_range.split('|')
+            start_date = dt.strptime(start_str, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+            end_date = dt.strptime(end_str, '%Y-%m-%d').replace(tzinfo=timezone.utc) + timedelta(days=1)
+            filters.append(Clip.created_at >= start_date)
+            filters.append(Clip.created_at < end_date)
+        except (ValueError, IndexError):
+            pass
 
     filters.append(Clip.status.has(Status.type != 'Hidden'))
     filters.append(Clip.status.has(Status.type != 'Pending'))
@@ -211,7 +222,7 @@ def index():
     if sort not in VALID_SORTS:
         sort = 'views'
     timeframe = request.args.get('timeframe', '7d')
-    if timeframe not in VALID_TIMEFRAMES:
+    if timeframe not in VALID_TIMEFRAMES and not timeframe.startswith('custom:'):
         timeframe = '7d'
     category = request.args.get('category', None)
     if category:

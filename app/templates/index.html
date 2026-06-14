@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=20260126">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=20260613">
     
     
     <div class="container pt-3">
@@ -10,44 +10,40 @@
                 <nav class="navbar navbar-dark navbar-expand-md">
                     <div class="container-fluid rounded py-2 bg-alveus-tan">
                         <ul class="nav navbar-nav ml-auto">
-                            <div class="dropdown mx-1">
-                                <button class="btn btn-alveus-green dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Sort By
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="sortDropdown">
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="new">New</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="old">Old</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="views">Views</a></li>
-                                    <li><a class="dropdown-item sort-btn" href="#" data-sort="likes">Likes</a></li>
-                                </ul>
+                            <div class="d-flex align-items-center flex-wrap">
+                                <div class="dropdown mx-1">
+                                    <button class="btn btn-alveus-green dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Sort By
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                                        <li><a class="dropdown-item sort-btn" href="#" data-sort="new">New</a></li>
+                                        <li><a class="dropdown-item sort-btn" href="#" data-sort="old">Old</a></li>
+                                        <li><a class="dropdown-item sort-btn" href="#" data-sort="views">Views</a></li>
+                                        <li><a class="dropdown-item sort-btn" href="#" data-sort="likes">Likes</a></li>
+                                    </ul>
+                                </div>
+                                <div class="input-group mx-1">
+                                    <span class="input-group-text">
+                                        <i class="fa-solid fa-calendar"></i>
+                                    </span>
+                                    <input type="text" id="daterange" class="form-control date-range-picker" placeholder="Select date range">
+                                </div>
+                                {% if broadcaster_choices|length > 1 %}
+                                <div class="dropdown mx-1">
+                                    <select id="broadcasters-select" name="broadcaster" class="form-control selectpicker"
+                                        data-style="btn-alveus-green"
+                                        data-width="100%"
+                                        multiple
+                                        data-live-search="true"
+                                        title="Select broadcaster(s)"
+                                        data-selected-text-format="count > 3">
+                                        {% for broadcaster in broadcaster_choices %}
+                                            <option value="{{ broadcaster[0] }}" {% if broadcaster[0] in selected_broadcaster %}selected{% endif %}>{{ broadcaster[1] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% endif %}
                             </div>
-                            <div class="dropdown mx-1">
-                                <button class="btn btn-alveus-green dropdown-toggle" type="button" id="timeframeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Timeframe
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="timeframeDropdown">
-                                    <li><a class="dropdown-item timeframe-btn" href="#" data-timeframe="24h">Last 24 Hours</a></li>
-                                    <li><a class="dropdown-item timeframe-btn" href="#" data-timeframe="7d">Last 7 Days</a></li>
-                                    <li><a class="dropdown-item timeframe-btn" href="#" data-timeframe="30d">Last 30 Days</a></li>
-                                    <li><a class="dropdown-item timeframe-btn" href="#" data-timeframe="1y">Last 1 Year</a></li>
-                                    <li><a class="dropdown-item timeframe-btn" href="#" data-timeframe="all">All Time</a></li>
-                                </ul>
-                            </div>
-                            {% if broadcaster_choices|length > 1 %}
-                            <div class="dropdown mx-1">
-                                <select id="broadcasters-select" name="broadcaster" class="form-control selectpicker mb-2"
-                                    data-style="btn-alveus-green"
-                                    data-width="100%"
-                                    multiple
-                                    data-live-search="true"
-                                    title="Select broadcaster(s)"
-                                    data-selected-text-format="count > 3">
-                                    {% for broadcaster in broadcaster_choices %}
-                                        <option value="{{ broadcaster[0] }}" {% if broadcaster[0] in selected_broadcaster %}selected{% endif %}>{{ broadcaster[1] }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            {% endif %}
                         </ul>
                         <ul class="nav navbar-nav mr-auto">
                             <form id="filter-form" class="d-flex align-items-center flex-wrap" 
@@ -74,10 +70,12 @@
                                 <button type="button" class="btn btn-alveus-green mx-1" title="Advanced Filters" data-bs-toggle="modal" data-bs-target="#advancedFilterModal">
                                     <i class="fa-solid fa-filter"></i>
                                 </button>
-                                <input type="text" name="search" class="form-control mx-1 search-bar"
-                                    placeholder="Filter..."
-                                    value="{{ search }}">
-                                <button type="submit" class="btn btn-alveus-green mx-1" id="filter-btn">Filter</button>
+                                <div class="input-group mx-1">
+                                    <input type="text" name="search" class="form-control search-bar"
+                                        placeholder="Filter..."
+                                        value="{{ search }}">
+                                    <button type="submit" class="btn btn-alveus-green" id="filter-btn">Filter</button>
+                                </div>
                                 <button type="button" class="btn btn-alveus-green mx-1" title="Clear Filters" id="clear-filters-btn">
                                     <i class="fa-solid fa-ban"></i>
                                 </button>
@@ -160,5 +158,5 @@
             {% include "additional_clips.html" %}
         </div>
     </div>
-    <script src="{{ url_for('static', filename='scripts/index.js') }}?v=20260602"></script>
+    <script src="{{ url_for('static', filename='scripts/index.js') }}?v=20260613"></script>
 {% endblock %}

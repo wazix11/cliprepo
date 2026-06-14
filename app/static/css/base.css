@@ -89,6 +89,17 @@
     min-height: calc(100vh - var(--navbar-height));
 }
 
+.input-group {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: unset;
+    width: unset;
+}
+.date-range-picker {
+    max-width: 205px;
+}
+
 .search-bar {
     max-width: 200px;
 }
