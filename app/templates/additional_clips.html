@@ -79,7 +79,8 @@
      hx-trigger="revealed"
      hx-target="#load-more"
      hx-swap="outerHTML"
-     hx-include="#filter-form">
+     hx-include="#filter-form"
+     hx-vals='js:{"init_params_json": JSON.stringify({{ params | tojson }})}'>
     <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
     </div>

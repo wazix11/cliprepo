@@ -13,7 +13,7 @@ EMBED_PARENT = os.environ.get('EMBED_PARENT')
 
 def format_count(count, type):
     if count < 1000:
-        return str(count) + f' {type}{'s' if count != 1 else ''}'
+        return str(count) + f" {type}{'s' if count != 1 else ''}"
     elif count < 1_000_000:
         return f'{count / 1000:.1f}K {type}s'
     elif count < 1_000_000_000:
@@ -52,11 +52,9 @@ def format_clips(page, sort, timeframe='7d', category=None, broadcasters=[], the
     if broadcasters:
         filters.append(or_(*[Clip.broadcaster_id == bid for bid in broadcasters]))
     if themes:
-        for theme_id in themes:
-            filters.append(Clip.themes.any(Theme.id == theme_id))
+        filters.append(or_(*[Clip.themes.any(Theme.id == tid) for tid in themes]))
     if subjects:
-        for subject_id in subjects:
-            filters.append(Clip.subjects.any(Subject.id == subject_id))
+        filters.append(or_(*[Clip.subjects.any(Subject.id == sid) for sid in subjects]))
     if layout:
         filters.append(Clip.layout_id == layout)
     if liked and current_user.is_authenticated:
@@ -273,6 +271,18 @@ def index():
     else:
         subjects = []
 
+    params = {
+        'sort': sort,
+        'timeframe': timeframe,
+        'category': category,
+        'broadcasters': broadcasters,
+        'themes': themes,
+        'subjects': subjects,
+        'layout': layout,
+        'search': search,
+        'liked': liked
+    }
+
     formatted_clips, has_next = format_clips(
         page=page,
         sort=sort,
@@ -305,23 +315,65 @@ def index():
         selected_subjects=subjects,
         selected_layout=layout,
         search=search,
-        liked=liked
+        liked=liked,
+        params=params
     )
 
 # Loads more clips and adds them to the main page as you scroll down
 @bp.route('/load-clips', methods=['POST'])
 def load_clips():
+    # Get the string of params from hx-vals
+    init_params_raw = request.form.get('init_params_json', '{}')
+    init_params = json.loads(init_params_raw)
+    
+    # 2. Rebuild current_params by checking form inputs, falling back to init_params
+    current_params = {}
+    keys = ['sort', 'timeframe', 'category', 'broadcasters', 'themes', 'subjects', 'layout', 'search', 'liked']
+    for key in keys:
+        # Check if the parameter expects a list (like subjects or themes)
+        is_list_type = isinstance(init_params.get(key), list)
+        
+        if is_list_type:
+            # Check if the user selected fields in the form submission
+            form_list = request.form.getlist(key)
+            form_list = [v for v in form_list if v.strip()] # Clear out empty form defaults
+            
+            if form_list:
+                current_params[key] = form_list
+            else:
+                # Retain the clean list structure: [1, 2, 24, 25]
+                current_params[key] = init_params.get(key, [])
+        else:
+            form_value = request.form.get(key, '').strip()
+            if form_value:
+                current_params[key] = form_value
+            else:
+                current_params[key] = init_params.get(key, '')
+
+    # Some of this is a bit redundant with the loop above, but I'm keeping it for now to ensure the parameters are in the correct format and validated
     page = request.args.get('page', 1, type=int)
     sort = request.values.get('sort', 'views')
+    if current_params.get('sort'):
+        sort = current_params['sort']
+    if sort not in VALID_SORTS:
+        sort = 'views'
     timeframe = request.values.get('timeframe', '7d')
+    if current_params.get('timeframe'):
+        timeframe = current_params['timeframe']
+    if timeframe not in VALID_TIMEFRAMES and not timeframe.startswith('custom:'):
+        timeframe = '7d'
     category = request.values.get('category', None)
-    if category in [None, '', 'null']:
-        category = None
+    if current_params.get('category'):
+        category = current_params['category']
+    if category in [None, '', 'null']: category = None
     layout = request.values.get('layout', None)
-    if layout in [None, '', 'null']:
-        layout = None
+    if current_params.get('layout'):
+        layout = current_params['layout']
+    if layout in [None, '', 'null']: layout = None
 
     broadcasters_raw = request.values.getlist('broadcasters')
+    if current_params.get('broadcasters'):
+        broadcasters_raw = current_params['broadcasters']
     if isinstance(broadcasters_raw, str):
         broadcasters = [b for b in broadcasters_raw.split(',') if b]
     elif isinstance(broadcasters_raw, list):
@@ -334,23 +386,39 @@ def load_clips():
         broadcasters = []
 
     themes_raw = request.values.getlist('themes')
+    if current_params.get('themes'):
+        themes_raw = current_params['themes']
     if isinstance(themes_raw, str):
         themes = [t for t in themes_raw.split(',') if t]
     elif isinstance(themes_raw, list):
-        themes = [t for t in themes_raw if t]
+        if len(themes_raw) == 1 and ',' in themes_raw[0]:
+            themes = [t for t in themes_raw[0].split(',') if t]
+        else:
+            themes = [t for t in themes_raw if t]
     else:
         themes = []
 
     subjects_raw = request.values.getlist('subjects')
+    if current_params.get('subjects'):
+        subjects_raw = current_params['subjects']
     if isinstance(subjects_raw, str):
         subjects = [s for s in subjects_raw.split(',') if s]
     elif isinstance(subjects_raw, list):
-        subjects = [s for s in subjects_raw if s]
+        if len(subjects_raw) == 1 and ',' in subjects_raw[0]:
+            subjects = [s for s in subjects_raw[0].split(',') if s]
+        else:
+            subjects = [s for s in subjects_raw if s]
     else:
         subjects = []
 
     search = request.values.get('search', '')
+    if current_params.get('search'):
+        search = current_params['search']
+    if len(search) > 50:
+        search = search[:50]
     liked = request.values.get('liked', '0') == '1'
+    if current_params.get('liked'):
+        liked = str(current_params['liked']) == '1'
 
     # Sort and paginate
     formatted_clips, has_next = format_clips(
@@ -378,7 +446,8 @@ def load_clips():
         search=search,
         liked=liked,
         clips=formatted_clips, 
-        has_next=has_next
+        has_next=has_next,
+        params=current_params
     )
 
 @bp.route('/about')
