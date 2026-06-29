@@ -5,6 +5,8 @@ const sortLabels = {
     likes: "Likes"
 };
 
+const DateTime = window.luxon?.DateTime;
+
 function submitFilterForm() {
     const form = document.getElementById('filter-form');
     if (!form) return;
@@ -30,16 +32,16 @@ function initSelectPickers() {
 function getPredefinedRangeName(startDate, endDate) {
     // Check against predefined ranges
     const ranges = {
-        'Last 24 Hours': [moment().subtract(24, 'hours'), moment()],
-        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-        'Last 1 Year': [moment().subtract(1, 'year'), moment()],
-        'All Time': [moment('2000-01-01'), moment()]
+        'Last 24 Hours': [DateTime.now().minus({ hours: 24 }), DateTime.now()],
+        'Last 7 Days': [DateTime.now().minus({ days: 6 }), DateTime.now()],
+        'Last 30 Days': [DateTime.now().minus({ days: 29 }), DateTime.now()],
+        'Last 1 Year': [DateTime.now().minus({ years: 1 }), DateTime.now()],
+        'All Time': [DateTime.fromISO('2000-01-01'), DateTime.now()]
     };
     
     for (const [name, [rangeStart, rangeEnd]] of Object.entries(ranges)) {
-        if (startDate.format('YYYY-MM-DD') === rangeStart.format('YYYY-MM-DD') && 
-            endDate.format('YYYY-MM-DD') === rangeEnd.format('YYYY-MM-DD')) {
+        if (startDate.toFormat('yyyy-MM-dd') === rangeStart.toFormat('yyyy-MM-dd') && 
+            endDate.toFormat('yyyy-MM-dd') === rangeEnd.toFormat('yyyy-MM-dd')) {
             return name;
         }
     }
@@ -47,23 +49,25 @@ function getPredefinedRangeName(startDate, endDate) {
 }
 
 function initDaterangepicker() {
-    if (!(window.jQuery && typeof jQuery().daterangepicker === 'function')) return;
-    const daterangeInput = $('#daterange');
-    if (daterangeInput.length === 0) return;
-    
-    // Define default date range (last 7 days)
-    const defaultStartDate = moment().subtract(6, 'days');
-    const defaultEndDate = moment();
-    
-    // Check URL params for existing timeframe
+    if (typeof DateRangePicker === 'undefined' || typeof DateRangePicker.daterangepicker !== 'function') return;
+    const daterangeInput = document.getElementById('daterange');
+    if (!daterangeInput) return;
+
+    const existingPicker = DateRangePicker.getDateRangePicker(daterangeInput);
+    if (existingPicker && typeof existingPicker.remove === 'function') {
+        existingPicker.remove();
+    }
+
+    const defaultStartDate = DateTime.now().minus({ days: 6 });
+    const defaultEndDate = DateTime.now();
+
     const urlParams = new URLSearchParams(window.location.search);
     const timeframeParam = urlParams.get('timeframe');
-    
+
     let startDate = defaultStartDate;
     let endDate = defaultEndDate;
-    let displayText = 'Last 7 Days'; // Default display
-    
-    // Map timeframe values to display names
+    let displayText = 'Last 7 Days';
+
     const timeframeDisplayMap = {
         '24h': 'Last 24 Hours',
         '7d': 'Last 7 Days',
@@ -71,93 +75,85 @@ function initDaterangepicker() {
         '1y': 'Last 1 Year',
         'all': 'All Time'
     };
-    
-    // Map timeframe values to date ranges
+
     const timeframeRangeMap = {
-        '24h': [moment().subtract(24, 'hours'), moment()],
-        '7d': [moment().subtract(6, 'days'), moment()],
-        '30d': [moment().subtract(29, 'days'), moment()],
-        '1y': [moment().subtract(1, 'year'), moment()],
-        'all': [moment('2000-01-01'), moment()]
+        '24h': [DateTime.now().minus({ hours: 24 }), DateTime.now()],
+        '7d': [DateTime.now().minus({ days: 6 }), DateTime.now()],
+        '30d': [DateTime.now().minus({ days: 29 }), DateTime.now()],
+        '1y': [DateTime.now().minus({ years: 1 }), DateTime.now()],
+        'all': [DateTime.fromISO('2000-01-01'), DateTime.now()]
     };
-    
-    // Restore from timeframe param if present
+
     if (timeframeParam) {
         if (timeframeParam.startsWith('custom:')) {
-            // Handle custom date range: custom:YYYY-MM-DD|YYYY-MM-DD
             try {
-                const dateRange = timeframeParam.substring(7); // Skip 'custom:'
+                const dateRange = timeframeParam.substring(7);
                 const [start, end] = dateRange.split('|');
-                const parsedStart = moment(start, 'YYYY-MM-DD');
-                const parsedEnd = moment(end, 'YYYY-MM-DD');
-                if (parsedStart.isValid() && parsedEnd.isValid()) {
+                const parsedStart = DateTime.fromISO(start);
+                const parsedEnd = DateTime.fromISO(end);
+                if (parsedStart.isValid && parsedEnd.isValid) {
                     startDate = parsedStart;
                     endDate = parsedEnd;
-                    displayText = startDate.format('YYYY-MM-DD') + ' - ' + endDate.format('YYYY-MM-DD');
+                    displayText = startDate.toFormat('yyyy-MM-dd') + ' - ' + endDate.toFormat('yyyy-MM-dd');
                 }
             } catch (e) {}
         } else if (timeframeDisplayMap[timeframeParam]) {
-            // Handle predefined ranges
             const range = timeframeRangeMap[timeframeParam];
             startDate = range[0];
             endDate = range[1];
             displayText = timeframeDisplayMap[timeframeParam];
         }
     }
-    
-    // Destroy previous instance if it exists
-    try {
-        daterangeInput.data('daterangepicker').remove();
-    } catch (e) {}
-    
-    daterangeInput.daterangepicker({
-        "startDate": startDate,
-        "endDate": endDate,
-        "showDropdowns": true,
+
+    const options = {
+        startDate,
+        endDate,
+        showDropdowns: true,
         ranges: {
-            'Last 24 Hours': [moment().subtract(24, 'hours'), moment()],
-            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-            'Last 1 Year': [moment().subtract(1, 'year'), moment()],
-            'All Time': [moment('2000-01-01'), moment()]
+            'Last 24 Hours': [DateTime.now().minus({ hours: 24 }), DateTime.now()],
+            'Last 7 Days': [DateTime.now().minus({ days: 6 }), DateTime.now()],
+            'Last 30 Days': [DateTime.now().minus({ days: 29 }), DateTime.now()],
+            'Last 1 Year': [DateTime.now().minus({ years: 1 }), DateTime.now()],
+            'All Time': [DateTime.fromISO('2000-01-01'), DateTime.now()]
         },
-        "locale": {
-            "format": "YYYY-MM-DD",
-            "separator": " - ",
-            "applyLabel": "Apply",
-            "cancelLabel": "Cancel",
-            "fromLabel": "From",
-            "toLabel": "To",
-            "customRangeLabel": "Custom",
-            "weekLabel": "W",
-            "daysOfWeek": ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
-            "monthNames": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-            "firstDay": 1
+        locale: {
+            format: 'yyyy-MM-dd',
+            separator: ' - ',
+            applyLabel: 'Apply',
+            cancelLabel: 'Cancel',
+            fromLabel: 'From',
+            toLabel: 'To',
+            customRangeLabel: 'Custom',
+            weekLabel: 'W',
+            daysOfWeek: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+            monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+            firstDay: 1
         },
-        "alwaysShowCalendars": true
-    });
-    
-    // Set initial display text
-    daterangeInput.val(displayText);
-    
-    // Store the current state for cancel handler
-    let lastAppliedStartDate = startDate.clone();
-    let lastAppliedEndDate = endDate.clone();
+        alwaysShowCalendars: true,
+        autoUpdateInput: false
+    };
+
+    DateRangePicker.daterangepicker(daterangeInput, options);
+    const pickerInput = DateRangePicker.getDateRangePicker(daterangeInput) ? daterangeInput : null;
+    if (!pickerInput) return;
+
+    daterangeInput.value = displayText;
+
+    let lastAppliedStartDate = startDate;
+    let lastAppliedEndDate = endDate;
     let lastAppliedDisplayText = displayText;
-    
-    // Update hidden input and URL when date range is changed
-    daterangeInput.on('apply.daterangepicker', function(ev, picker) {
-        // Check if it's a predefined range or custom
+
+    const applyHandler = (ev) => {
+        const picker = ev.picker || DateRangePicker.getDateRangePicker(daterangeInput);
+        if (!picker) return;
+
         const predefinedName = getPredefinedRangeName(picker.startDate, picker.endDate);
-        const displayText = predefinedName || picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD');
-        daterangeInput.val(displayText);
-        
-        // Store the applied state
-        lastAppliedStartDate = picker.startDate.clone();
-        lastAppliedEndDate = picker.endDate.clone();
-        lastAppliedDisplayText = displayText;
-        
-        // Map predefined ranges to timeframe values
+        const newDisplayText = predefinedName || picker.startDate.toFormat('yyyy-MM-dd') + ' - ' + picker.endDate.toFormat('yyyy-MM-dd');
+        daterangeInput.value = newDisplayText;
+        lastAppliedStartDate = picker.startDate;
+        lastAppliedEndDate = picker.endDate;
+        lastAppliedDisplayText = newDisplayText;
+
         const timeframeMap = {
             'Last 24 Hours': '24h',
             'Last 7 Days': '7d',
@@ -165,31 +161,20 @@ function initDaterangepicker() {
             'Last 1 Year': '1y',
             'All Time': 'all'
         };
-        
-        let timeframeValue;
-        if (predefinedName) {
-            timeframeValue = timeframeMap[predefinedName];
-        } else {
-            // Custom range: encode as custom:YYYY-MM-DD|YYYY-MM-DD
-            timeframeValue = 'custom:' + picker.startDate.format('YYYY-MM-DD') + '|' + picker.endDate.format('YYYY-MM-DD');
-        }
+
+        const timeframeValue = predefinedName ? timeframeMap[predefinedName] : 'custom:' + picker.startDate.toFormat('yyyy-MM-dd') + '|' + picker.endDate.toFormat('yyyy-MM-dd');
         document.getElementById('timeframe-input').value = timeframeValue;
         updateUrlParam('timeframe', timeframeValue);
-        
         submitFilterForm();
-    });
-    
-    // Restore state when cancel is clicked or when the picker is hidden without applying
-    daterangeInput.on('cancel.daterangepicker', function(ev, picker) {
-        picker.setStartDate(lastAppliedStartDate);
-        picker.setEndDate(lastAppliedEndDate);
-        daterangeInput.val(lastAppliedDisplayText);
-    });
-    daterangeInput.on('hide.daterangepicker', function(ev, picker) {
-        picker.setStartDate(lastAppliedStartDate);
-        picker.setEndDate(lastAppliedEndDate);
-        daterangeInput.val(lastAppliedDisplayText);
-    });
+    };
+
+    const cancelHandler = () => {
+        daterangeInput.value = lastAppliedDisplayText;
+    };
+
+    daterangeInput.addEventListener('apply', applyHandler);
+    daterangeInput.addEventListener('cancel', cancelHandler);
+    daterangeInput.addEventListener('hide', cancelHandler);
 }
 
 function updateUrlParam(key, value) {
@@ -344,10 +329,7 @@ document.getElementById('clear-filters-btn').addEventListener('click', function(
     document.querySelector('input[name="search"]').value = '';
 
     // Reset daterange picker to default
-    if (window.jQuery && typeof jQuery().daterangepicker === 'function') {
-        try { $('#daterange').data('daterangepicker').remove(); } catch(e) {}
-        initDaterangepicker();
-    }
+    initDaterangepicker();
 
     window.history.replaceState(null, '', window.location.pathname);
     updateUrlParam('sort', 'views');
