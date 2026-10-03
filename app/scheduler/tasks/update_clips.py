@@ -1,4 +1,4 @@
-import os
+import os, re
 from dotenv import load_dotenv
 from app import db
 from app.models import Clip, User
@@ -9,6 +9,43 @@ load_dotenv(override=True)
 BROADCASTER_ID = os.environ.get('BROADCASTER_ID')
 GAME_ID = os.environ.get('GAME_ID')
 CLIPS_START_DATE = os.environ.get("CLIPS_START_DATE")
+
+def is_available_in_clip_player(clip):
+    # If the value is already set, return immediately
+    if clip.get('is_available_in_clip_player') == True:
+        return True
+    if clip.get('is_available_in_clip_player') == False:
+        return False
+
+    # Single character titles should be excluded
+    if len(clip['title']) <= 1:
+        return False
+    
+    # Check if the clip should be available in the clip player/api based on view count and other criteria
+    excluded_phrases = [
+        'animal ambassador 24/7',
+        'seizure',
+        'for staff',
+        'limp',
+        'vomit',
+        r'puk(e|ing)?',
+        r'(th|f)rew up',
+        r'throw(s|ing)? up'
+    ]
+    excluded_title = re.compile(
+        rf'\b({'|'.join(excluded_phrases)})\b',
+        re.IGNORECASE
+    )
+    # Check if the clip title contains any excluded phrases
+    if excluded_title.search(clip['title']):
+        return False
+
+    # Make clip available in the clip player/api if view count is 100 or more
+    if clip['view_count'] >= 100:
+        return True
+    # Leave the value as None if the clip doesn't meet the criteria but doesn't contain excluded phrases
+    else:
+        return None
 
 def update_clips(started_at=None, after=None, save_to_file=True):
     latest_clip_file = './app/scheduler/latest_clip_created_at.txt'
@@ -84,6 +121,10 @@ def update_clips(started_at=None, after=None, save_to_file=True):
                     existing_clip.duration = clip['duration']; changed = True
                 if existing_clip.is_featured != clip.get('is_featured', False):
                     existing_clip.is_featured = clip.get('is_featured', False); changed = True
+                if existing_clip.is_available_in_clip_player is None:
+                    result = is_available_in_clip_player(clip)
+                    if existing_clip.is_available_in_clip_player != result:
+                        existing_clip.is_available_in_clip_player = result; changed = True
 
                 if changed:
                     existing_clip.updated_at = datetime.now(timezone.utc)
@@ -108,7 +149,8 @@ def update_clips(started_at=None, after=None, save_to_file=True):
                     vod_offset=clip['vod_offset'],
                     is_featured=clip.get('is_featured', False),
                     updated_at=datetime.now(timezone.utc),
-                    status_id=1
+                    status_id=1,
+                    is_available_in_clip_player=is_available_in_clip_player(clip)
                 )
             if new_clip:
                 clips_to_add.append(new_clip)
@@ -245,6 +287,10 @@ def update_manual_import_clips(offset):
             existing_clip.duration = clip['duration']; changed = True
         if existing_clip.is_featured != clip.get('is_featured', False):
             existing_clip.is_featured = clip.get('is_featured', False); changed = True
+        if existing_clip.is_available_in_clip_player is None:
+            result = is_available_in_clip_player(clip)
+            if existing_clip.is_available_in_clip_player != result:
+                existing_clip.is_available_in_clip_player = result; changed = True
 
         if changed:
             existing_clip.updated_at = datetime.now(timezone.utc)

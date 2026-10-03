@@ -1,0 +1,72 @@
+{% extends "dash/dashboard_base.html" %}
+
+{% block dash_content %}
+    <section class="content-header">
+        <h3>Manage API Keys</h3>
+        <button class="btn btn-alveus-tan" data-bs-toggle="modal" data-bs-target="#createApiKeyModal">Create New API Key</button>
+    </section>
+    <section class="main-content">
+        <div class="row">
+            <div class="col-md-9">
+                <div class="box box-light">
+                    <div class="box-body">
+                        <div class="table-container">
+                            <table class="table table-striped dashboard-table" id="apiKeysTable">
+                                <thead>
+                                    <tr>
+                                        {% for key, val in columns|items %}
+                                            <th>{{ val }}</th>
+                                        {% endfor %}
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% include "dash/api/_api_keys_table_body.html" %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="box box-light">
+                    <div class="box-body">
+                        <p>When generating an API token, make sure to copy it immediately as it will not be shown again.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% include "dash/api/modals/create_api_key_modal.html" %}
+    {% include "dash/api/modals/show_api_key_modal.html" %}
+    <script>
+        const apiKeyNameError = document.getElementById('apiKeyNameError');
+
+        document.body.addEventListener('htmx:beforeRequest', function (event) {
+            if (event.detail.elt.id === 'createApiKeyForm') {
+                apiKeyNameError.textContent = '';
+                apiKeyNameError.classList.add('d-none');
+            }
+        });
+
+        document.body.addEventListener('htmx:responseError', function (event) {
+            if (event.detail.elt.id !== 'createApiKeyForm') {
+                return;
+            }
+
+            const response = JSON.parse(event.detail.xhr.responseText);
+            apiKeyNameError.textContent = response.error || 'Unable to create API key.';
+            apiKeyNameError.classList.remove('d-none');
+        });
+
+        document.body.addEventListener('showApiKey', function (event) {
+            const key = event.detail.api_key;
+            document.getElementById('apiKeyValueCode').textContent = key;
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('createApiKeyModal')).hide();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('showApiKeyModal')).show();
+            document.getElementById('createApiKeyForm').reset();
+            apiKeyNameError.textContent = '';
+            apiKeyNameError.classList.add('d-none');
+        });
+    </script>
+{% endblock %}

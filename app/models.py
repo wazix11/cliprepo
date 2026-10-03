@@ -78,6 +78,9 @@ class User(UserMixin, db.Model):
         back_populates='updated_by_user'
     )
 
+    # Relationship to track API keys created by the user
+    api_keys: so.Mapped[List['ApiKey']] = so.relationship('ApiKey', back_populates='created_by_user')
+
     # Relationships to track categories created/updated by the user
     categories: so.Mapped[List['Category']] = so.relationship(
         'Category', back_populates='created_by_user', foreign_keys='Category.created_by'
@@ -134,6 +137,19 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f"<User id='{self.id}' login='{self.login}' display_name='{self.display_name}' rank='{self.rank}' contributions={self.contributions}>"
+
+class ApiKey(db.Model):
+    id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True)
+    key_id: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True, nullable=False)
+    key_hash: so.Mapped[str] = so.mapped_column(sa.String(256), unique=True, nullable=False)
+    name: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True, nullable=False)
+    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
+    used_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
+    uses: so.Mapped[int] = so.mapped_column(sa.Integer, default=0, nullable=False)
+
+    # Relationship to track which user created the API key
+    created_by: so.Mapped[int] = so.mapped_column(sa.Integer, sa.ForeignKey('user.id'), nullable=True)
+    created_by_user: so.Mapped['User'] = so.relationship('User', back_populates='api_keys', foreign_keys=[created_by])
 
 @login.user_loader
 def load_user(id):
@@ -311,6 +327,7 @@ class Clip(db.Model):
     vod_offset: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=True)
     is_featured: so.Mapped[bool] = so.mapped_column(sa.Boolean)
     notes: so.Mapped[str] = so.mapped_column(sa.Text, nullable=True)
+    is_available_in_clip_player: so.Mapped[bool] = so.mapped_column(sa.Boolean, nullable=True)
     updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime,
                                                        default=lambda: datetime.now(timezone.utc),
                                                        onupdate=lambda: datetime.now(timezone.utc),

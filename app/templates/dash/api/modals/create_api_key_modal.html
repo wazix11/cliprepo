@@ -1,0 +1,26 @@
+<div class="modal fade" id="createApiKeyModal" tabindex="-1" aria-labelledby="createApiKeyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createApiKeyModalLabel">Create New API Key</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                    <form id="createApiKeyForm"
+                        hx-post="{{ url_for('api.generate_api_key') }}"
+                        hx-target="#apiKeysTable tbody"
+                        hx-swap="innerHTML">
+                    <div class="mb-3">
+                        <label for="apiKeyName" class="form-label justify-content-start mb-2">API Key Name</label>
+                        <input type="text" class="form-control" id="apiKeyName" name="name" required>
+                        <div id="apiKeyNameError" class="alert alert-danger mt-2 mb-0 d-none" role="alert"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-alveus-green" form="createApiKeyForm">Create API Key</button>
+            </div>
+        </div>
+    </div>
+</div>

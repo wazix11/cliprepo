@@ -1,0 +1,19 @@
+{% if api_keys|length > 0 %}
+    {% for api_key in api_keys %}
+    <tr>
+        <td>{{ api_key.name }}</td>
+        <td>{{ api_key.uses }}</td>
+        <td>{{ api_key.created_by_user.display_name }}</td>
+        <td>{{ api_key.created_at }}</td>
+        <td class="table-actions">
+            {% if current_user.rank_id >= 3 %}
+                <a href="{{ url_for('api.api_delete', id=api_key.id) }}" class="btn btn-danger" role="button"><i class="fa-solid fa-trash"></i></a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="{{ columns|length + 1 }}" class="text-center">No API keys found.</td>
+    </tr>
+{% endif %}

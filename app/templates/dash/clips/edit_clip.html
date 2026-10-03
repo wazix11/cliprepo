@@ -96,6 +96,15 @@
                                     {{ form.notes(class="form-control") }}
                                 </div>
                             </div>
+                            <div class="row form-row">
+                                <div class="col-md-3 form-label">
+                                    {{ form.is_available_in_clip_player.label }}&nbsp;
+                                    <i class="fa-regular fa-circle-question" data-bs-toggle="tooltip" data-bs-placement="top" title="Leave blank to allow availability based on automatic rules"></i>
+                                </div>
+                                <div class="col-md-8 form-input-box">
+                                    {{ form.is_available_in_clip_player(class="form-control") }}
+                                </div>
+                            </div>
                             <div class="row">
                                 <div class="col-md-1 offset-md-8 form-actions">
                                     {{ form.save(class="btn btn-alveus-green", type="submit") }}

@@ -1,0 +1,79 @@
+﻿{% extends "dash/dashboard_base.html" %}
+
+{% block dash_content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/api_reference.css') }}?v=20260919">
+
+<div class="api-reference">
+    <section class="content-header">
+        <div>
+            <h3>API Reference</h3>
+            <p>Explore endpoints and test authenticated requests.</p>
+        </div>
+        <a class="btn btn-alveus-tan" href="{{ url_for('api.api_manage') }}">Manage API Keys</a>
+    </section>
+    <section class="main-content">
+        <div class="row g-3">
+            <div class="col-lg-3">
+                <div class="box box-light h-100">
+                    <div class="box-body">
+                        <h4 class="mb-3">Endpoints</h4>
+                        <div class="endpoint-list" id="endpointList"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-9">
+                <div class="box box-light h-100">
+                    <div class="box-body">
+            <div class="detail-header">
+                <h4 id="endpointTitle">Endpoint</h4>
+                <div class="method-line"><span class="method">GET</span><span class="url" id="requestPath"></span></div>
+                <p class="description" id="endpointDescription"></p>
+            </div>
+            <section class="mb-4">
+                <h5 class="border-bottom pb-2">Query Parameters</h5>
+                <div id="parameterList"></div>
+            </section>
+            <section>
+                <form id="apiRequestForm" hx-post="{{ url_for('api.api_test_request') }}" hx-target="#responsePanel" hx-swap="innerHTML" hx-indicator="#requestSpinner">
+                    <div class="auth-field">
+                        <label for="apiKey">Authorization</label>
+                        <input class="form-control" id="apiKey" name="api_key" type="password" autocomplete="off" placeholder="sk_..." required>
+                    </div>
+                    <input id="endpointInput" name="endpoint" type="hidden">
+                    <div id="queryParamsSection">
+                        <label class="form-label" for="queryParams">Values</label>
+                        <textarea class="form-control" id="queryParams" name="query_params" rows="3" placeholder="One key=value pair per line"></textarea>
+                        <small class="form-text">Use comma-separated values for repeated filters, such as <code>theme_ids=1,2</code>.</small>
+                    </div>
+                    <div class="language-picker mt-4" role="tablist" aria-label="Code examples">
+                        <span class="language-label">Language</span>
+                        <button class="code-tab active" type="button" data-language="python">Python</button>
+                        <button class="code-tab" type="button" data-language="javascript">JavaScript</button>
+                        <button class="code-tab" type="button" data-language="curl">Shell</button>
+                    </div>
+                    <div class="code-card">
+                        <div class="code-card-header">
+                            <span>REQUEST</span>
+                            <button class="try-button" id="sendRequest" type="submit">
+                                Try it 
+                                <span id="requestSpinner" class="htmx-indicator spinner-border spinner-border-sm ms-1" role="status"></span>
+                            </button>
+                        </div>
+                        <pre class="code-example" id="codeExample"></pre>
+                    </div>
+                </form>
+                <div id="responsePanel" class="response-card">
+                    <div class="response-heading">
+                        <h4>Response</h4>
+                        <span class="response-meta">No request sent</span>
+                    </div>
+                    <pre class="response">Run a request to see the response.</pre>
+                </div>
+            </section>
+        </div>
+    </section>
+</div>
+
+<script id="apiEndpoints" type="application/json">{{ api_endpoints|tojson }}</script>
+<script src="{{ url_for('static', filename='scripts/api_reference.js') }}?v=20260919"></script>
+{% endblock %}

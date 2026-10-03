@@ -1,0 +1,7 @@
+<div class="response-heading">
+    <h4>Response</h4>
+    <span class="response-meta{% if response_status.startswith('2') %} response-success{% else %} response-error{% endif %}">
+        {{ response_status }}
+    </span>
+</div>
+<pre class="response">{{ response_body }}</pre>

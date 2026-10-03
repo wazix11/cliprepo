@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import SelectField, StringField, SubmitField, TextAreaField, BooleanField
-from wtforms.validators import DataRequired, ValidationError
+from wtforms.validators import DataRequired
 from wtforms.widgets import ColorInput, Select, html_params
 from wtforms_components import SelectMultipleField
 
@@ -29,6 +29,13 @@ class deleteForm(FlaskForm):
     cancel = SubmitField('Cancel', render_kw={'formnovalidate': True})
 
 class clipForm(FlaskForm):
+    def coerce_clip_player(value):
+        if value is True or value == 'True':
+            return True
+        if value is False or value == 'False':
+            return False
+        return None
+
     title_override = StringField('Title Override')
     notes = TextAreaField('Notes')
     category = SelectField('Category', coerce=lambda x: int(x) if x else None)
@@ -36,6 +43,15 @@ class clipForm(FlaskForm):
     themes = SelectMultipleField('Themes', coerce=int)
     subjects = SelectMultipleField('Subjects', coerce=int, widget=SelectPickerWidget())
     layout = SelectField('Layout', coerce=lambda x: int(x) if x else None)
+    is_available_in_clip_player = SelectField(
+        'In Clip Player',
+        choices=[
+            ('', ''),
+            ('True', 'Yes'),
+            ('False', 'No')
+        ],
+        coerce=coerce_clip_player
+    )
     save = SubmitField('Save')
     cancel = SubmitField('Cancel', render_kw={'formnovalidate': True})
 

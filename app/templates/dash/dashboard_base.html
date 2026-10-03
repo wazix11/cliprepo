@@ -101,7 +101,10 @@
                     </a>
                     <ul id="settings" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
                         <li class="sidebar-item">
-                            <a href="#" class="sidebar-link">Placeholder</a>
+                            <a href="{{ url_for('api.api_manage') }}" class="sidebar-link">Manage API Keys</a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="{{ url_for('api.api_test') }}" class="sidebar-link">API Reference</a>
                         </li>
                     </ul>
                 </li>

@@ -10,6 +10,7 @@ from sqlalchemy import or_, text, func
 from app.dash.forms import *
 from app.utils.get_twitch_clips import get_clips_by_broadcaster_id
 from app.utils.get_twitch_users import get_user_by_login
+from app.scheduler.tasks.update_clips import is_available_in_clip_player
 
 load_dotenv(override=True)
 EMBED_PARENT = os.environ.get('EMBED_PARENT')
@@ -168,6 +169,7 @@ def dash_clips():
         'created_at': 'Created At',
         'duration': 'Duration',
         'notes': 'Notes',
+        'is_available_in_clip_player': 'In Clip Player',
         'category': 'Category',
         'status': 'Status',
         'themes': 'Themes',
@@ -241,7 +243,8 @@ def dash_clips_edit(id):
                             current_clip.status_id,
                             [theme.id for theme in current_clip.themes],
                             [subject.id for subject in current_clip.subjects],
-                            current_clip.layout_id]
+                            current_clip.layout_id,
+                            current_clip.is_available_in_clip_player]
         # populate the form with the existing data
         form = clipForm(title_override=current_clip.title_override, 
                         notes=current_clip.notes,
@@ -249,11 +252,12 @@ def dash_clips_edit(id):
                         status=current_clip.status_id,
                         themes=[theme.id for theme in current_clip.themes],
                         subjects=[subject.id for subject in current_clip.subjects],
-                        layout=current_clip.layout_id)
-        form.category.choices = [(None, '-- None --')] + [(c.id, c.name) for c in Category.query.order_by('id')]
+                        layout=current_clip.layout_id,
+                        is_available_in_clip_player=current_clip.is_available_in_clip_player)
+        form.category.choices = [('', '')] + [(c.id, c.name) for c in Category.query.order_by('id')]
         form.status.choices = [(st.id, st.name) for st in Status.query.order_by('id')]
         form.themes.choices = [(t.id, t.name) for t in Theme.query.order_by('id')]
-        form.layout.choices = [(None, '-- None --')] + [(l.id, l.name) for l in Layout.query.order_by('id')]
+        form.layout.choices = [('', '')] + [(l.id, l.name) for l in Layout.query.order_by('id')]
         form.subjects.choices = []
         form.subjects.option_attrs = {}
 
@@ -281,20 +285,22 @@ def dash_clips_edit(id):
 
     if request.method == 'POST':
         if form.cancel.data:
-            session.pop('edit_clip_referrer', None)
-            return redirect(url_for('dash.dash_clips'))
+            referrer = session.pop('edit_clip_referrer', None)
+            return redirect(referrer or url_for('dash.dash_clips'))
     if form.validate_on_submit():
+        print(type(form.is_available_in_clip_player.data), form.is_available_in_clip_player.data)
+        referrer = session.pop('edit_clip_referrer', None)
         form_info = [form.title_override.data, 
                      form.notes.data,
                      form.category.data,
                      form.status.data,
                      form.themes.data,
                      form.subjects.data,
-                     form.layout.data] # list to compare with current_clip_info
-        # if the form data hasn't changed, just redirect to clips page
+                     form.layout.data,
+                     form.is_available_in_clip_player.data] # list to compare with current_clip_info
+        # if the form data hasn't changed, just redirect to previous page
         if form_info == current_clip_info:
-            session.pop('edit_clip_referrer', None)
-            return redirect(url_for('dash.dash_clips'))
+            return redirect(referrer or url_for('dash.dash_clips'))
         # otherwise handle changes
         else:
             if current_clip.updated_by != int(current_user.id):
@@ -305,19 +311,17 @@ def dash_clips_edit(id):
             with db.session.no_autoflush:
                 current_clip.title_override = form.title_override.data
                 current_clip.notes = form.notes.data
-                current_clip.category_id = form.category.data if form.category.data else None
+                current_clip.category_id = form.category.data
                 current_clip.status_id = form.status.data
                 current_clip.themes = [Theme.query.get(theme_id) for theme_id in form.themes.data]
                 current_clip.subjects = [Subject.query.get(subject_id) for subject_id in form.subjects.data]
-                current_clip.layout_id = form.layout.data if form.layout.data else None
+                current_clip.layout_id = form.layout.data
+                current_clip.is_available_in_clip_player = form.is_available_in_clip_player.data
                 current_clip.updated_by = current_user.id
                 current_clip.updated_at = datetime.now(timezone.utc)
             db.session.commit()
 
-            referrer = session.pop('edit_clip_referrer', None)
-            if referrer:
-                return redirect(referrer)
-            return redirect(url_for('dash.dash_clips'))
+            return redirect(referrer or url_for('dash.dash_clips'))
     return render_template('dash/clips/edit_clip.html', title='Dashboard - Edit Clip', form=form, clip=current_clip, embed_parent=EMBED_PARENT)
 
 @bp.route('/dashboard/clips/<id>/delete', methods=['GET', 'POST'])
@@ -531,7 +535,8 @@ def dash_clips_import_submit():
                     is_featured=clip.get('is_featured', False),
                     status_id=status_id,
                     category_id=category_id,
-                    layout_id=layout_id
+                    layout_id=layout_id,
+                    is_available_in_clip_player=is_available_in_clip_player(clip)
                 )
                 
                 clips_to_add.append(new_clip)
@@ -1564,6 +1569,7 @@ def dash_statuslabels_clips(id):
         'created_at': 'Created At',
         'duration': 'Duration',
         'notes': 'Notes',
+        'is_available_in_clip_player': 'In Clip Player',
         'category': 'Category',
         'status': 'Status',
         'themes': 'Themes',

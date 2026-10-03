@@ -21,6 +21,9 @@ def activity_log_listener(mapper, connection, target, action):
                 'new': hist.added[0] if hist.added else None
             }
 
+    if target.__tablename__ == 'api_key':
+        return  # Skip logging for ApiKey table to avoid exposing sensitive information
+
     # For Clip updates, also capture theme and subject relationship changes
     if action == 'update' and target.__tablename__ == 'clip':
         themes_hist = get_history(target, 'themes')
