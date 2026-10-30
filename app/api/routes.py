@@ -372,7 +372,7 @@ def get_clips():
 
         filters.append(Clip.is_available_in_clip_player == True)
 
-        filters.append(Clip.status.has(Status.type != 'hidden'))
+        filters.append(Clip.status.has(Status.type == 'visible'))
 
         order_by = {
             'new': Clip.created_at.desc(),

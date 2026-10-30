@@ -1,0 +1,24 @@
+{# Renders the header section for dashboard pages #}
+{% macro render_header(title, button_text=None, button_url="#", button_toggle=None, button_target=None) %}
+<section class="content-header">
+    <h3>{{ title }}</h3>
+    {% if button_text %}
+        {% if button_toggle and button_target %}
+            <button class="btn btn-alveus-tan" data-bs-toggle="{{ button_toggle }}" data-bs-target="{{ button_target }}">{{ button_text }}</button>
+        {% else %}
+            <a href="{{ button_url }}"><button class="btn btn-alveus-tan">{{ button_text }}</button></a>
+        {% endif %}
+    {% endif %}
+</section>
+{% endmacro %}
+
+{# Renders the standard box with customizable column sizing #}
+{% macro render_box(column_class) %}
+<div class="{{ column_class }}">
+    <div class="box box-light">
+        <div class="box-body">
+            {{ caller() }}
+        </div>
+    </div>
+</div>
+{% endmacro %}

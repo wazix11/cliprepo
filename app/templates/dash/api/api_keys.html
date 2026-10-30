@@ -1,40 +1,25 @@
 {% extends "dash/dashboard_base.html" %}
+{% from "dash/macros/layout.html" import render_header, render_box %}
+{% from "dash/macros/table.html" import render_table %}
 
 {% block dash_content %}
-    <section class="content-header">
-        <h3>Manage API Keys</h3>
-        <button class="btn btn-alveus-tan" data-bs-toggle="modal" data-bs-target="#createApiKeyModal">Create New API Key</button>
-    </section>
+    {{ render_header("Manage API Keys", button_text="Create New API Key", button_toggle="modal", button_target="#createApiKeyModal") }}
     <section class="main-content">
         <div class="row">
-            <div class="col-md-9">
-                <div class="box box-light">
-                    <div class="box-body">
-                        <div class="table-container">
-                            <table class="table table-striped dashboard-table" id="apiKeysTable">
-                                <thead>
-                                    <tr>
-                                        {% for key, val in columns|items %}
-                                            <th>{{ val }}</th>
-                                        {% endfor %}
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% include "dash/api/_api_keys_table_body.html" %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="box box-light">
-                    <div class="box-body">
-                        <p>When generating an API token, make sure to copy it immediately as it will not be shown again.</p>
-                    </div>
-                </div>
-            </div>
+            {% call render_box("col-md-9") %}
+                {% call(api_key) render_table(
+                    data=api_keys,
+                    id="apiKeysTable",
+                    columns=columns,
+                    actions_location="end",
+                    data_list=True
+                ) %}
+                    {% include "dash/api/_api_keys_table_body.html" %}
+                {% endcall %}
+            {% endcall %}
+            {% call render_box("col-md-3") %}
+                <p>When generating an API token, make sure to copy it immediately as it will not be shown again.</p>
+            {% endcall %}
         </div>
     </section>
     {% include "dash/api/modals/create_api_key_modal.html" %}
